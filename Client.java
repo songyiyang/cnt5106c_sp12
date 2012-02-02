@@ -9,16 +9,18 @@ public class Client
 {
 
     private static IPAddress serverIP;
-    private static DatagramSocket server;
+    private static DatagramSocket socket;
     private static int port;
 
     private static BufferedReader reader;
     private static PrintWriter writer;
 
+    private static int PACKET_SIZE = 2048;
+
     public Client(){
 
 	serverIP = null;
-	server = null;
+	socket = null;
 	serverPort = -1;
 
 	reader = null;
@@ -28,20 +30,21 @@ public class Client
 
     public static void main(String[] args){
 
-	boolean activeConnection = true;
+	DatagramPacket packet = new DatagramPacket(new byte[PACKET_SIZE]);
+	boolean wait = false;
 
 	try {
-
+	    socket = new DatagramSocket();
+	    wait = true;
 	}
-	catch (IOException e) {
-
-	}
-	catch (Exception e){
-	    e.printStackTrace();
+	catch (SocketException e){
+	    System.out.println("client unable to connect to port " + socket.getPort());
 	}
 
 
-	while (activeConnection){
+	while (wait){
+
+	    socket.send();
 
 	}
 
