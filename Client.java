@@ -30,7 +30,7 @@ public class Client
 
     public static void main(String[] args){
 
-	DatagramPacket packet = new DatagramPacket(new byte[PACKET_SIZE]);
+	DatagramPacket packet = null;
 	boolean wait = false;
 
 	try {
