@@ -40,7 +40,7 @@ public class ClientProtocol extends Protocol
 
 	return system_msg;
 
-    }
+    } // end method parseCommand
 
     public static String parseResponse(DatagramPacket packet,
 				       IPAddress server){
@@ -60,17 +60,17 @@ public class ClientProtocol extends Protocol
 
 	return system_msg;
 
-    }
+    } // end method parseResponse
 
 
     public static IPAddress receive(DatagramSocket socket,
 				       DatagramPacket packet){
 	return Protocol.receive(socket, packet);
-    }
+    } // end method receive
 
     public static int send(DatagramSocket socket, String msg,
 		              IPAddress address){
 	return Protocol.send(socket, msg, address);
-    }
+    } // end method send
 
 } // end class ClientProtocol

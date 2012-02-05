@@ -50,30 +50,19 @@ public class Server
 			       + port);
 	}
 
-	String response = null;
-	String message = null;
-
-	int counter = 0;
+	String system_msg = null;
 
 	while (wait){
 
-	    System.out.println(message);
+	    dataIn = new byte[Protocol.PACKET_SIZE];
+	    packetIn = new DatagramPacket(dataIn, dataIn.length);
 
-	    client = Protocol.receive(socket, packetIn);
+	    client = ServerProtocol.receive(socket, packetIn);
+	    system_msg = ServerProtocol.parseMessage(socket, packetIn, client);
 
-	    message = new String(packetIn.getData());
-
-	    if (counter == 100){
-		response = "die";
+	    if (system_msg.matches("^.+ GAMEOVER$")){
 		wait = false;
 	    }
-	    else {
-		response = "42";
-	    }
-
-	    Protocol.send(socket, response, client);
-
-	    counter++;
 
 	} // end while wait
 
