@@ -19,11 +19,44 @@ public class ServerProtocol extends Protocol
 	boolean error = false;
 
 	String name = null;
+	IPAddress ipAddress = null;
         int port = 0;
 
-	if (tokens[1].equals("GAMEOVER")){
+	if (tokens[1].equals("INSERT")){
+System.out.println(message);
+	    name = tokens[2];
+	    String[] address = tokens[3].split(":");
+
+	    if (address.length == 2){
+		port = Integer.parseInt(address[1]);
+		ipAddress = new IPAddress(address[0], port);
+	    }
+	    else {
+		ipAddress = new IPAddress(address[0]);
+	    }
+
+	    Record record = new Record(name, ipAddress);
+	    Server.addRecord(record);
+
+	    cmd = ProtocolCommand.INSERT;
+
+	}
+
+/*
+	else if (tokens[1].equals("DELETE")){
+
+	}
+
+	else if (tokens[1].equals("GET")){
+
+	}
+
+*/
+
+	else if (tokens[1].equals("GAMEOVER")){
 	    cmd = ProtocolCommand.GAMEOVER;
 	}
+
 	else if (tokens[1].equals("TEST")){
 	    cmd = ProtocolCommand.TEST;
 	}

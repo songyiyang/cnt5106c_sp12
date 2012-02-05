@@ -41,7 +41,7 @@ public class ClientProtocol extends Protocol
 			 "(max 80 chars): ","[A-Za-z0-9]{1,80}", tokens, 1, in);
 
 		addr = parseParameter("Please enter the IP address:",
-			 "[0-255](\\.[0-255]){3}", tokens, 2, in);
+			 IPAddress.ipRegex, tokens, 2, in);
 
 		while (port < 1024 || port > 65535){
 		    portStr = parseParameter("Please enter the port number:",
@@ -51,7 +51,7 @@ public class ClientProtocol extends Protocol
 
 		address = new IPAddress(addr, port);
 
-//		cmd = ProtocolCommand.INSERT;
+		cmd = ProtocolCommand.INSERT;
 
 	    }
 
@@ -91,9 +91,14 @@ public class ClientProtocol extends Protocol
 
 	System.out.println(message);
 
-	if (tokens[1].equals("GAMEOVER")){
+	if (tokens[1].equals("INSERT")){
+	    system_msg = "INSERT";
+	}
+
+	else if (tokens[1].equals("GAMEOVER")){
 	    system_msg = "game over";
 	}
+
 	else if (tokens[1].equals("TEST")){
 	    system_msg = "test";
 	}

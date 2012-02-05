@@ -1,6 +1,6 @@
 import java.io.*;
 import java.net.*;
-import java.util.TreeMap;
+import java.util.LinkedList;
 
 /**
  * @desc This the server process that communicates
@@ -13,8 +13,7 @@ public class Server
     private static DatagramSocket socket;
     private static int port;
 
-    private static TreeMap<String,IPAddress> records =
-		   new TreeMap<String,IPAddress>();
+    private static LinkedList<Record> records = new LinkedList<Record>();
 
 
     public static void main(String[] args){
@@ -68,5 +67,9 @@ public class Server
 	catch (Exception e){ }
 
     } // end main
+
+    public static void addRecord(Record record){
+	records.addLast(record);
+    }
 
 } // end class Server

@@ -8,43 +8,62 @@ import java.net.InetAddress;
 public class IPAddress
 {
 
-    private String IPAddress;
-    private InetAddress IPNetAddress;
+    private String ipAddress;
+    private InetAddress ipNetAddress;
     private int port;
+
+    public static String ipRegex = "^(\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])" +
+		           "(\\.(\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])){3}$";
 
     public IPAddress(){
 
-	IPAddress = null;
-	IPNetAddress = null;
+	ipAddress = null;
+	ipNetAddress = null;
 	port = 0;
 
     }
 
-    public IPAddress(InetAddress _IPNetAddress){
-	IPNetAddress = _IPNetAddress;
+    public IPAddress(InetAddress _ipNetAddress){
+	ipNetAddress = _ipNetAddress;
+	ipAddress = ipNetAddress.getHostAddress();
     }
 
-    public IPAddress(String _IPAddress){
-	IPAddress = _IPAddress;
+    public IPAddress(String _ipAddress){
+	ipAddress = _ipAddress;
     }
 
-    public IPAddress(String _IPAddress, int _port){
-	IPAddress = _IPAddress;
+    public IPAddress(String _ipAddress, int _port){
+	ipAddress = _ipAddress;
 	port = _port;
     }
 
-    public IPAddress(InetAddress _IPNetAddress, int _port){
-	IPNetAddress = _IPNetAddress;
-	IPAddress = IPNetAddress.getHostAddress();
+    public IPAddress(InetAddress _ipNetAddress, int _port){
+	ipNetAddress = _ipNetAddress;
+	ipAddress = ipNetAddress.getHostAddress();
 	port = _port;
     }
+
+
+    public boolean matches(IPAddress _ipAddress){
+
+	String ipToMatch = _ipAddress.getIPAddress();
+	ipToMatch = ipToMatch.replaceAll("\\.","\\.");
+	ipToMatch = ipToMatch.replaceAll("\\*","[0-9]");
+
+	return this.ipAddress.matches(ipToMatch);
+
+    }
+
+    /**
+     * Accessor methods
+     */
 
     public String getIPAddress(){
-	return IPAddress;
+	return ipAddress;
     }
 
     public InetAddress getIPNetAddress(){
-	return IPNetAddress;
+	return ipNetAddress;
     }
 
     public int getPort(){
@@ -53,7 +72,7 @@ public class IPAddress
 
     public String toString(){
 
-	StringBuffer output = new StringBuffer(IPAddress);
+	StringBuffer output = new StringBuffer(ipAddress);
 
 	if (port > 0){
 	    output.append(":" + port);

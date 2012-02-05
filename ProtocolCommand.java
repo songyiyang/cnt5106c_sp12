@@ -4,7 +4,7 @@ public enum ProtocolCommand {
     DELETE("DELETE"),
     GET("GET"),
     GAMEOVER("GAMEOVER"),
-    TEST("TEST");
+    TEST("TEST"),
     TRANSMIT("TRANSMIT");
 
     private String command;
@@ -45,7 +45,7 @@ public enum ProtocolCommand {
 
 	    case INSERT:
 
-		msg = msg.concat(" " + name + " " address.toString());
+		msg = msg.concat(" " + name + " " + address.toString());
 
 		break;
 
