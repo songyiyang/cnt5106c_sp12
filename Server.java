@@ -12,7 +12,7 @@ public class Server
     private static DatagramSocket socket;
     private static int port;
 
-    private static int PACKET_SIZE = 2048;
+
 
     public Server(){
 
@@ -24,15 +24,11 @@ public class Server
 
     public static void main(String[] args){
 
-	DatagramPacket packetOut = null;
 	DatagramPacket packetIn = null;
-	InetAddress address = null;
-
-	byte[] dataOut = new byte[PACKET_SIZE];
-	byte[] dataIn = new byte[PACKET_SIZE];
+	byte[] dataIn = new byte[Protocol.PACKET_SIZE];
 
 	IPAddress client = null;
-	int clientPort = -1;
+
 	boolean wait = false;
 
 	port = 1648;
@@ -59,13 +55,11 @@ public class Server
 
 	int counter = 0;
 
-try{
 	while (wait){
 
-	    socket.receive(packetIn);	    
+	    System.out.println(message);
 
-	    address = packetIn.getAddress();
-	    clientPort = packetIn.getPort();
+	    client = Protocol.receive(socket, packetIn);
 
 	    message = new String(packetIn.getData());
 
@@ -77,17 +71,11 @@ try{
 		response = "42";
 	    }
 
-	    dataOut = response.getBytes();
-	    packetOut = new DatagramPacket(dataOut, dataOut.length,
-					   address, clientPort);
-
-	    socket.send(packetOut);
+	    Protocol.send(socket, response, client);
 
 	    counter++;
 
 	} // end while wait
-}
-catch (Exception e){ }
 
 
 	try {

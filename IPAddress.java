@@ -8,18 +8,35 @@ import java.net.InetAddress;
 public class IPAddress
 {
 
-    public String ipString;
-    public InetAddress ipNetAddress;
+    private InetAddress IPNetAddress;
+    private int port;
 
     public IPAddress(){
 
-	ipString = "";
-	ipNetAddress = null;
+	IPNetAddress = null;
+	port = -1;
 
     }
 
-    public IPAddress(InetAddress address){
+    public IPAddress(InetAddress _IPNetAddress){
+	IPNetAddress = _IPNetAddress;
+    }
 
+    public IPAddress(InetAddress _IPNetAddress, int _port){
+	IPNetAddress = _IPNetAddress;
+	port = _port;
+    }
+
+    public String getIPAddress(){
+	return IPNetAddress.getHostAddress();
+    }
+
+    public InetAddress getIPNetAddress(){
+	return IPNetAddress;
+    }
+
+    public int getPort(){
+	return port;
     }
 
 } // end class IPAddress

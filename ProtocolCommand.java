@@ -3,11 +3,12 @@ public enum ProtocolCommand {
     INSERT("INSERT %s %s %d"),
     DELETE("DELETE %s %s %d"),
     GET("GET %s %s"),
-    DIE("DIE");
+    KABOOM("KABOOM"),
+    TEST("SANCHO");
 
     private String msgFormat;
 
-    public ProtocolCommand(String _msgFormat){
+    ProtocolCommand(String _msgFormat){
 	msgFormat = _msgFormat;
     }
 
@@ -34,14 +35,16 @@ public enum ProtocolCommand {
 
 		break;
 
-	    case INSERT:
+	    case KABOOM:
 
 		break;
 
-	    case DIE:
+	    case TEST:
 
 		break;
-	}
+	} // end switch cmd
+
+	return msg;
 
     } // end method createRecordPacketMessage
 

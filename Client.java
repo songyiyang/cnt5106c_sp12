@@ -8,9 +8,8 @@ import java.net.*;
 public class Client
 {
 
-    private static IPAddress serverIP;
+    private static IPAddress server;
     private static DatagramSocket socket;
-    private static int port;
 
     private static BufferedReader reader;
     private static PrintWriter writer;
@@ -19,9 +18,8 @@ public class Client
 
     public Client(){
 
-	serverIP = null;
+	server = null;
 	socket = null;
-	port = -1;
 
 	reader = null;
 	writer = null;
@@ -30,21 +28,19 @@ public class Client
 
     public static void main(String[] args){
 
-	DatagramPacket packetOut = null;
 	DatagramPacket packetIn = null;
-	InetAddress address = null;
-	port = 1648;
+	int port = 1648;
 
 	boolean wait = false;
 
-	byte[] dataOut = new byte[PACKET_SIZE];
 	byte[] dataIn = new byte[PACKET_SIZE];
 
 	try {
 	    socket = new DatagramSocket();
 	    wait = true;
 
-	    address = InetAddress.getByName("nicka-linux");
+	    server = new IPAddress(InetAddress.getByName("nicka-linux"),
+				   port);
 	    packetIn = new DatagramPacket(dataIn, dataIn.length);
 	}
 	catch (SocketException e){
@@ -59,18 +55,13 @@ public class Client
 	String message = "Ping me!";
 	String response = null;
 
-
-try {
 	while (wait){
 
-	    dataOut = message.getBytes();
-	    packetOut = new DatagramPacket(dataOut, dataOut.length,
-					   address, port);
-
 	    System.out.println(message);
-	    socket.send(packetOut);
+	    Protocol.send(socket, message, server);
 
-	    socket.receive(packetIn);
+	    server = Protocol.receive(socket, packetIn);
+
 	    response = new String(packetIn.getData());
 	    response = response.trim();
 
@@ -79,10 +70,6 @@ try {
 	    }
 
 	}
-}
-catch (Exception e){
-
-}
 
 	try {
 	    socket.close();
