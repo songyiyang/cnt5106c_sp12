@@ -1,3 +1,6 @@
+import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.net.DatagramSocket;
 import java.net.DatagramPacket;
 
@@ -8,25 +11,62 @@ import java.net.DatagramPacket;
 public class ClientProtocol extends Protocol
 {
 
-    private static String cmdRegex = "^(quit|gameover|help|\\?).*$";
+    private static String cmdRegex = "^(insert|delete|get|quit|" +
+				     "gameover|help|\\?).*$";
 
-    public static String parseCommand(String input){
+    public static String parseCommand(String command){
 
 	String system_msg = "WTF";
 	ProtocolCommand cmd = null;
 
-	if (input.matches(cmdRegex)){
+	if (command.matches(cmdRegex)){
 
 	    IPAddress address = null;
-	    String name = null;
-	   
-	    if (input.equals("quit")){
+	    String name = "";
+	    String addr = "";
+	    String portStr = "";
+	    int port = 0;
+
+	    String tokens[] = null;
+
+	    BufferedReader in = null;
+	    in = new BufferedReader(new InputStreamReader(System.in));
+
+	    tokens = command.split("\\s");
+
+		// Insert a new record
+	    if (command.matches("^insert(\\s[A-Za-z0-9\\.]){0,3}.*")){
+
+		name = parseParameter("Please enter the alphanumeric name " +
+			 "(max 80 chars): ","[A-Za-z0-9]{1,80}", tokens, 1, in);
+
+		addr = parseParameter("Please enter the IP address:",
+			 "[0-255](\\.[0-255]){3}", tokens, 2, in);
+
+		while (port < 1024 || port > 65535){
+		    portStr = parseParameter("Please enter the port number:",
+			 "[0-9]{4,5}", tokens, 3, in);
+		    port = Integer.parseInt(portStr);
+		}
+
+		address = new IPAddress(addr, port);
+
+//		cmd = ProtocolCommand.INSERT;
+
+	    }
+
+		// Force the client to exit
+	    else if (command.equals("quit")){
 		system_msg = "quit";
 	    }
-	    else if (input.equals("gameover")){
+
+		// Shut down client and server
+	    else if (command.equals("gameover")){
 		cmd = ProtocolCommand.GAMEOVER;
 	    }
-	    else if (input.matches("^(help|\\?)$")){
+
+		// Get system help
+	    else if (command.matches("^(help|\\?)$")){
 //		system_msg = "help";
 	    }
 
@@ -62,7 +102,6 @@ public class ClientProtocol extends Protocol
 
     } // end method parseResponse
 
-
     public static IPAddress receive(DatagramSocket socket,
 				       DatagramPacket packet){
 	return Protocol.receive(socket, packet);
@@ -72,5 +111,37 @@ public class ClientProtocol extends Protocol
 		              IPAddress address){
 	return Protocol.send(socket, msg, address);
     } // end method send
+
+
+    private static String parseParameter(String prompt, String regexp,
+					 String[] tokens, int tokenIndex,
+					 BufferedReader in){
+
+	String value = "";
+	String input = "";
+
+	if (tokens.length >= tokenIndex+1 &&
+	    tokens[tokenIndex].matches(regexp)){
+	    value = tokens[tokenIndex];
+	}
+
+	while (!input.matches(regexp)){
+
+	    System.out.print(prompt + " ");
+
+	    try {
+		 input = in.readLine();
+	    }
+	    catch (IOException e){ }
+
+	} // end while !input.matches()
+
+	if (value.equals("")){
+	    value = input;
+	}
+
+	return value;
+
+    } // end method parseParameter
 
 } // end class ClientProtocol

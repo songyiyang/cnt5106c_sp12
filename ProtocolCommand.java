@@ -1,24 +1,23 @@
 public enum ProtocolCommand {
 
-    INSERT("INSERT", "%s %s %d %s"),
-    DELETE("DELETE", "%s %s %d %s"),
-    GET("GET", "%s %s %s"),
-    GAMEOVER("GAMEOVER", null),
-    TEST("TEST", null);
+    INSERT("INSERT"),
+    DELETE("DELETE"),
+    GET("GET"),
+    GAMEOVER("GAMEOVER"),
+    TEST("TEST");
+    TRANSMIT("TRANSMIT");
 
     private String command;
-    private String payload;
 
     private static final String packetHeader = "%s %s";
-    private static final String errorPayload = "ERROR %s";
+    private static final String errorPayload = "ERROR ";
     private static final String successPayload = "SUCCESS";
 
     private static final String sendHeader = "SND";
     private static final String receiveHeader = "RCV";
 
-    ProtocolCommand(String _command, String _payload){
+    ProtocolCommand(String _command){
 	command = _command;
-	payload = _payload;
     }
 
     public String getCommand(){
@@ -31,6 +30,7 @@ public enum ProtocolCommand {
 
 	String msg = null;
 	String dir = null;
+	boolean payloadExists = true;
 
 	if (direction == 0){
 	    dir = sendHeader;
@@ -45,6 +45,8 @@ public enum ProtocolCommand {
 
 	    case INSERT:
 
+		msg = msg.concat(" " + name + " " address.toString());
+
 		break;
 
 	    case DELETE:
@@ -57,12 +59,23 @@ public enum ProtocolCommand {
 
 	    case GAMEOVER:
 
+		    // No payload to send
+		payloadExists = false;
+
 		break;
 
 	    case TEST:
 
+		    // No payload to send...yet
+		payloadExists = false;
+
 		break;
+
 	} // end switch cmd
+
+	if (payloadExists && direction == 1){
+	    msg = msg.concat(" " + successPayload);
+	}
 
 	return msg;
 
