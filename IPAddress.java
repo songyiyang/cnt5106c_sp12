@@ -1,4 +1,4 @@
-import java.net.INetAddress;
+import java.net.InetAddress;
 
 /**
  * @desc Acts as a wrapper to contain
@@ -9,7 +9,7 @@ public class IPAddress
 {
 
     public String ipString;
-    public INetAddress ipNetAddress;
+    public InetAddress ipNetAddress;
 
     public IPAddress(){
 
@@ -18,7 +18,7 @@ public class IPAddress
 
     }
 
-    public IPAddress(INetAddress address){
+    public IPAddress(InetAddress address){
 
     }
 

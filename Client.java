@@ -21,7 +21,7 @@ public class Client
 
 	serverIP = null;
 	socket = null;
-	serverPort = -1;
+	port = -1;
 
 	reader = null;
 	writer = null;
@@ -30,31 +30,74 @@ public class Client
 
     public static void main(String[] args){
 
-	DatagramPacket packet = null;
+	DatagramPacket packetOut = null;
+	DatagramPacket packetIn = null;
+	InetAddress address = null;
+	port = 1648;
+
 	boolean wait = false;
+
+	byte[] dataOut = new byte[PACKET_SIZE];
+	byte[] dataIn = new byte[PACKET_SIZE];
 
 	try {
 	    socket = new DatagramSocket();
 	    wait = true;
+
+	    address = InetAddress.getByName("nicka-linux");
+	    packetIn = new DatagramPacket(dataIn, dataIn.length);
 	}
 	catch (SocketException e){
-	    System.out.println("client unable to connect to port " + socket.getPort());
+	    System.out.println("client unable to connect to port "
+			       + socket.getPort());
+	}
+	catch (UnknownHostException e){
+	    e.printStackTrace();
 	}
 
 
+	String message = "Ping me!";
+	String response = null;
+
+
+try {
 	while (wait){
 
-	    socket.send();
+	    dataOut = message.getBytes();
+	    packetOut = new DatagramPacket(dataOut, dataOut.length,
+					   address, port);
 
+	    System.out.println(message);
+	    socket.send(packetOut);
+
+	    socket.receive(packetIn);
+	    response = new String(packetIn.getData());
+	    response = response.trim();
+
+	    if (response.matches("die")){
+		wait = false;
+	    }
+
+	}
+}
+catch (Exception e){
+
+}
+
+	try {
+	    socket.close();
+	}
+	catch (Exception e){
+	    e.printStackTrace();
 	}
 
     } // end main method
 
-    private static void ReadMsg(){
-
+    private static byte[] ReadMsg(){
+	return new byte[PACKET_SIZE];
     }
 
-    private static void SendMsg(){
+    private static void SendMsg(byte[] msg){
 
     }
 
