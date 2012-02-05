@@ -11,65 +11,101 @@ public class Client
     private static IPAddress server;
     private static DatagramSocket socket;
 
-    private static BufferedReader reader;
-    private static PrintWriter writer;
-
-    private static int PACKET_SIZE = 2048;
+    private static BufferedReader in;
 
     public Client(){
 
 	server = null;
 	socket = null;
 
-	reader = null;
-	writer = null;
+	in = null;
 
     } // end constructor
 
     public static void main(String[] args){
 
 	DatagramPacket packetIn = null;
+	byte[] dataIn = null;
 	int port = 1648;
 
 	boolean wait = false;
 
-	byte[] dataIn = new byte[PACKET_SIZE];
-
+	    // First, establish a socket and set up the
+	    // server's IP address.
 	try {
 	    socket = new DatagramSocket();
 	    wait = true;
 
 	    server = new IPAddress(InetAddress.getByName("nicka-linux"),
 				   port);
-	    packetIn = new DatagramPacket(dataIn, dataIn.length);
 	}
 	catch (SocketException e){
 	    System.out.println("client unable to connect to port "
-			       + socket.getPort());
+			       + port);
 	}
 	catch (UnknownHostException e){
 	    e.printStackTrace();
 	}
 
 
-	String message = "Ping me!";
-	String response = null;
+	    // Now set up a reader in order to receive
+	    // user input. Exit program if unable to get
+	    // stream.
+	try {
+	    in = new BufferedReader(new InputStreamReader(System.in));
+	}
+	catch (Exception e){
+	    System.out.println("unable to get user input, " +
+			       "shutting down client.");
+	    System.exit(1);
+	}
+
+	String input = "";
+	String system_msg = null;
+
+	String prompt = "$ ";
 
 	while (wait){
 
-	    System.out.println(message);
-	    Protocol.send(socket, message, server);
+		// Create new, empty packet
+	    dataIn = new byte[Protocol.PACKET_SIZE];
+	    packetIn = new DatagramPacket(dataIn, dataIn.length);
 
-	    server = Protocol.receive(socket, packetIn);
+		// Prompt user for input
+	    System.out.print(prompt);
 
-	    response = new String(packetIn.getData());
-	    response = response.trim();
+	    try {
+		input = in.readLine();
+	    }
+	    catch (IOException e){
+		continue;
+	    }
 
-	    if (response.matches("die")){
+		// Parse the input and return a system message
+	    system_msg = ClientProtocol.parseCommand(input);
+
+		// If user wants to close the client, do so
+	    if (system_msg.equals("quit")){
+		break;
+	    }
+	    else if (system_msg.equals("WTF")){
+		continue;
+	    }
+
+		// Send the packet to the server
+	    ClientProtocol.send(socket, system_msg, server);
+
+		// Get the response
+	    server = ClientProtocol.receive(socket, packetIn);
+
+		// Finally parse the response
+	    system_msg = ClientProtocol.parseResponse(packetIn, server);
+
+	    if (system_msg.equals("game over")){
 		wait = false;
 	    }
 
-	}
+	} // end while true
 
 	try {
 	    socket.close();
@@ -79,13 +115,5 @@ public class Client
 	}
 
     } // end main method
-
-    private static byte[] ReadMsg(){
-	return new byte[PACKET_SIZE];
-    }
-
-    private static void SendMsg(byte[] msg){
-
-    }
 
 } // end class Client

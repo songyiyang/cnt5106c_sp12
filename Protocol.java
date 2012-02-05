@@ -11,14 +11,18 @@ import java.net.DatagramPacket;
  *
  * @see ProtocolCommand.java
  */
-public final class Protocol
+public class Protocol
 {
 
     public static final int PACKET_SIZE = 2048;
-    private static int ENCRYPTION_MODE = 0; 
 
-    public static IPAddress receive(DatagramSocket socket,
-				    DatagramPacket packet){
+    protected static String extractMessage(DatagramPacket packet){
+	String message = new String(packet.getData());
+	return message.trim();
+    } // end method extractMessage
+
+    protected static IPAddress receive(DatagramSocket socket,
+				       DatagramPacket packet){
 
 	IPAddress address = null;
 
@@ -34,8 +38,8 @@ public final class Protocol
 
     } // end method receive
 
-    public static int send(DatagramSocket socket, String msg,
-		      IPAddress address){
+    protected static int send(DatagramSocket socket, String msg,
+		              IPAddress address){
 
 	int success = 0;
 

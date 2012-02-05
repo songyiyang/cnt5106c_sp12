@@ -1,25 +1,45 @@
 public enum ProtocolCommand {
 
-    INSERT("INSERT %s %s %d"),
-    DELETE("DELETE %s %s %d"),
-    GET("GET %s %s"),
-    KABOOM("KABOOM"),
-    TEST("SANCHO");
+    INSERT("INSERT", "%s %s %d %s"),
+    DELETE("DELETE", "%s %s %d %s"),
+    GET("GET", "%s %s %s"),
+    GAMEOVER("GAMEOVER", null),
+    TEST("TEST", null);
 
-    private String msgFormat;
+    private String command;
+    private String payload;
 
-    ProtocolCommand(String _msgFormat){
-	msgFormat = _msgFormat;
+    private static final String packetHeader = "%s %s";
+    private static final String errorPayload = "ERROR %s";
+    private static final String successPayload = "SUCCESS";
+
+    private static final String sendHeader = "SND";
+    private static final String receiveHeader = "RCV";
+
+    ProtocolCommand(String _command, String _payload){
+	command = _command;
+	payload = _payload;
     }
 
-    public String getMessageFormat(){
-	return msgFormat;
+    public String getCommand(){
+	return command;
     }
 
-    public static String createRecordPacketMessage(ProtocolCommand cmd,
-			 String name, IPAddress address){
+    public static String createPacket(ProtocolCommand cmd,
+			 String name, IPAddress address,
+			 int direction, boolean error){
 
 	String msg = null;
+	String dir = null;
+
+	if (direction == 0){
+	    dir = sendHeader;
+	}
+	else {
+	    dir = receiveHeader;
+	}
+
+	msg = String.format(packetHeader, dir, cmd.getCommand());
 
 	switch (cmd){
 
@@ -35,7 +55,7 @@ public enum ProtocolCommand {
 
 		break;
 
-	    case KABOOM:
+	    case GAMEOVER:
 
 		break;
 
