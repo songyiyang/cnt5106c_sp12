@@ -1,5 +1,6 @@
 import java.io.*;
 import java.net.*;
+import java.util.TreeMap;
 
 /**
  * @desc This the server process that communicates
@@ -12,14 +13,8 @@ public class Server
     private static DatagramSocket socket;
     private static int port;
 
-
-
-    public Server(){
-
-	socket = null;
-	port = -1;
-
-    } // end constructor
+    private static TreeMap<String,IPAddress> records =
+		   new TreeMap<String,IPAddress>();
 
 
     public static void main(String[] args){

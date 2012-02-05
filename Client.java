@@ -8,19 +8,10 @@ import java.net.*;
 public class Client
 {
 
-    private static IPAddress server;
-    private static DatagramSocket socket;
+    private static IPAddress server = null;
+    private static DatagramSocket socket = null;
+    private static BufferedReader in = null;
 
-    private static BufferedReader in;
-
-    public Client(){
-
-	server = null;
-	socket = null;
-
-	in = null;
-
-    } // end constructor
 
     public static void main(String[] args){
 
