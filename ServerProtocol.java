@@ -65,9 +65,7 @@ public class ServerProtocol extends Protocol
 		ipAddress = new IPAddress(ip);
 	    }
 
-	    Record record = new Record(name, ipAddress);
-
-	    boolean deleted = Server.deleteRecord(record);
+	    boolean deleted = Server.deleteRecord(name, ipAddress);
 
 	    cmd = ProtocolCommand.DELETE;
 

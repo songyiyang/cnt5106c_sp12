@@ -77,10 +77,10 @@ public class Server
 	boolean deleted = false;
 	boolean match = false;
 
-	Record temp = null;
+	Record deleteMe = null;
 	String address = null;
 
-	for (temp : records){
+	for (Record temp : records){
 
 	    match = false;
 
@@ -88,7 +88,7 @@ public class Server
 
 	    if (ipAddress.getIPAddress() != null){
 		address = ipAddress.getIPAddress();
-		match = match && temp.getIPAddress().matches(address);
+		match = match && temp.getIPAddress().getIPAddress().matches(address);
 	    }
 
 	    if (ipAddress.getPort() > 0){
@@ -96,13 +96,14 @@ public class Server
 	    }
 
 	    if (match){
+		deleteMe = temp;
 		break;
 	    }
 
 	} // end for
 
-	if (match){
-	    deleted = records.remove(temp);
+	if (deleteMe != null){
+	    deleted = records.remove(deleteMe);
 	}
 
 	return deleted;
