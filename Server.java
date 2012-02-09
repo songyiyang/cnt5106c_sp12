@@ -72,4 +72,41 @@ public class Server
 	records.addLast(record);
     }
 
+    public static boolean deleteRecord(String name, IPAddress ipAddress){
+
+	boolean deleted = false;
+	boolean match = false;
+
+	Record temp = null;
+	String address = null;
+
+	for (temp : records){
+
+	    match = false;
+
+	    match = temp.getName().equals(name);
+
+	    if (ipAddress.getIPAddress() != null){
+		address = ipAddress.getIPAddress();
+		match = match && temp.getIPAddress().matches(address);
+	    }
+
+	    if (ipAddress.getPort() > 0){
+		match = match && (temp.getIPAddress().getPort() == ipAddress.getPort());
+	    }
+
+	    if (match){
+		break;
+	    }
+
+	} // end for
+
+	if (match){
+	    deleted = records.remove(temp);
+	}
+
+	return deleted;
+
+    } // end method deleteRecord
+
 } // end class Server
