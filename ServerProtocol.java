@@ -23,7 +23,7 @@ public class ServerProtocol extends Protocol
         int port = 0;
 
 	if (tokens[1].equals("INSERT")){
-System.out.println(message);
+
 	    name = tokens[2];
 	    String[] address = tokens[3].split(":");
 
@@ -42,10 +42,36 @@ System.out.println(message);
 
 	}
 
-/*
+
 	else if (tokens[1].equals("DELETE")){
 
+	    name = tokens[2];
+	    String[] address = tokens[3].split(":");
+	    String ip = null;
+	    port = 0;
+
+	    if (!address[0].equals("null")){
+		ip = address[0];
+	    }
+	    else {
+		ip = null;
+	    }
+
+	    if (address.length == 2){
+		port = Integer.parseInt(address[1]);
+		ipAddress = new IPAddress(ip, port);
+	    }
+	    else {
+		ipAddress = new IPAddress(ip);
+	    }
+
+	    boolean deleted = Server.deleteRecord(name, ipAddress);
+
+	    cmd = ProtocolCommand.DELETE;
+
 	}
+
+/*
 
 	else if (tokens[1].equals("GET")){
 

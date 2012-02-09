@@ -51,7 +51,7 @@ public enum ProtocolCommand {
 
 		break;
 
-		// format: DIR DELETE name {null|ip}:{0|port}
+		// format: DIR DELETE name {null|ip}[:port]
 		// {SUCCESS | ERROR code}
 
 	    case DELETE:
