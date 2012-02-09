@@ -45,14 +45,48 @@ public class IPAddress
 
 
     public boolean matches(IPAddress _ipAddress){
-
-	String ipToMatch = _ipAddress.getIPAddress();
-	ipToMatch = ipToMatch.replaceAll("\\.","\\.");
-	ipToMatch = ipToMatch.replaceAll("\\*","[0-9]");
-
-	return this.ipAddress.matches(ipToMatch);
-
+	return this.ipAddress.matches(_ipAddress.getIPAddress());
     }
+
+    public static String parseIPAddressRegex(String ipRegex){
+
+	String[] tokens = ipRegex.split("\\.");
+	ipRegex = "^";
+
+	String[] subnets = new String[tokens.length];
+
+	for (int i = 0; i < tokens.length; i++) {
+
+	    subnets[i] = tokens[i];
+
+	    if (subnets[i].equals("*")){
+		subnets[i] = "(\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])";
+	    } // case: match all possible numbers
+	    else if (subnets[i].length() == 2){
+		if (subnets[i].charAt(0) == '*'){
+		    subnets[i] = subnets[i].replaceFirst("\\*", "[1-9]");
+		}
+		if (subnets[i].matches("\\*")){
+		    subnets[i] = subnets[i].replaceFirst("\\*", "[0-9]");
+		}
+	    } // case: match 2 digit number
+	    else if (subnets[i].length() == 3){
+		if (subnets[i].charAt(0) == '*'){
+		    subnets[i] = subnets[i].replaceFirst("\\*", "[1-2]");
+		}
+		if (subnets[i].matches("\\*")){
+		    subnets[i] = subnets[i].replace("\\*","[0-5]");
+		}
+	    } // case: match 3 digit number
+	} // end for i
+
+	ipRegex = ipRegex.concat(subnets[0] + "\\." + subnets[1] +
+				 "\\." + subnets[2] + "\\." + subnets[3]);
+	ipRegex = ipRegex.concat("$");
+
+	return ipRegex;
+
+    } // end parseIPAddressRegex
 
     /**
      * Accessor methods
