@@ -27,8 +27,9 @@ public class Client
 	    socket = new DatagramSocket();
 	    wait = true;
 
-	    server = new IPAddress(InetAddress.getByName("nicka-linux"),
-				   port);
+	    InetAddress host = InetAddress.getLocalHost();
+	    server = new IPAddress(host, port);
+
 	}
 	catch (SocketException e){
 	    System.out.println("client unable to connect to port "
