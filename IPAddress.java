@@ -106,7 +106,14 @@ public class IPAddress
 
     public String toString(){
 
-	StringBuffer output = new StringBuffer(ipAddress);
+	StringBuffer output = new StringBuffer("");
+
+	if (ipAddress == null){
+	    output.append("null");
+	}
+	else {
+	    output.append(ipAddress);
+	}
 
 	if (port > 0){
 	    output.append(":" + port);

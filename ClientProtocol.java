@@ -38,20 +38,53 @@ public class ClientProtocol extends Protocol
 	    if (command.matches("^insert(\\s[A-Za-z0-9\\.]){0,3}.*")){
 
 		name = parseParameter("Please enter the alphanumeric name " +
-			 "(max 80 chars): ","[A-Za-z0-9]{1,80}", tokens, 1, in);
+			 "(max 80 chars): ","[A-Za-z0-9]{1,80}", tokens, 1,
+			 in, false);
 
 		addr = parseParameter("Please enter the IP address:",
-			 IPAddress.ipRegex, tokens, 2, in);
+			 IPAddress.ipRegex, tokens, 2, in, false);
 
-		while (port < 1024 || port > 65535){
+		while (port <= 1024 || port >= 65535){
 		    portStr = parseParameter("Please enter the port number:",
-			 "[0-9]{4,5}", tokens, 3, in);
+			 "[0-9]{4,5}", tokens, 3, in, false);
 		    port = Integer.parseInt(portStr);
 		}
 
 		address = new IPAddress(addr, port);
 
 		cmd = ProtocolCommand.INSERT;
+
+	    }
+
+		// Delete a record from the server
+	    else if (command.matches("^delete(\\s[A-Za-z0-9\\.]){0,2}.*")){
+
+		name = parseParameter("Please enter the alphanumeric name " +
+			 "(max 80 chars): ","[A-Za-z0-9]{1,80}", tokens, 1,
+			 in, false);
+
+		addr = parseParameter("Please enter the IP address:",
+			 IPAddress.ipRegex, tokens, 2, in, true);
+
+		if (addr.equals("!")){
+		    addr = null;
+		}
+
+		while (port <= 1024 || port >= 65535){
+		    portStr = parseParameter("Please enter the port number:",
+			 "[0-9]{4,5}", tokens, 3, in, true);
+
+		    if (portStr.equals("!")){
+			port = 0;
+			break;
+		    }
+
+		    port = Integer.parseInt(portStr);
+		}
+
+		address = new IPAddress(addr, port);
+
+		cmd = ProtocolCommand.DELETE;
 
 	    }
 
@@ -120,10 +153,14 @@ public class ClientProtocol extends Protocol
 
     private static String parseParameter(String prompt, String regexp,
 					 String[] tokens, int tokenIndex,
-					 BufferedReader in){
+					 BufferedReader in, boolean optional){
 
 	String value = "";
 	String input = "";
+
+	if (optional){
+	    prompt = prompt.concat(("(type '!' to skip)"));
+	}
 
 	if (tokens.length >= tokenIndex+1 &&
 	    tokens[tokenIndex].matches(regexp)){
@@ -138,6 +175,10 @@ public class ClientProtocol extends Protocol
 		 input = in.readLine();
 	    }
 	    catch (IOException e){ }
+
+	    if (optional && input.equals("!")){
+		break;
+	    }
 
 	} // end while !input.matches()
 
