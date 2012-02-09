@@ -43,13 +43,20 @@ public enum ProtocolCommand {
 
 	switch (cmd){
 
+
+		// format: DIR INSERT name ip:port {SUCCESS | ERROR code}
 	    case INSERT:
 
 		msg = msg.concat(" " + name + " " + address.toString());
 
 		break;
 
+		// format: DIR DELETE name {null|ip}:{0|port}
+		// {SUCCESS | ERROR code}
+
 	    case DELETE:
+
+		msg = msg.concat(" " + name + " " + address.toString());
 
 		break;
 
@@ -57,6 +64,7 @@ public enum ProtocolCommand {
 
 		break;
 
+		// format: DIR GAMEOVER {SUCCESS | ERROR code}
 	    case GAMEOVER:
 
 		    // No payload to send
@@ -64,6 +72,7 @@ public enum ProtocolCommand {
 
 		break;
 
+		// format: DIR TEST {SUCCESS | ERROR code}
 	    case TEST:
 
 		    // No payload to send...yet
