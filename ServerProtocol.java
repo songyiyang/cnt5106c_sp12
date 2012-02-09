@@ -66,7 +66,7 @@ public class ServerProtocol extends Protocol
 	    }
 
 	    boolean deleted = Server.deleteRecord(name, ipAddress);
-
+System.out.println("is deleted? " + deleted);
 	    cmd = ProtocolCommand.DELETE;
 
 	}
