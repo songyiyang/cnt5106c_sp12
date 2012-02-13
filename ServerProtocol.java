@@ -147,6 +147,8 @@ public class ServerProtocol extends Protocol
 
 	while (recordNum < numberOfRecords){
 
+	    inPacket = new DatagramPacket(new byte[PACKET_SIZE], PACKET_SIZE);
+
 	    record = matchedRecords.get(recordNum);
 	    name = record.getName();
 	    address = record.getIPAddress().toString();

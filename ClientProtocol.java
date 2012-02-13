@@ -133,7 +133,8 @@ System.out.println(system_msg);
 
     } // end method parseCommand
 
-    public static String parseResponse(DatagramPacket packet,
+    public static String parseResponse(DatagramSocket socket,
+				       DatagramPacket packet,
 				       IPAddress server){
 
 	String system_msg = "";
@@ -153,7 +154,7 @@ System.out.println(system_msg);
 	}
 
 	else if (tokens[1].equals("GET")){
-	    //getMatchedRecords(socket, server);
+	    getMatchedRecords(socket, server);
 	    system_msg = "GET";
 	}
 
@@ -192,12 +193,15 @@ System.out.println(system_msg);
 
 	while (getRecords){
 
+	    inPacket = new DatagramPacket(new byte[PACKET_SIZE], PACKET_SIZE);
+
 	    server = receive(socket, inPacket);
 	    response = Protocol.extractMessage(inPacket);
-	    tokens = response.split("\\s");
+	    tokens = response.split("\\s+");
 
 	    if (tokens[2].equals("YAH")){
 		getRecords = false;
+		System.out.println("gsdgrdf");
 	    }
 
 	    i = 3;
@@ -205,7 +209,7 @@ System.out.println(system_msg);
 	    while (i < tokens.length){
 
 		name = tokens[i];
-		address = tokens[i+1].split(":");
+		address = tokens[i+1].split("\\:");
 
 		System.out.println("Record: name = " + name +
 				   "; IP = " + address[0] +

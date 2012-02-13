@@ -91,7 +91,7 @@ public class Client
 	    server = ClientProtocol.receive(socket, packetIn);
 
 		// Finally parse the response
-	    system_msg = ClientProtocol.parseResponse(packetIn, server);
+	    system_msg = ClientProtocol.parseResponse(socket, packetIn, server);
 
 	    if (system_msg.equals("game over")){
 		wait = false;
