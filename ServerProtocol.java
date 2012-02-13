@@ -128,8 +128,9 @@ public class ServerProtocol extends Protocol
 
 	String isEnd = " YAH";
 	String isNotEnd = " NAW";
+	int MESSAGE_PACKET_SIZE = 30;
 
-	int packetSize = 30;
+	int packetSize = MESSAGE_PACKET_SIZE;
 	int recordNum = 0;
 	int numberOfRecords = matchedRecords.size();
 
@@ -170,6 +171,7 @@ public class ServerProtocol extends Protocol
 
 		if (response.matches(".*(SUCCESS)$")){
 		    message = "";
+		    packetSize = MESSAGE_PACKET_SIZE;
 		}
 
 		continue;
@@ -180,7 +182,7 @@ public class ServerProtocol extends Protocol
 
 	} // end while recordNum
 
-	if (packetSize > 30) {
+	if (packetSize > MESSAGE_PACKET_SIZE) {
 	    message = isEnd + message;
 	    pmessage = ProtocolCommand.createPacket(cmd, "", client,
 						       message, 0, null);

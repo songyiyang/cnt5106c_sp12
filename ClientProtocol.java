@@ -153,6 +153,7 @@ System.out.println(system_msg);
 	}
 
 	else if (tokens[1].equals("GET")){
+	    //getMatchedRecords(socket, server);
 	    system_msg = "GET";
 	}
 
@@ -172,6 +173,54 @@ System.out.println(system_msg);
 	return system_msg;
 
     } // end method parseResponse
+
+    private static void getMatchedRecords(DatagramSocket socket,
+					  IPAddress server){
+
+	boolean getRecords = true;
+	DatagramPacket inPacket = null;
+	ProtocolCommand cmd = ProtocolCommand.TRANSMIT;
+
+	String name = null;
+	String address[] = null;
+
+	String message = null;
+	String response = null;
+	String tokens[] = null;
+
+	int i = 0;
+
+	while (getRecords){
+
+	    server = receive(socket, inPacket);
+	    response = Protocol.extractMessage(inPacket);
+	    tokens = response.split("\\s");
+
+	    if (tokens[2].equals("YAH")){
+		getRecords = false;
+	    }
+
+	    i = 3;
+
+	    while (i < tokens.length){
+
+		name = tokens[i];
+		address = tokens[i+1].split(":");
+
+		System.out.println("Record: name = " + name +
+				   "; IP = " + address[0] +
+				   "; port = " + address[1]);
+
+		i += 2;
+
+	    } // end while i
+
+	    message = ProtocolCommand.createPacket(cmd, "", server, "", 1, null);
+	    send(socket, message, server);
+
+	} // end while getRecords
+
+    } // end method getMatchedRecords
 
     public static IPAddress receive(DatagramSocket socket,
 				       DatagramPacket packet){
