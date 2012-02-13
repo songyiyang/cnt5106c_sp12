@@ -88,8 +88,6 @@ public class ServerProtocol extends Protocol
 
 	    matchedRecords = Server.findRecords(name, address);
 
-	    args = args.concat("" + matchedRecords.size());
-
 	    if (matchedRecords.size() == 0){
 		error = ErrorCode.RECORD_NOT_FOUND;
 	    }
