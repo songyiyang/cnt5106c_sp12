@@ -84,7 +84,7 @@ public class ServerProtocol extends Protocol
 	    String address = tokens[3];
 
 	    cmd = ProtocolCommand.GET;
-	    ErrorCode error = ErrorCode.RECORD_NOT_FOUND;
+	    error = ErrorCode.RECORD_NOT_FOUND;
 
 	}
 
