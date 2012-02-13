@@ -26,6 +26,7 @@ public class ClientProtocol extends Protocol
 	    String addr = "";
 	    String portStr = "";
 	    int port = 0;
+	    String args = "";
 
 	    String tokens[] = null;
 
@@ -88,6 +89,23 @@ public class ClientProtocol extends Protocol
 
 	    }
 
+		// Delete a record from the server
+	    else if (command.matches("^get(\\s[A-Za-z0-9\\.]){0,2}.*")){
+
+		name = parseParameter("Please enter the alphanumeric name " +
+			 "(max 80 chars): ","[A-Za-z0-9]{1,80}", tokens, 1,
+			 in, false);
+
+		addr = parseParameter("Please enter the IP address:",
+			 IPAddress.ipRegex, tokens, 2, in, true);
+
+		address = new IPAddress(addr, 0);
+
+		cmd = ProtocolCommand.GET;
+
+	    }
+
+
 		// Force the client to exit
 	    else if (command.equals("quit")){
 		system_msg = "quit";
@@ -106,7 +124,7 @@ public class ClientProtocol extends Protocol
 
 	    if (cmd != null){
 		system_msg = ProtocolCommand.createPacket(cmd, name,
-					        address, 0, false);
+					        address, args, 0, null);
 	    }
 
 	} // end if input.matches
@@ -122,10 +140,20 @@ public class ClientProtocol extends Protocol
 	String message = Protocol.extractMessage(packet);
 	String[] tokens = message.split("\\s+");
 
+	ErrorCode error = null;
+
 	System.out.println(message);
 
 	if (tokens[1].equals("INSERT")){
 	    system_msg = "INSERT";
+	}
+
+	else if (tokens[1].equals("DELETE")){
+	    system_msg = "DELETE";
+	}
+
+	else if (tokens[1].equals("GET")){
+	    system_msg = "GET";
 	}
 
 	else if (tokens[1].equals("GAMEOVER")){
@@ -134,6 +162,11 @@ public class ClientProtocol extends Protocol
 
 	else if (tokens[1].equals("TEST")){
 	    system_msg = "test";
+	}
+
+
+	if (error != null){
+	    System.out.println("error at server - " + error.getMessage());
 	}
 
 	return system_msg;

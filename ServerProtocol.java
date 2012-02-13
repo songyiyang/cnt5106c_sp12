@@ -16,11 +16,12 @@ public class ServerProtocol extends Protocol
 	String[] tokens = message.split("\\s+");
 
 	ProtocolCommand cmd = null;
-	boolean error = false;
+	ErrorCode error = null;
 
 	String name = null;
 	IPAddress ipAddress = null;
         int port = 0;
+	String args = "";
 
 	if (tokens[1].equals("INSERT")){
 
@@ -66,18 +67,24 @@ public class ServerProtocol extends Protocol
 	    }
 
 	    boolean deleted = Server.deleteRecord(name, ipAddress);
-System.out.println("is deleted? " + deleted);
+
+	    if (!deleted){
+		error = ErrorCode.RECORD_NOT_FOUND;
+	    }
+
 	    cmd = ProtocolCommand.DELETE;
 
 	}
 
-/*
+
 
 	else if (tokens[1].equals("GET")){
 
+
+
 	}
 
-*/
+
 
 	else if (tokens[1].equals("GAMEOVER")){
 	    cmd = ProtocolCommand.GAMEOVER;
@@ -89,7 +96,7 @@ System.out.println("is deleted? " + deleted);
 
 	if (cmd != null){
 	    system_msg = ProtocolCommand.createPacket(cmd, name,
-					              client, 1, error);
+					              client, args, 1, error);
 	    send(socket, system_msg, client);
 	}
 

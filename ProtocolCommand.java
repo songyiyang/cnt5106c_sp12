@@ -25,8 +25,8 @@ public enum ProtocolCommand {
     }
 
     public static String createPacket(ProtocolCommand cmd,
-			 String name, IPAddress address,
-			 int direction, boolean error){
+			 String name, IPAddress address, String args,
+			 int direction, ErrorCode error){
 
 	String msg = null;
 	String dir = null;
@@ -60,7 +60,10 @@ public enum ProtocolCommand {
 
 		break;
 
+		// format: DIR GET name ip {SUCCESS | ERROR code}
 	    case GET:
+
+		msg = msg.concat(" " + name + " " + address.toString());
 
 		break;
 
@@ -80,10 +83,25 @@ public enum ProtocolCommand {
 
 		break;
 
+		// format: DIR TRANSMIT #sent #total {name ip:port}+
+		// {SUCCESS | ERROR code}
+	    case TRANSMIT:
+
+		msg = msg.concat(" " + args);
+
+		break;
+
 	} // end switch cmd
 
 	if (payloadExists && direction == 1){
-	    msg = msg.concat(" " + successPayload);
+
+	    if (error == null){
+		msg = msg.concat(" " + successPayload);
+	    }
+	    else {
+		msg = msg.concat(" " + errorPayload + error.getNumber());
+	    }
+
 	}
 
 	return msg;
