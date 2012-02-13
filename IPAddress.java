@@ -86,8 +86,8 @@ public class IPAddress
 	    } // case: match 3 digit number
 	} // end for i
 
-	ipRegex = ipRegex.concat(subnets[0] + "\\\\." + subnets[1] +
-				 "\\\\." + subnets[2] + "\\\\." + subnets[3]);
+	ipRegex = ipRegex.concat(subnets[0] + "\\." + subnets[1] +
+				 "\\." + subnets[2] + "\\." + subnets[3]);
 	ipRegex = ipRegex.concat("$");
 
 	return ipRegex;
