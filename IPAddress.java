@@ -12,8 +12,13 @@ public class IPAddress
     private InetAddress ipNetAddress;
     private int port;
 
-    public static String ipRegex = "^(\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])" +
-		           "(\\.(\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])){3}$";
+    public static final String ipRegex = "^(\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d"+
+	     "|25[0-5])(\\.(\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])){3}$";
+
+    public static final String ipRegexWildcard = "^(\\d|[1-9]\\d|1\\d{2}" +
+	    "|2[0-4]\\d|25[0-5]|\\*\\d{0,2}|\\d\\*{1,2}|\\d\\*\\d|\\*\\d"
+	    "|\\*\\d\\*)(\\.(\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5]"+
+	    "|\\*\\d{0,2}|\\d{1,2}\\*|\\d\\*\\d|\\*\\d|\\*\\d\\*)){3}$";
 
     public IPAddress(){
 
@@ -80,8 +85,8 @@ public class IPAddress
 	    } // case: match 3 digit number
 	} // end for i
 
-	ipRegex = ipRegex.concat(subnets[0] + "\\." + subnets[1] +
-				 "\\." + subnets[2] + "\\." + subnets[3]);
+	ipRegex = ipRegex.concat(subnets[0] + "\\\\." + subnets[1] +
+				 "\\\\." + subnets[2] + "\\\\." + subnets[3]);
 	ipRegex = ipRegex.concat("$");
 
 	return ipRegex;
