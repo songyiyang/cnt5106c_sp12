@@ -80,7 +80,11 @@ public class ServerProtocol extends Protocol
 
 	else if (tokens[1].equals("GET")){
 
+	    name = tokens[2];
+	    String address = tokens[3];
 
+	    cmd = ProtocolCommand.GET;
+	    ErrorCode error = ErrorCode.RECORD_NOT_FOUND;
 
 	}
 
