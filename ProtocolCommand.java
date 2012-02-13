@@ -87,7 +87,9 @@ public enum ProtocolCommand {
 		// {SUCCESS | ERROR code}
 	    case TRANSMIT:
 
-		msg = msg.concat(" " + args);
+		if (direction == 0){
+		    msg = msg.concat(" " + args);
+		}
 
 		break;
 
