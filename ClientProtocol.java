@@ -215,7 +215,7 @@ System.out.println(system_msg);
 
 	    } // end while i
 
-	    message = ProtocolCommand.createPacket(cmd, "", server, "", 1, null);
+	    message = ProtocolCommand.createPacket(cmd, "", null, "", 1, null);
 	    send(socket, message, server);
 
 	} // end while getRecords
