@@ -93,11 +93,11 @@ public class ClientProtocol extends Protocol
 	    else if (command.matches("^get(\\s[A-Za-z0-9\\.]){0,2}.*")){
 
 		name = parseParameter("Please enter the alphanumeric name " +
-			 "(max 80 chars): ","[A-Za-z0-9]{1,80}", tokens, 1,
-			 in, false);
+			 "(max 80 chars): ","([A-Za-z0-9]{1,80}|\\*)",
+			 tokens, 1, in, false);
 
 		addr = parseParameter("Please enter the IP address:",
-			 IPAddress.ipRegex, tokens, 2, in, true);
+			 IPAddress.ipRegexWildcard, tokens, 2, in, false);
 
 		address = new IPAddress(addr, 0);
 
@@ -126,7 +126,7 @@ public class ClientProtocol extends Protocol
 		system_msg = ProtocolCommand.createPacket(cmd, name,
 					        address, args, 0, null);
 	    }
-
+System.out.println(system_msg);
 	} // end if input.matches
 
 	return system_msg;
