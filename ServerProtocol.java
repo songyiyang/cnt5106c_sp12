@@ -1,3 +1,4 @@
+import java.util.LinkedList;
 import java.net.DatagramSocket;
 import java.net.DatagramPacket;
 
@@ -22,6 +23,8 @@ public class ServerProtocol extends Protocol
 	IPAddress ipAddress = null;
         int port = 0;
 	String args = "";
+
+	LinkedList<Record> matchedRecords = null;
 
 	if (tokens[1].equals("INSERT")){
 
@@ -83,8 +86,15 @@ public class ServerProtocol extends Protocol
 	    name = tokens[2];
 	    String address = tokens[3];
 
+	    matchedRecords = Server.findRecords(name, address);
+
+	    args = args.concat("" + matchedRecords.size());
+
+	    if (matchedRecords.size() == 0){
+		error = ErrorCode.RECORD_NOT_FOUND;
+	    }
+
 	    cmd = ProtocolCommand.GET;
-	    error = ErrorCode.RECORD_NOT_FOUND;
 
 	}
 
@@ -104,11 +114,83 @@ public class ServerProtocol extends Protocol
 	    send(socket, system_msg, client);
 	}
 
+	if (cmd == ProtocolCommand.GET && error == null){
+	    sendMatchedRecords(socket, client, matchedRecords);
+	}
 
 	return system_msg;
 
     } // end method parseMessage
 
+
+    private static void sendMatchedRecords(DatagramSocket socket,
+			  IPAddress client, LinkedList<Record> matchedRecords){
+
+	String isEnd = " YAH";
+	String isNotEnd = " NAW";
+
+	int packetSize = 30;
+	int recordNum = 0;
+	int numberOfRecords = matchedRecords.size();
+
+	String name = null;
+	String address = null;
+	String message = "";
+	String pmessage = "";
+
+	String data = null;
+	byte[] dataBytes = null;
+	Record record = null;
+
+	String response = null;
+	DatagramPacket inPacket = null;
+	ProtocolCommand cmd = ProtocolCommand.TRANSMIT;
+
+	while (recordNum < numberOfRecords){
+
+	    record = matchedRecords.get(recordNum);
+	    name = record.getName();
+	    address = record.getIPAddress().toString();
+
+	    data = " " + name + " " + address;
+	    dataBytes = data.getBytes();
+
+	    if (packetSize + dataBytes.length < PACKET_SIZE){
+		message = message + data;
+		packetSize += dataBytes.length;
+	    }
+	    else {
+		message = isNotEnd + message;
+		pmessage = ProtocolCommand.createPacket(cmd, "", client,
+						       message, 0, null);
+		send(socket, pmessage, client);
+		client = receive(socket, inPacket);
+
+		response = Protocol.extractMessage(inPacket);
+
+		if (response.matches(".*(SUCCESS)$")){
+		    message = "";
+		}
+
+		continue;
+
+	    } // end else
+
+	    recordNum++;
+
+	} // end while recordNum
+
+	if (packetSize > 30) {
+	    message = isEnd + message;
+	    pmessage = ProtocolCommand.createPacket(cmd, "", client,
+						       message, 0, null);
+	    send(socket, pmessage, client);
+	    client = receive(socket, inPacket);
+
+	    response = Protocol.extractMessage(inPacket);
+	} // end if packetSize()
+
+    } // end method 
 
     public static IPAddress receive(DatagramSocket socket,
 				       DatagramPacket packet){
