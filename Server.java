@@ -110,4 +110,23 @@ public class Server
 
     } // end method deleteRecord
 
+    public static LinkedList<Record> findRecords(String name, String address){
+
+	String addressRegex = IPAddress.parseIPAddressRegex(address);
+	IPAddress ipRegex = new IPAddress(addressRegex);
+
+	LinkedList<Record> matchedRecords = new LinkedList<Record>();
+
+	for (Record temp : records){
+
+	    if (temp.matches(name, ipRegex)){
+		matchedRecords.addLast(temp);
+	    } // end if temp.matches
+
+	} // end for temp
+
+	return matchedRecords;
+
+    } // end method findRecords
+
 } // end class Server
