@@ -83,7 +83,7 @@ public enum ProtocolCommand {
 
 		break;
 
-		// format: DIR TRANSMIT #sent #total {name ip:port}+
+		// format: DIR TRANSMIT {YAH|NAW} {name ip:port}+
 		// {SUCCESS | ERROR code}
 	    case TRANSMIT:
 
