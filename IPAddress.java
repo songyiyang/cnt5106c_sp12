@@ -65,7 +65,7 @@ public class IPAddress
 	    subnets[i] = tokens[i];
 
 	    if (subnets[i].equals("*")){
-		subnets[i] = "(\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])";
+		subnets[i] = "(\\\\d|[1-9]\\\\d|1\\\\d{2}|2[0-4]\\\\d|25[0-5])";
 	    } // case: match all possible numbers
 	    else if (subnets[i].length() == 2){
 		if (subnets[i].charAt(0) == '*'){
