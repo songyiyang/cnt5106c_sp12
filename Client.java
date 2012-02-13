@@ -26,10 +26,6 @@ public class Client
 	try {
 	    socket = new DatagramSocket();
 	    wait = true;
-
-	    InetAddress host = InetAddress.getLocalHost();
-	    server = new IPAddress(host, port);
-
 	}
 	catch (SocketException e){
 	    System.out.println("client unable to connect to port "
@@ -57,6 +53,7 @@ public class Client
 
 	String prompt = "$ ";
 
+	    // Loop forever until shutdown signal sent
 	while (wait){
 
 		// Create new, empty packet
@@ -80,7 +77,12 @@ public class Client
 	    if (system_msg.equals("quit")){
 		break;
 	    }
+
+		// Program couldn't understand the output.
+		// Re-ask user for input.
 	    else if (system_msg.equals("WTF")){
+		System.out.println("wtf were you doing? try to enter " +
+				   "the command again.");
 		continue;
 	    }
 
@@ -93,12 +95,14 @@ public class Client
 		// Finally parse the response
 	    system_msg = ClientProtocol.parseResponse(socket, packetIn, server);
 
+		// If system gives the signal, shut program down
 	    if (system_msg.equals("game over")){
 		wait = false;
 	    }
 
 	} // end while true
 
+	    // Close the socket
 	try {
 	    socket.close();
 	}
