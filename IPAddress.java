@@ -50,8 +50,9 @@ public class IPAddress
 
 
     public boolean matches(IPAddress _ipAddress){
-	return this.ipAddress.matches(_ipAddress.getIPAddress());
-    }
+	String ipRegex = _ipAddress.getIPAddress();
+	return ipAddress.matches(ipRegex);
+    } // end method matches
 
     public static String parseIPAddressRegex(String ipRegex){
 
@@ -65,7 +66,7 @@ public class IPAddress
 	    subnets[i] = tokens[i];
 
 	    if (subnets[i].equals("*")){
-		subnets[i] = "(\\\\d|[1-9]\\\\d|1\\\\d{2}|2[0-4]\\\\d|25[0-5])";
+		subnets[i] = "(\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])";
 	    } // case: match all possible numbers
 	    else if (subnets[i].length() == 2){
 		if (subnets[i].charAt(0) == '*'){
