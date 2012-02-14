@@ -30,9 +30,7 @@ public class Client
 	catch (SocketException e){
 	    System.out.println("client unable to connect to port "
 			       + port);
-	}
-	catch (UnknownHostException e){
-	    e.printStackTrace();
+	    System.exit(1);
 	}
 
 
@@ -71,11 +69,17 @@ public class Client
 	    }
 
 		// Parse the input and return a system message
-	    system_msg = ClientProtocol.parseCommand(input);
+	    system_msg = ClientProtocol.parseCommand(input, socket);
 
 		// If user wants to close the client, do so
 	    if (system_msg.equals("quit")){
 		break;
+	    }
+
+		// If user set variables for server, loop back
+		// around so that s/he can begin sending commands
+	    else if (system_msg.equals("set")){
+		continue;
 	    }
 
 		// Program couldn't understand the output.

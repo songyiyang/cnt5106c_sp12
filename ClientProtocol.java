@@ -1,8 +1,12 @@
 import java.io.IOException;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.net.InetAddress;
 import java.net.DatagramSocket;
 import java.net.DatagramPacket;
+import java.net.SocketException;
+import java.net.UnknownHostException;
+import java.net.SocketTimeoutException;
 
 /**
  * @desc Interprets and handles responses
@@ -15,11 +19,34 @@ public class ClientProtocol extends Protocol
     private static String cmdRegex = "^(set|insert|delete|get|quit|" +
 				     "gameover|help|\\?).*$";
 
-    public static String parseCommand(String command){
+    private static boolean timeout = false;
+
+    /**
+     * Parse the response from the server. May invoke threads
+     * or other send/receive pairs in order to complete the
+     * the transaction.
+     *
+     * @param command
+     *    The command sent from the user.
+     * @param packet
+     *    The packet that contains the server's response.
+     * @param server
+     *    The IPAddress of the server.
+     *
+     * @return
+     *    A string representing a system message.
+     *    The message may represent something that should
+     *    be sent to the server, or that should be handled
+     *    solely by the client.
+     */
+    public static String parseCommand(String command, DatagramSocket socket){
 
 	    // Set default messages and cmd variables
 	String system_msg = "WTF";
 	ProtocolCommand cmd = null;
+
+	    // Reset the timeout flag
+	timeout = false;
 
 	if (command.matches(cmdRegex)){
 
@@ -55,7 +82,7 @@ public class ClientProtocol extends Protocol
 		    // Note the port can be anything that isn't 0
 		while (port > 0){
 		    portStr = parseParameter("Please enter the port number:",
-			 "[0-9]{4,5}", tokens, 3, in, false);
+			 "[1-9][0-9]*", tokens, 3, in, false);
 		    port = Integer.parseInt(portStr);
 		}
 
@@ -85,9 +112,9 @@ public class ClientProtocol extends Protocol
 
 		    // Get the port of the record to delete
 		    // This field is optional
-		while (port <= 1024 || port >= 65535){
+		while (port > 0){
 		    portStr = parseParameter("Please enter the port number:",
-			 "[0-9]{4,5}", tokens, 3, in, true);
+			 "[1-9][0-9]*", tokens, 3, in, true);
 
 		    if (portStr.equals("!")){
 			port = 0;
@@ -126,6 +153,63 @@ public class ClientProtocol extends Protocol
 
 	    }
 
+		// Set the address and port of the server
+	    else if (command.matches("^set(\\s[A-Za-z0-9\\.]){0,2}.*")){
+
+		IPAddress tempAddr = null;
+
+		    // Get the regex for the IP address
+		addr = parseParameter("Please enter the IP address:",
+			 IPAddress.ipRegex, tokens, 2, in, false);
+
+		    // The port number of the remote socket
+		    // Note the port can be anything that isn't 0
+		while (port > 0){
+		    portStr = parseParameter("Please enter the port number:",
+			 "[1-9][0-9]*", tokens, 3, in, false);
+		    port = Integer.parseInt(portStr);
+		}
+
+		    // Attempt to ping the remote server
+		try {
+
+		    int TIMEOUT = 1000 * 5;
+		    InetAddress tempInet = InetAddress.getByName(addr);
+		    tempAddr = new IPAddress(tempInet, port);
+
+		    String tempMsg = ProtocolCommand.createPacket(
+				   ProtocolCommand.TEST, "", null, "", 0, null);
+		    DatagramPacket packet = new DatagramPacket(
+					    new byte[PACKET_SIZE], PACKET_SIZE);
+
+		    socket.setSoTimeout(TIMEOUT);
+
+		    send(socket, tempMsg, tempAddr);
+		    tempAddr = receive(socket, packet);
+
+		}
+
+		catch (Exception e){ }
+
+		    // Reset the timeout counter
+		try {
+		    socket.setSoTimeout(0);
+		}
+		catch (SocketException e) { }
+
+
+		if (tempAddr == null){
+		    System.out.println("error: specified server unreachable");
+		    system_msg = "set";
+		}
+		else {
+		    System.out.println("Server IP = " + addr + ", " +
+				       "port = " + port);
+		    system_msg = "set " + tempAddr.toString();
+		}
+
+
+	    }
 
 		// Force the client to exit
 	    else if (command.equals("quit")){
@@ -182,6 +266,11 @@ public class ClientProtocol extends Protocol
 
 	ErrorCode error = null;
 
+	if (tokens[2].equals("ERROR")){
+	    int errorNumber = Integer.parseInt(tokens[3]);
+	    error = ErrorCode.getErrorCode(errorNumber);
+	}
+
 	if (tokens[1].equals("INSERT")){
 	    system_msg = "INSERT";
 	}
@@ -191,8 +280,13 @@ public class ClientProtocol extends Protocol
 	}
 
 	else if (tokens[1].equals("GET")){
-	    getMatchedRecords(socket, server);
+
+	    if (error == null){
+		getMatchedRecords(socket, server);
+	    }
+
 	    system_msg = "GET";
+
 	}
 
 	else if (tokens[1].equals("GAMEOVER")){
@@ -205,7 +299,7 @@ public class ClientProtocol extends Protocol
 
 
 	if (error != null){
-	    System.out.println("error at server - " + error.getMessage());
+	    System.out.println("error! " + error.getMessage());
 	}
 
 	return system_msg;
@@ -368,7 +462,17 @@ public class ClientProtocol extends Protocol
      */
     public static IPAddress receive(DatagramSocket socket,
 				       DatagramPacket packet){
-	return Protocol.receive(socket, packet);
+	IPAddress addr = null;
+
+	try {
+	    addr = Protocol.receive(socket, packet);
+	}
+	catch (SocketTimeoutException e){
+	    // do something here
+	}
+
+	return addr;
+
     } // end method receive
 
     /**
