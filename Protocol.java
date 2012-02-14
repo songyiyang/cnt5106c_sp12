@@ -1,6 +1,7 @@
 import java.io.IOException;
 import java.net.DatagramSocket;
 import java.net.DatagramPacket;
+import java.net.SocketTimeoutException;
 
 /**
  * @desc Defines methods required by both client and
@@ -47,15 +48,21 @@ public class Protocol
      *    originated.
      */
     protected static IPAddress receive(DatagramSocket socket,
-				       DatagramPacket packet){
+				       DatagramPacket packet)
+				throws SocketTimeoutException {
 
-	IPAddress address = null;
+	    IPAddress address = null;
 
 	    // Receive a packet sent to the socket
 	try {
 	    socket.receive(packet);
 	    address = new IPAddress(packet.getAddress(), packet.getPort());
 	}
+
+	catch (SocketTimeoutException e){
+	    throw new SocketTimeoutException();
+	}
+
 	catch (IOException e){
 	    // do something
 	}
