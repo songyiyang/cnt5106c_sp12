@@ -14,18 +14,44 @@ import java.net.DatagramPacket;
 public class Protocol
 {
 
+	// Default packet size is 2048 bytes
     public static final int PACKET_SIZE = 2048;
 
+   /**
+    * Remove the payload from the packet, removing any
+    * extra whitespace in the process.
+    *
+    * @param packet
+    *    The packet that contains the payload.
+    *
+    * @return
+    *    The String representation of the payload sent
+    *    to the client.
+    */
     protected static String extractMessage(DatagramPacket packet){
 	String message = new String(packet.getData());
 	return message.trim();
     } // end method extractMessage
 
+    /**
+     * Receive a packet from some server.
+     *
+     * @param socket
+     *    The DatagramSocket through which to talk to the
+     *    server.
+     * @param packet
+     *    The packet through which the data is received.
+     *
+     * @return
+     *    The IPAddress of the server from which the packet
+     *    originated.
+     */
     protected static IPAddress receive(DatagramSocket socket,
 				       DatagramPacket packet){
 
 	IPAddress address = null;
 
+	    // Receive a packet sent to the socket
 	try {
 	    socket.receive(packet);
 	    address = new IPAddress(packet.getAddress(), packet.getPort());
@@ -38,10 +64,25 @@ public class Protocol
 
     } // end method receive
 
-    protected static int send(DatagramSocket socket, String msg,
-		              IPAddress address){
+    /**
+     * Send a packet to some server.
+     *
+     * @param socket
+     *    The DatagramSocket through which to talk to the
+     *    server.
+     * @param msg
+     *    The message to send.
+     * @param packet
+     *    The packet through which the data is received.
+     *
+     * @return
+     *    TRUE if the send operation was successful, FALSE
+     *    otherwise.
+     */
+    protected static boolean send(DatagramSocket socket, String msg,
+		                  IPAddress address){
 
-	int success = 0;
+	boolean success = false;
 
 	byte[] msgBytes = msg.getBytes();
 	DatagramPacket packet = null;
@@ -52,7 +93,7 @@ public class Protocol
 		packet = new DatagramPacket(msgBytes, msgBytes.length,
 			    address.getIPNetAddress(), address.getPort());
 		socket.send(packet);
-		success = 1;
+		success = true;
 	    }
 
 	}
