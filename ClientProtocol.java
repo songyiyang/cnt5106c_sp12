@@ -80,9 +80,9 @@ public class ClientProtocol extends Protocol
 
 		    // The port number of the remote socket
 		    // Note the port can be anything that isn't 0
-		while (port > 0){
+		while (port <= 0){
 		    portStr = parseParameter("Please enter the port number:",
-			 "[1-9][0-9]*", tokens, 3, in, false);
+			 "^[1-9][0-9]*$", tokens, 3, in, false);
 		    port = Integer.parseInt(portStr);
 		}
 
@@ -112,9 +112,9 @@ public class ClientProtocol extends Protocol
 
 		    // Get the port of the record to delete
 		    // This field is optional
-		while (port > 0){
+		while (port <= 0){
 		    portStr = parseParameter("Please enter the port number:",
-			 "[1-9][0-9]*", tokens, 3, in, true);
+			 "^[1-9][0-9]*$", tokens, 3, in, true);
 
 		    if (portStr.equals("!")){
 			port = 0;
@@ -164,9 +164,9 @@ public class ClientProtocol extends Protocol
 
 		    // The port number of the remote socket
 		    // Note the port can be anything that isn't 0
-		while (port > 0){
+		while (port <= 0){
 		    portStr = parseParameter("Please enter the port number:",
-			 "[1-9][0-9]*", tokens, 3, in, false);
+			 "^[1-9][0-9]*$", tokens, 3, in, false);
 		    port = Integer.parseInt(portStr);
 		}
 
@@ -266,7 +266,7 @@ public class ClientProtocol extends Protocol
 
 	ErrorCode error = null;
 
-	if (tokens[2].equals("ERROR")){
+	if (tokens.length >= 3 && tokens[2].equals("ERROR")){
 	    int errorNumber = Integer.parseInt(tokens[3]);
 	    error = ErrorCode.getErrorCode(errorNumber);
 	}

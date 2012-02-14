@@ -17,7 +17,6 @@ public class Client
 
 	DatagramPacket packetIn = null;
 	byte[] dataIn = null;
-	int port = 1648;
 
 	boolean wait = false;
 
@@ -28,8 +27,6 @@ public class Client
 	    wait = true;
 	}
 	catch (SocketException e){
-	    System.out.println("client unable to connect to port "
-			       + port);
 	    System.exit(1);
 	}
 
@@ -50,6 +47,7 @@ public class Client
 	String system_msg = null;
 
 	String prompt = "$ ";
+	IPAddress server = null;
 
 	    // Loop forever until shutdown signal sent
 	while (wait){
@@ -78,7 +76,26 @@ public class Client
 
 		// If user set variables for server, loop back
 		// around so that s/he can begin sending commands
-	    else if (system_msg.equals("set")){
+	    else if (system_msg.matches("set.*")){
+
+		if (system_msg.matches("set .+")){
+		    String[] address = system_msg.split("\\s");
+		    String[] ip = address[1].split(":");
+
+		    InetAddress inetAddress = null;
+
+		    try {
+			inetAddress = InetAddress.getByName(ip[0]);
+		    }
+		    catch (UnknownHostException e){
+			// do nothing, it's been verified already
+		    }
+
+		    int port = Integer.parseInt(ip[1]);
+
+		    server = new IPAddress(inetAddress, port);
+		}
+
 		continue;
 	    }
 
@@ -87,6 +104,11 @@ public class Client
 	    else if (system_msg.equals("WTF")){
 		System.out.println("wtf were you doing? try to enter " +
 				   "the command again.");
+		continue;
+	    }
+
+	    else if (server == null){
+		System.out.println("must set server IP and port!");
 		continue;
 	    }
 
