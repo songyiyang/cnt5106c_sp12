@@ -1,6 +1,7 @@
 import java.util.LinkedList;
 import java.net.DatagramSocket;
 import java.net.DatagramPacket;
+import java.net.SocketTimeoutException;
 
 /**
  * @desc Interprets and handles messages
@@ -196,11 +197,21 @@ public class ServerProtocol extends Protocol
 
     public static IPAddress receive(DatagramSocket socket,
 				       DatagramPacket packet){
-	return Protocol.receive(socket, packet);
+	IPAddress addr = null;
+
+	try {
+	    addr = Protocol.receive(socket, packet);
+	}
+	catch (SocketTimeoutException e){
+
+	}
+
+	return addr;
+
     } // end method receive
 
-    public static int send(DatagramSocket socket, String msg,
-		              IPAddress address){
+    public static boolean send(DatagramSocket socket, String msg,
+		               IPAddress address){
 	return Protocol.send(socket, msg, address);
     } // end method send
 
