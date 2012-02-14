@@ -277,45 +277,6 @@ public class ClientProtocol extends Protocol
     } // end method getMatchedRecords
 
     /**
-     * Receive a packet from some server.
-     *
-     * @param socket
-     *    The DatagramSocket through which to talk to the
-     *    server.
-     * @param packet
-     *    The packet through which the data is received.
-     *
-     * @return
-     *    The IPAddress of the server from which the packet
-     *    originated.
-     */
-    public static IPAddress receive(DatagramSocket socket,
-				       DatagramPacket packet){
-	return Protocol.receive(socket, packet);
-    } // end method receive
-
-    /**
-     * Send a packet to some server.
-     *
-     * @param socket
-     *    The DatagramSocket through which to talk to the
-     *    server.
-     * @param msg
-     *    The message to send.
-     * @param packet
-     *    The packet through which the data is received.
-     *
-     * @return
-     *    TRUE if the send operation was successful, FALSE
-     *    otherwise.
-     */
-    public static boolean send(DatagramSocket socket, String msg,
-		              IPAddress address){
-	return Protocol.send(socket, msg, address);
-    } // end method send
-
-
-    /**
      * Request the user to enter properly-formatted data, for
      * use when filling out a command
      *
@@ -391,5 +352,43 @@ public class ClientProtocol extends Protocol
 	return value;
 
     } // end method parseParameter
+
+    /**
+     * Receive a packet from some server.
+     *
+     * @param socket
+     *    The DatagramSocket through which to talk to the
+     *    server.
+     * @param packet
+     *    The packet through which the data is received.
+     *
+     * @return
+     *    The IPAddress of the server from which the packet
+     *    originated.
+     */
+    public static IPAddress receive(DatagramSocket socket,
+				       DatagramPacket packet){
+	return Protocol.receive(socket, packet);
+    } // end method receive
+
+    /**
+     * Send a packet to some server.
+     *
+     * @param socket
+     *    The DatagramSocket through which to talk to the
+     *    server.
+     * @param msg
+     *    The message to send.
+     * @param packet
+     *    The packet through which the data is received.
+     *
+     * @return
+     *    TRUE if the send operation was successful, FALSE
+     *    otherwise.
+     */
+    public static boolean send(DatagramSocket socket, String msg,
+		              IPAddress address){
+	return Protocol.send(socket, msg, address);
+    } // end method send
 
 } // end class ClientProtocol
