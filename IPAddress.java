@@ -12,9 +12,12 @@ public class IPAddress
     private InetAddress ipNetAddress;
     private int port;
 
+	// Regular expression for IP address
     public static final String ipRegex = "^(\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d"+
 	     "|25[0-5])(\\.(\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])){3}$";
 
+	// Regular expression for IP address, allowing for 1-2
+	// *s for each subnet
     public static final String ipRegexWildcard = "^(\\d|[1-9]\\d|1\\d{2}" +
 	    "|2[0-4]\\d|25[0-5]|\\*\\d{0,2}|\\d\\*{1,2}|\\d\\*\\d|\\*\\d"+
 	    "|\\*\\d\\*)(\\.(\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5]"+
@@ -49,25 +52,56 @@ public class IPAddress
     }
 
 
+    /**
+     * Check to see if this IP address matches the supplied
+     * IPAddress regular expression.
+     *
+     * @param _ipAddress
+     *    IPAddress that represents some regular expression.
+     * 
+     * @return
+     *    TRUE if this IP address matches the regular expression,
+     *    FALSE otherwise.
+     */
     public boolean matches(IPAddress _ipAddress){
 	String ipRegex = _ipAddress.getIPAddress();
 	return ipAddress.matches(ipRegex);
     } // end method matches
 
+
+    /**
+     * Take a regular expression for an IP address and
+     * convert it into something Java can use as a regex.
+     *
+     * @param ipRegex
+     *    The String representation of the current regular
+     *    expression
+     *
+     * @return
+     *   The modified regular expression, as a String
+     */
     public static String parseIPAddressRegex(String ipRegex){
 
+	    // Break the IP address into 4 parts
 	String[] tokens = ipRegex.split("\\.");
+
+	    // The returned regex will be strict. Pattern must
+            // match exactly.
 	ipRegex = "^";
 
 	String[] subnets = new String[tokens.length];
 
+	    // Iterate through each part of the IP address
 	for (int i = 0; i < tokens.length; i++) {
 
 	    subnets[i] = tokens[i];
 
+		// Case 1: match all possible numbers (ie, *)
 	    if (subnets[i].equals("*")){
 		subnets[i] = "(\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])";
-	    } // case: match all possible numbers
+	    }
+
+		// Case 2: match 2 digit number (*d or d*)
 	    else if (subnets[i].length() == 2){
 		if (subnets[i].charAt(0) == '*'){
 		    subnets[i] = subnets[i].replaceFirst("\\*", "[1-9]");
@@ -75,7 +109,9 @@ public class IPAddress
 		if (subnets[i].matches("\\*")){
 		    subnets[i] = subnets[i].replaceFirst("\\*", "[0-9]");
 		}
-	    } // case: match 2 digit number
+	    }
+
+		// Case 3: match 3 digit number (ie, **d)
 	    else if (subnets[i].length() == 3){
 		if (subnets[i].charAt(0) == '*'){
 		    subnets[i] = subnets[i].replaceFirst("\\*", "[1-2]");
@@ -83,16 +119,20 @@ public class IPAddress
 		if (subnets[i].matches("\\*")){
 		    subnets[i] = subnets[i].replace("\\*","[0-5]");
 		}
-	    } // case: match 3 digit number
+	    }
+
 	} // end for i
 
+	    // Glue the pieces together
 	ipRegex = ipRegex.concat(subnets[0] + "\\." + subnets[1] +
 				 "\\." + subnets[2] + "\\." + subnets[3]);
+
+	    // Specify that pattern must be tight match
 	ipRegex = ipRegex.concat("$");
 
 	return ipRegex;
 
-    } // end parseIPAddressRegex
+    } // end method parseIPAddressRegex
 
     /**
      * Accessor methods
@@ -109,6 +149,10 @@ public class IPAddress
     public int getPort(){
 	return port;
     }
+
+    /**
+     * toString()
+     */
 
     public String toString(){
 
@@ -127,6 +171,6 @@ public class IPAddress
 
 	return output.toString();
 
-    }
+    } // end method toString
 
 } // end class IPAddress

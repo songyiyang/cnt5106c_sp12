@@ -32,13 +32,17 @@ public enum ProtocolCommand {
 	String dir = null;
 	boolean payloadExists = true;
 
+	    // DIR == SND
 	if (direction == 0){
 	    dir = sendHeader;
 	}
+
+	    // DIR == RCV
 	else {
 	    dir = receiveHeader;
 	}
 
+	    // Packet message initially looks like "{SND|RCV} COMMAND"
 	msg = String.format(packetHeader, dir, cmd.getCommand());
 
 	switch (cmd){
@@ -47,7 +51,9 @@ public enum ProtocolCommand {
 		// format: DIR INSERT name ip:port {SUCCESS | ERROR code}
 	    case INSERT:
 
-		msg = msg.concat(" " + name + " " + address.toString());
+		if (direction == 0){
+		    msg = msg.concat(" " + name + " " + address.toString());
+		}
 
 		break;
 
@@ -56,14 +62,18 @@ public enum ProtocolCommand {
 
 	    case DELETE:
 
-		msg = msg.concat(" " + name + " " + address.toString());
+		if (direction == 0){
+		    msg = msg.concat(" " + name + " " + address.toString());
+		}
 
 		break;
 
 		// format: DIR GET name ip {SUCCESS | ERROR code}
 	    case GET:
 
-		msg = msg.concat(" " + name + " " + address.toString());
+		if (direction == 0){
+		    msg = msg.concat(" " + name + " " + address.toString());
+		}
 
 		break;
 
@@ -95,11 +105,17 @@ public enum ProtocolCommand {
 
 	} // end switch cmd
 
+
+	    // Add "SUCCESS" or "ERROR code" to message
+            // if this is a RCV message and there
 	if (payloadExists && direction == 1){
 
+		// If no error, then success
 	    if (error == null){
 		msg = msg.concat(" " + successPayload);
 	    }
+
+		// Else error occurred, print out what happened
 	    else {
 		msg = msg.concat(" " + errorPayload + error.getNumber());
 	    }

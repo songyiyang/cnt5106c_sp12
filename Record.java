@@ -14,6 +14,20 @@ public class Record
 	ipAddress = _ipAddress;
     }
 
+    /**
+     * Check to see if the given name and IP regular expressions
+     * match those fields in the current record.
+     *
+     * @param _nameRegex
+     *    The regular expression with which to test against the
+     *    name field
+     * @param _ipAddressRegex
+     *    The regular expression with which to test against the
+     *    ipAddress field
+     *
+     * @return
+     *    TRUE if both fields match successfully, FALSE otherwise
+     */
     public boolean matches(String _nameRegex, IPAddress _ipAddressRegex){
 
 	_nameRegex = _nameRegex.replaceAll("\\*", ".*");
@@ -52,8 +66,12 @@ public class Record
     }
 
 
+    /**
+     * toString()
+     */
+
     public String toString(){
 	return name.concat(" " + ipAddress.toString());
-    }
+    } // end method toString
 
 } // end class Record
