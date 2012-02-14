@@ -11,11 +11,13 @@ import java.net.DatagramPacket;
 public class ClientProtocol extends Protocol
 {
 
-    private static String cmdRegex = "^(insert|delete|get|quit|" +
+	// Define the basic inputs
+    private static String cmdRegex = "^(set|insert|delete|get|quit|" +
 				     "gameover|help|\\?).*$";
 
     public static String parseCommand(String command){
 
+	    // Set default messages and cmd variables
 	String system_msg = "WTF";
 	ProtocolCommand cmd = null;
 
@@ -30,22 +32,28 @@ public class ClientProtocol extends Protocol
 
 	    String tokens[] = null;
 
+		// Need user input for most commands
 	    BufferedReader in = null;
 	    in = new BufferedReader(new InputStreamReader(System.in));
 
-	    tokens = command.split("\\s");
+		// Split the command into separate chunks
+	    tokens = command.split("\\s+");
 
 		// Insert a new record
 	    if (command.matches("^insert(\\s[A-Za-z0-9\\.]){0,3}.*")){
 
+		    // The name to insert at remote site
 		name = parseParameter("Please enter the alphanumeric name " +
 			 "(max 80 chars): ","[A-Za-z0-9]{1,80}", tokens, 1,
 			 in, false);
 
+		    // The IP address of the remote site
 		addr = parseParameter("Please enter the IP address:",
 			 IPAddress.ipRegex, tokens, 2, in, false);
 
-		while (port <= 1024 || port >= 65535){
+		    // The port number of the remote socket
+		    // Note the port can be anything that isn't 0
+		while (port > 0){
 		    portStr = parseParameter("Please enter the port number:",
 			 "[0-9]{4,5}", tokens, 3, in, false);
 		    port = Integer.parseInt(portStr);
@@ -60,17 +68,23 @@ public class ClientProtocol extends Protocol
 		// Delete a record from the server
 	    else if (command.matches("^delete(\\s[A-Za-z0-9\\.]){0,2}.*")){
 
+		    // Get the name of the record to delete
 		name = parseParameter("Please enter the alphanumeric name " +
 			 "(max 80 chars): ","[A-Za-z0-9]{1,80}", tokens, 1,
 			 in, false);
 
+		    // Get the IP address to delete
+		    // This field is optional
 		addr = parseParameter("Please enter the IP address:",
 			 IPAddress.ipRegex, tokens, 2, in, true);
 
+		    // If ignore sentinel was passed, null out variable
 		if (addr.equals("!")){
 		    addr = null;
 		}
 
+		    // Get the port of the record to delete
+		    // This field is optional
 		while (port <= 1024 || port >= 65535){
 		    portStr = parseParameter("Please enter the port number:",
 			 "[0-9]{4,5}", tokens, 3, in, true);
@@ -83,22 +97,29 @@ public class ClientProtocol extends Protocol
 		    port = Integer.parseInt(portStr);
 		}
 
+		    // Create IPAddress object. addr and port may be
+		    // set to ignore values, so it might not
+		    // represent a real IP/port pair
 		address = new IPAddress(addr, port);
 
 		cmd = ProtocolCommand.DELETE;
 
 	    }
 
-		// Delete a record from the server
+		// Get records from the server
 	    else if (command.matches("^get(\\s[A-Za-z0-9\\.]){0,2}.*")){
 
+		    // Get the regex for the name
 		name = parseParameter("Please enter the alphanumeric name " +
-			 "(max 80 chars): ","([A-Za-z0-9]{1,80}|\\*)",
+			 "(max 80 chars): ","([A-Za-z0-9]{1,80}|\\*{1})",
 			 tokens, 1, in, false);
 
+		    // Get the regex for the IP address
 		addr = parseParameter("Please enter the IP address:",
 			 IPAddress.ipRegexWildcard, tokens, 2, in, false);
 
+		    // Only the name and IP regex will be checked
+		    // against records, port is not important
 		address = new IPAddress(addr, 0);
 
 		cmd = ProtocolCommand.GET;
@@ -126,13 +147,31 @@ public class ClientProtocol extends Protocol
 		system_msg = ProtocolCommand.createPacket(cmd, name,
 					        address, args, 0, null);
 	    }
-System.out.println(system_msg);
+
 	} // end if input.matches
 
 	return system_msg;
 
     } // end method parseCommand
 
+    /**
+     * Parse the response from the server. May invoke threads
+     * or other send/receive pairs in order to complete the
+     * the transaction.
+     *
+     * @param socket
+     *    The DatagramSocket through which to talk to the
+     *    server.
+     * @param packet
+     *    The packet that contains the server's response.
+     * @param server
+     *    The IPAddress of the server.
+     *
+     * @return
+     *    A string representing some system message.
+     *    The client may act on the system or may
+     *    ignore it, depending on the type of message.
+     */
     public static String parseResponse(DatagramSocket socket,
 				       DatagramPacket packet,
 				       IPAddress server){
@@ -142,8 +181,6 @@ System.out.println(system_msg);
 	String[] tokens = message.split("\\s+");
 
 	ErrorCode error = null;
-
-	System.out.println(message);
 
 	if (tokens[1].equals("INSERT")){
 	    system_msg = "INSERT";
@@ -175,6 +212,19 @@ System.out.println(system_msg);
 
     } // end method parseResponse
 
+    /**
+     * Get records from the server. After a "get" command,
+     * if the server does not indicate an error, the server
+     * sends the matched records to the client. This method
+     * gets the records and prints them to the screen one
+     * by one.
+     *
+     * @param socket
+     *    The DatagramSocket through which to talk to the
+     *    server.
+     * @param server
+     *    The IPAddress of the server.
+     */
     private static void getMatchedRecords(DatagramSocket socket,
 					  IPAddress server){
 
@@ -226,17 +276,71 @@ System.out.println(system_msg);
 
     } // end method getMatchedRecords
 
+    /**
+     * Receive a packet from some server.
+     *
+     * @param socket
+     *    The DatagramSocket through which to talk to the
+     *    server.
+     * @param packet
+     *    The packet through which the data is received.
+     *
+     * @return
+     *    The IPAddress of the server from which the packet
+     *    originated.
+     */
     public static IPAddress receive(DatagramSocket socket,
 				       DatagramPacket packet){
 	return Protocol.receive(socket, packet);
     } // end method receive
 
-    public static int send(DatagramSocket socket, String msg,
+    /**
+     * Send a packet to some server.
+     *
+     * @param socket
+     *    The DatagramSocket through which to talk to the
+     *    server.
+     * @param msg
+     *    The message to send.
+     * @param packet
+     *    The packet through which the data is received.
+     *
+     * @return
+     *    TRUE if the send operation was successful, FALSE
+     *    otherwise.
+     */
+    public static boolean send(DatagramSocket socket, String msg,
 		              IPAddress address){
 	return Protocol.send(socket, msg, address);
     } // end method send
 
 
+    /**
+     * Request the user to enter properly-formatted data, for
+     * use when filling out a command
+     *
+     * @param prompt
+     *    The text that should display to the user.
+     * @param regexp
+     *    The regular expression against which to check the
+     *    user input.
+     * @param tokens
+     *    An array representing the command passed by the user.
+     *    Used to decide if the user passed in a value for the
+     *    command parameter.
+     * @param tokenIndex
+     *    The index of tokens that contains the passed in
+     *    parameter, if it exists.
+     * @param in
+     *    The input stream that will capture user input.
+     * @param optional
+     *    Flag used to determine if the parameter can be ignored
+     *    by the user.
+     *
+     * @return
+     *    A String representing the value passed in by 
+     *    the user.
+     */
     private static String parseParameter(String prompt, String regexp,
 					 String[] tokens, int tokenIndex,
 					 BufferedReader in, boolean optional){
@@ -244,30 +348,42 @@ System.out.println(system_msg);
 	String value = "";
 	String input = "";
 
+	    // If this parameter is optional, tell the user how
+            // to skip entering this parameter
 	if (optional){
 	    prompt = prompt.concat(("(type '!' to skip)"));
 	}
 
+	    // Check to see if the user already passed
+	    // the parameter
 	if (tokens.length >= tokenIndex+1 &&
 	    tokens[tokenIndex].matches(regexp)){
 	    value = tokens[tokenIndex];
 	}
 
+	    // Keep looping until user passes in an acceptable value
 	while (!input.matches(regexp)){
 
+		// Print out the prompt for input
 	    System.out.print(prompt + " ");
 
+		// Read in the parameter
 	    try {
 		 input = in.readLine();
 	    }
 	    catch (IOException e){ }
 
+		// If the parameter is optional, and user
+		// wants to ignore parameter, then break
+		// from loop
 	    if (optional && input.equals("!")){
 		break;
 	    }
 
 	} // end while !input.matches()
 
+	    // If something wasn't initially passed,
+	    // get the input that the user passed
 	if (value.equals("")){
 	    value = input;
 	}
