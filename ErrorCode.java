@@ -10,7 +10,8 @@ public enum ErrorCode
     PACKET_EXPLODED(777, "packet inexplicably blew up"),
     TIMEOUT(1973, "server's response timed out - it is wasting the "+
                   "hours in an offhand way"),
-    RECORD_NOT_FOUND(404, "cannot find record");
+    RECORD_NOT_FOUND(404, "cannot find record"),
+    SERVER_BUSY(9876, "server is busy, go away!");
 
     private int number;
     private String message;
@@ -49,6 +50,13 @@ public enum ErrorCode
 
 		ec = ErrorCode.TIMEOUT;
 		break;
+
+		// Server is busy with something
+	    case 1973:
+
+		ec = ErrorCode.SERVER_BUSY;
+		break;
+
 
 	} // end switch code
 
