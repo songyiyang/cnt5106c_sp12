@@ -18,10 +18,12 @@
 
 4.  Messages
   a.  General Structure
-  b.  INSERT
-  c.  DELETE
-  d.  GET
-  e.  TRANSMIT
+  b.  Types
+    i.  INSERT
+   ii.  DELETE
+  iii.  GET
+   iv.  TRANSMIT
+  c. Error Codes
 
 5. Known Problems
 
@@ -131,3 +133,79 @@ the fields.
  4. Messages
 ============================================
 
+a. Basic Structure
+
+The following represent the messages between client and server during an
+exchange. The basic structure of these messages is
+
+DIRECTION COMMAND [[name] [IP:port] [args]] [{SUCCESS | ERROR code}]
+
+where:
+
+    1. DIRECTION = SND (for initial requests) or RCV (for acknowledgements);
+    2. COMMAND = one of the commands listed later in this section;
+    3. [name] [port] [args] = a name, IP/port and list of optional arguments; and
+    4. {SUCCESS| ERROR code} = a status string indicating successful completion
+       of the specified task or a specific error condition.
+
+Typically, for RCV messages, there are no additional arguments; there is only the
+status message. Conversely SND messages do not have status messages but will have
+some sort of argument list.
+
+b. Types of Messages
+
+  i.  INSERT
+
+    SND INSERT {name} {IP:port}
+    RCV INSERT {SUCCESS | ERROR code}
+
+ ii.  DELETE
+
+    SND DELETE {name} { {IP|"null"}:{port|0} }
+    RCV DELETE  {SUCCESS | ERROR code}
+
+iii.  GET
+
+    SND GET {nameRegex} {IPregex}
+    RCV DELETE {SUCCESS | ERROR code}
+
+    GET indicates to the server to retrieve records off the name
+    and IP regular expressions entered by the user. This request does
+    not actually retrieve records - a successful GET is followed by
+    one or more TRANSMIT messages (see below) - but is used to see
+    if records do exist.
+
+    When the server receives a GET, it processes the regular expressions
+    and then attempts to match records based off of them. If there are
+    any records the server will return with SUCCESS and begin sending
+    TRANSMIT messages. If there are no records a "record not found" error
+    is returned.
+
+ iv.  TRANSMIT
+
+    SND TRANSMIT { {YAH|NAW} {name IP:port}+ }
+    RCV TRANSMIT {SUCCESS | ERROR code}
+
+    TRANSMIT messages follow a successful GET acknowledgement. name
+    and IP:port fields are unused here; only the args field is needed.
+
+    Within the args field, two types of fields exist. The first is an
+    indication of whether or not the current packet is the last such packet
+    of records. YAH means there are no more records, while NAW means the
+    opposite. This indicates to the client whether or not all records
+    have been transmitted.
+
+    The second lists of all the records found by the server. The server
+    lists the name of the record and the IP and port of the record for all
+    records returned.
+
+
+  v.  GAMEOVER
+
+    SND GAMEOVER
+    RCV GAMEOVER
+
+    GAMEOVER is unique in that only the shutdown message is sent; no
+    additional parameters are used.
+
+c. Error Codes
