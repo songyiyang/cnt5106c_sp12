@@ -1,0 +1,133 @@
+*******************************************************************
+
+ Project 1 Documentation
+
+*******************************************************************
+
+=====================================
+ Table of Contents
+=====================================
+
+1.  Compilation
+
+2.  Basic Usage
+  a.  Client
+  b.  Server
+
+3. Client Commands
+
+4.  Messages
+  a.  General Structure
+  b.  INSERT
+  c.  DELETE
+  d.  GET
+  e.  TRANSMIT
+
+5. Known Problems
+
+============================================
+ 1. Compilation
+============================================
+
+Compilation is simple. A makefile is provided for convenient
+use. Simply type
+
+make
+
+and the program will compile. When cleaning the current directory
+of files, type
+
+make clean
+
+and all the class files will be removed.
+
+============================================
+ 2. Basic Usage
+============================================
+
+a. Client
+
+To use the client, simply type
+
+java Client
+
+and the client application will start. The client establishes UDP
+connections with servers and communicates with them by translating
+user input into special message packets. Each time a send/receive
+pair is done, the user is prompted for input at the dollar sign ($),
+much as what one does in BASH. If an error occurs, or if the command
+submitted to the ClientProtocol is unknown, errors will appear on the
+screen.
+
+**NOTE** The client initially is not connected to any server. The user
+must first give the application an IP and port on which to connect. Please
+see Section 3: Client Commands for the method in which to do this.
+
+b. Server
+
+To use the server, simply type
+
+java Server [port]
+
+and the client application will start. Note that the user may start
+the server with a given port number. In fact, there are three possible
+ways that the server can get a port number:
+
+    1. Passed as argument to application;
+    2. Specified in config file;
+    3. Specified at 8080.
+
+The order given indicates the preference given when determining the port.
+That is, if the user passes a non valid port number (outside of the range
+1024 <= port# <= 65535) via command line, the application tries to get the
+port from the config file. If for some reason the config file is unable to
+return the port number, the port is simply specified as 8080.
+
+Once started, the server is self-running. It will continue operating until
+a client issues a GAMEOVER packet. (See Section 3: Client Commands for more.)
+Otherwise, the server will run until stopped by the user.
+
+============================================
+ 3. Client Commands
+============================================
+
+The following are the commands the client can perform. This section does not
+deal with the actual message packets that are sent between the client and
+server. Arguments denoted in [] are optional, while those denoted in {} are
+required. Finally, arguments must be typed in as the user is prompted fill in
+the fields.
+
+- set {IP} {port}
+
+  Tells the application to use the given IP and port pair as the server
+  to contact. A test ping is done to ensure that the server exists; if it does
+  not, or if it does not respond within 5 seconds, an error message is printed out
+  and the client's variables are not set to send to that IP/port pair.
+
+- insert {name} {IP} {port}
+
+  Inserts the name and IP/port pair into the server's records database.
+
+- delete {name} [IP] [port]
+
+  Deletes the named record from the server's records database. If the IP and
+  port are specified as well, they must also match those provided in the record
+  in order to delete the record.
+
+- get {name | name regex} {IP | IP regex}
+  Get searches for records in the remote server that match the inputs
+  provided by the client. For the name, the user may specify an alphanumeric
+  string or simply the * wildcard. For the IP address, one or all the
+  subcomponents may specify numeric characters or the wildcard *. The server
+  takes this information and then attempts to find records that match
+
+- quit
+  Closes the client application. The server continues to run.
+
+- gameover
+  Closes the client application AND closes the server application.
+
+============================================
+ 4. Messages
+============================================
+
