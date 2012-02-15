@@ -80,8 +80,11 @@ public enum ProtocolCommand {
 		// format: DIR GAMEOVER {SUCCESS | ERROR code}
 	    case GAMEOVER:
 
-		    // No payload to send
-		payloadExists = false;
+		    // While no data is sent, in future server
+		    // may send error code. For now, server
+		    // will always send SUCCESS with this
+		    // message.
+		payloadExists = true;
 
 		break;
 

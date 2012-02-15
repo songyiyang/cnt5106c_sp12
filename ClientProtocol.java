@@ -299,7 +299,7 @@ public class ClientProtocol extends Protocol
 
 
 	if (error != null){
-	    System.out.println("error! " + error.getMessage());
+	    System.out.println("error: " + error.getMessage());
 	}
 
 	return system_msg;
