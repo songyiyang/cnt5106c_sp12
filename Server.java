@@ -9,7 +9,7 @@ import java.util.LinkedList;
 public class Server
 {
 
-//    private ConfigFile config;
+    private static ConfigFile config;
     private static DatagramSocket socket;
     private static int port;
 
@@ -18,6 +18,9 @@ public class Server
 
 
     public static void main(String[] args){
+
+	    // Determine this host's IP and port
+	determineIPAndPortNumber(args);
 
 	    // Define a packet with which to receive data
 	DatagramPacket packetIn = null;
@@ -45,7 +48,6 @@ public class Server
 	}
 
 	String system_msg = null;
-
 
 	    // Loop forever until shutdown signal sent
 	while (wait){
@@ -144,6 +146,70 @@ public class Server
 	return deleted;
 
     } // end method deleteRecord
+
+    /**
+     * Prints out the IP and port number of the server.
+     * This method also determines what the port number 
+     * will be.
+     * 
+     * @param args[]
+     *    An array of Strings as passed to main()
+     * 
+     */
+    private static void determineIPAndPortNumber(String args[]){
+
+	config = new ConfigFile("config.ini");
+	boolean finished = false;
+
+	int selectedPort = 0;
+
+	    // Highest priority is given to command-line argument
+	if (args.length >= 1){
+		selectedPort = Integer.parseInt(args[0]);
+	    try {
+		if (selectedPort >= 1024 && selectedPort <= 65535){
+		    finished = true;
+		}
+	    }
+	    catch (NumberFormatException e){ 
+
+	    }
+	} // end if args.length
+
+	    // If no argument is passed, or passed arg was not a valid
+	    // port number, read in the configuration file
+	if (!finished){
+		// Second-highest priority is given to server config file
+	    selectedPort = config.getPort();
+
+	    if (selectedPort >= 1024 && selectedPort <= 65535){
+		finished = true;
+	    }
+	}
+
+
+	    // If someone modified the config file to have an invalid
+	    // port, then randomly choose one. it's getting reported to the
+	    // user anyhow, until it gets changed of course.
+	if (!finished){
+	    selectedPort = 8080;
+	    finished = true;
+	}
+
+	    
+	port = selectedPort;
+
+	InetAddress host = null;
+
+	    // Print out IP address and port
+	try {
+	    host = InetAddress.getLocalHost();
+	    System.out.println("IP is " + host.getHostAddress() +
+			       ", port is " + port);
+	}
+	catch (UnknownHostException e){ }
+
+    } // end determineIPAndPortNumber
 
     /**
      * Find records that match the given regular expressions.
