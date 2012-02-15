@@ -222,8 +222,7 @@ There are some error codes defined that may be encountered when using the
 system. The following error codes and enumerated types are defined in the
 ErrorCode class:
 
-    - 72 (FAIL_WHALE): An unexpected error occurred. Used in the INSERT
-      command.
+    - 72 (FAIL_WHALE): An unexpected error occurred.
 
     - 404 (RECORD_NOT_FOUND): The server was unable to find a valid record.
       This message is passed in the DELETE and GET commands.
