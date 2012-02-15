@@ -10,22 +10,27 @@
 
 1.  Compilation
 
-2.  Basic Usage
+2. Known Problems
+
+3.  Basic Usage
   a.  Client
+
   b.  Server
 
-3. Client Commands
+4. Client Commands
 
-4.  Messages
+5.  Messages
   a.  General Structure
+
   b.  Types
     i.  INSERT
    ii.  DELETE
   iii.  GET
    iv.  TRANSMIT
+    v.  GAMEOVER
+
   c. Error Codes
 
-5. Known Problems
 
 ============================================
  1. Compilation
@@ -199,13 +204,36 @@ iii.  GET
     lists the name of the record and the IP and port of the record for all
     records returned.
 
-
   v.  GAMEOVER
 
     SND GAMEOVER
-    RCV GAMEOVER
+    RCV GAMEOVER {SUCCESS | ERROR code}
 
-    GAMEOVER is unique in that only the shutdown message is sent; no
-    additional parameters are used.
+    GAMEOVER tells the server to shut down in addition to the client.
+    If the acknowledgement returns successfully then both client and
+    server shut down. If the server is busy processing then it will
+    return a SERVER_BUSY error indicating as such. In such an event
+    the client will not shut down and must either try to resend the
+    message or simply close itself.
 
 c. Error Codes
+
+There are some error codes defined that may be encountered when using the
+system. The following error codes and enumerated types are defined in the
+ErrorCode class:
+
+    - 72 (FAIL_WHALE): An unexpected error occurred. Used in the INSERT
+      command.
+
+    - 404 (RECORD_NOT_FOUND): The server was unable to find a valid record.
+      This message is passed in the DELETE and GET commands.
+
+    - 777 (PACKET_EXPLODED): A packet loss was detected by the receiver.
+
+    - 1973 (TIMEOUT): The client waited for a response from the server
+      within some time frame but did not get one. Used primarily by the
+      client when testing its server configuration.
+
+    - 9876 (SERVER_BUSY): The client has indicated to the server that
+      it should shut down (using the GAMEOVER message) but the server cannot
+      stop because it is busy processing something.
