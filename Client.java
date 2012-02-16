@@ -102,8 +102,7 @@ public class Client
 		// Program couldn't understand the output.
 		// Re-ask user for input.
 	    else if (system_msg.equals("WTF")){
-		System.out.println("wtf were you doing? try to enter " +
-				   "the command again.");
+		System.out.println("command not understood");
 		continue;
 	    }
 
@@ -123,7 +122,7 @@ public class Client
 
 		// If system gives the signal, shut program down
 	    if (system_msg.equals("game over")){
-		wait = false;
+		server = null;
 	    }
 
 	} // end while true

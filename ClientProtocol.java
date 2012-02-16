@@ -111,7 +111,7 @@ public class ClientProtocol extends Protocol
 
 		    // Get the port of the record to delete
 		    // This field is optional
-		while (port < 1024 && port > 65535){
+		while (port < 1024 || port > 65535){
 		    portStr = parseParameter("Please enter the port number:",
 			 "^[1-9][0-9]{3,4}$", tokens, 3, in, true);
 
@@ -163,7 +163,7 @@ public class ClientProtocol extends Protocol
 
 		    // The port number of the remote socket
 		    // Note the port can be anything that isn't 0
-		while (port < 1024 && port > 65535){
+		while (port < 1024 || port > 65535){
 		    portStr = parseParameter("Please enter the port number:",
 			 "^[1-9][0-9]{3,4}$", tokens, 3, in, false);
 		    port = Integer.parseInt(portStr);
