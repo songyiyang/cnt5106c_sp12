@@ -77,12 +77,11 @@ public class ClientProtocol extends Protocol
 		    // The IP address of the remote site
 		addr = parseParameter("Please enter the IP address:",
 			 IPAddress.ipRegex, tokens, 2, in, false);
-
 		    // The port number of the remote socket
 		    // Note the port can be anything that isn't 0
-		while (port <= 0){
+		while (port < 1024 || port > 65535){
 		    portStr = parseParameter("Please enter the port number:",
-			 "^[1-9][0-9]*$", tokens, 3, in, false);
+			 "^[1-9][0-9]{3,4}$", tokens, 3, in, false);
 		    port = Integer.parseInt(portStr);
 		}
 
@@ -112,9 +111,9 @@ public class ClientProtocol extends Protocol
 
 		    // Get the port of the record to delete
 		    // This field is optional
-		while (port <= 0){
+		while (port < 1024 && port > 65535){
 		    portStr = parseParameter("Please enter the port number:",
-			 "^[1-9][0-9]*$", tokens, 3, in, true);
+			 "^[1-9][0-9]{3,4}$", tokens, 3, in, true);
 
 		    if (portStr.equals("!")){
 			port = 0;
@@ -164,9 +163,9 @@ public class ClientProtocol extends Protocol
 
 		    // The port number of the remote socket
 		    // Note the port can be anything that isn't 0
-		while (port <= 0){
+		while (port < 1024 && port > 65535){
 		    portStr = parseParameter("Please enter the port number:",
-			 "^[1-9][0-9]*$", tokens, 3, in, false);
+			 "^[1-9][0-9]{3,4}$", tokens, 3, in, false);
 		    port = Integer.parseInt(portStr);
 		}
 
@@ -216,7 +215,7 @@ public class ClientProtocol extends Protocol
 		system_msg = "quit";
 	    }
 
-		// Shut down client and server
+		// Shut down server
 	    else if (command.equals("kill")){
 		cmd = ProtocolCommand.GAMEOVER;
 	    }
