@@ -15,8 +15,8 @@ import java.net.SocketTimeoutException;
 public class Protocol
 {
 
-	// Default packet size is 2048 bytes
-    public static final int PACKET_SIZE = 2048;
+	// Default packet size is 1024 bytes
+    public static final int PACKET_SIZE = 1024;
 
    /**
     * Remove the payload from the packet, removing any
