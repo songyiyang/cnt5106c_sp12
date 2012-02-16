@@ -68,16 +68,19 @@ public enum ProtocolCommand {
 
 		break;
 
-		// format: DIR GET name ip {SUCCESS | ERROR code}
+		// format: DIR GET name ip [#matches] {SUCCESS | ERROR code}
 	    case GET:
 
 		if (direction == 0){
 		    msg = msg.concat(" " + name + " " + address.toString());
 		}
+		else {
+		    msg = msg.concat(" " + args);
+		}
 
 		break;
 
-		// format: DIR GAMEOVER {SUCCESS | ERROR code}
+		// format: DIR GAMEOVER [MSG]{SUCCESS | ERROR code}
 	    case GAMEOVER:
 
 		    // While no data is sent, in future server

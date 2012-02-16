@@ -31,6 +31,7 @@
 
   c. Error Codes
 
+6. Test Cases
 
 ============================================
  1. Compilation
@@ -87,18 +88,25 @@ the server with a given port number. In fact, there are three possible
 ways that the server can get a port number:
 
     1. Passed as argument to application;
-    2. Specified in config file;
+    2. Specified in config.ini;
     3. Specified at 8080.
 
 The order given indicates the preference given when determining the port.
 That is, if the user passes a non valid port number (outside of the range
 1024 <= port# <= 65535) via command line, the application tries to get the
 port from the config file. If for some reason the config file is unable to
-return the port number, the port is simply specified as 8080.
+return a valid port number, the port is simply specified as 8080.
 
 Once started, the server is self-running. It will continue operating until
 a client issues a GAMEOVER packet. (See Section 3: Client Commands for more.)
 Otherwise, the server will run until stopped by the user.
+
+On shutdown, the server will serialize the records it has into Records.db.
+This file is opened on startup, so any records placed in it will be
+automatically inserted. The following format defines how Records.db
+expects the serialized records to look like:
+
+name; IP; port
 
 ============================================
  4. Client Commands
@@ -107,10 +115,14 @@ Otherwise, the server will run until stopped by the user.
 The following are the commands the client can perform. This section does not
 deal with the actual message packets that are sent between the client and
 server. Arguments denoted in [] are optional, while those denoted in {} are
-required. Finally, arguments must be typed in as the user is prompted fill in
-the fields.
+required.
 
-- set {IP} {port}
+Finally, the user may supply arguments in the command, or may wait for the
+client application to ask for the information. Any information passed in
+via the initial user input is checked against the expected input, and
+if it fails the check the user will be prompted to enter valid data.
+
+- server {IP} {port}
 
   Tells the application to use the given IP and port pair as the server
   to contact. A test ping is done to ensure that the server exists; if it does
@@ -121,24 +133,35 @@ the fields.
 
   Inserts the name and IP/port pair into the server's records database.
 
-- delete {name} [IP] [port]
+- delete {name} {IP|"null"} {port|0}
 
   Deletes the named record from the server's records database. If the IP and
   port are specified as well, they must also match those provided in the record
   in order to delete the record.
 
-- get {name | name regex} {IP | IP regex}
+  "null" and 0 both are used to indicate that the field is to be ignored
+  during the search for the record. Should the server get a message
+  with "null" in the IP field, for example, the server will not consider
+  IP addresses during the process of finding a match. 
+
+- find {name | name regex} {IP | IP regex}
   Get searches for records in the remote server that match the inputs
   provided by the client. For the name, the user may specify an alphanumeric
   string or simply the * wildcard. For the IP address, one or all the
-  subcomponents may specify numeric characters or the wildcard *. The server
-  takes this information and then attempts to find records that match
+  subcomponents may specify numeric characters or the wildcard *.
+
+  The server takes this information and then attempts to find records
+  that match the given input. A RECORD_NOT_FOUND error is generated
+  if there are no records to report. Otherwise, the client receives
+  the number of matched records and the records themselves.
 
 - quit
   Closes the client application. The server continues to run.
 
-- gameover
-  Closes the client application AND closes the server application.
+- kill
+  Closes the server application. The client application continues to
+  run, but the last known server IP address is discarded (since the
+  server has shut down).
 
 ============================================
  5. Messages
@@ -170,15 +193,31 @@ b. Types of Messages
     SND INSERT {name} {IP:port}
     RCV INSERT {SUCCESS | ERROR code}
 
+    INSERT inserts the name/IP:port pair into the records list
+    if a record does not exist with the given name. If the name
+    currently exists, a FAIL_WHALE error code is generated (see
+    below).
+
  ii.  DELETE
 
     SND DELETE {name} { {IP|"null"}:{port|0} }
     RCV DELETE  {SUCCESS | ERROR code}
 
+    DELETE deletes the specified record, if one can be found. The
+    only field required to delete a record is the name, but the
+    server will attempt to match against records with as much
+    information is supplied. Thus, if a user supplies an IP address
+    and no port, then the server will search for the record with the
+    given name AND IP address. If a port is supplied, that is checked
+    along with the name (and IP address, if requested by the user).
+
+    If no records are found, a RECORD_NOT_FOUND error is sent to the
+    client.
+
 iii.  GET
 
     SND GET {nameRegex} {IPregex}
-    RCV DELETE {SUCCESS | ERROR code}
+    RCV GET {#records} {SUCCESS | ERROR code}
 
     GET indicates to the server to retrieve records off the name
     and IP regular expressions entered by the user. This request does
@@ -188,9 +227,9 @@ iii.  GET
 
     When the server receives a GET, it processes the regular expressions
     and then attempts to match records based off of them. If there are
-    any records the server will return with SUCCESS and begin sending
-    TRANSMIT messages. If there are no records a "record not found" error
-    is returned.
+    any records the server will return with the number of records and SUCCESS
+    and then begin sending TRANSMIT messages. If there are no records,
+    #records = 0 and a "record not found" error is returned.
 
  iv.  TRANSMIT
 
@@ -213,7 +252,7 @@ iii.  GET
   v.  GAMEOVER
 
     SND GAMEOVER
-    RCV GAMEOVER {SUCCESS | ERROR code}
+    RCV GAMEOVER {MSG} {SUCCESS | ERROR code}
 
     GAMEOVER tells the server to shut down in addition to the client.
     If the acknowledgement returns successfully then both client and
@@ -221,6 +260,9 @@ iii.  GET
     return a SERVER_BUSY error indicating as such. In such an event
     the client will not shut down and must either try to resend the
     message or simply close itself.
+
+    Note that the server can send any kind of message in response
+    to a kill command.
 
 c. Error Codes
 
@@ -242,3 +284,34 @@ ErrorCode class:
     - 9876 (SERVER_BUSY): The client has indicated to the server that
       it should shut down (using the GAMEOVER message) but the server cannot
       stop because it is busy processing something.
+
+============================================
+ 6. Test Cases
+============================================
+
+The following are test cases that can be used to test the system
+functionality.
+
+INSERT
+- insert test 1.1.1.1 1234 - should succeed
+- insert test 2.21.245.92 5462 - should fail, 'test' already exists
+- insert test1 2.21.245.92 5462 - should succeed
+- insert test2 43.34.65.65 1928 - should succeed
+- insert test3 42.42.42.42 7373 - should succeed
+- insert test4 192.168.6.1 1111 - should succeed
+- insert test5 75.75.75.75 3192 - should succeed
+
+DELETE
+- delete test56 - should fail, no record named 'test5'
+- delete test2 - should succeed, record exists
+- delete test 2.2.2.2 1234 - should fail, IP address does not match record's
+- delete test 1.1.1.1 2134 - should fail, port does not match record's
+- delete test 1.1.1.1 1234 - should succeed, all fields match
+
+GET/TRANSMIT
+- find test *.*.*.* - should fail, no records named 'test'
+- find * *.*.*.* - should find test1, test3-test5
+- find * 4*.*.42.* - should find test3
+
+GAMEOVER
+- kill - should return with message "game over, man! game over!"

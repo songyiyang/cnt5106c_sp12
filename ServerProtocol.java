@@ -113,6 +113,9 @@ public class ServerProtocol extends Protocol
 		error = ErrorCode.RECORD_NOT_FOUND;
 	    }
 
+	    args = "" + matchedRecords.size();
+
+
 	    cmd = ProtocolCommand.GET;
 	    system_msg = "get";
 

@@ -267,7 +267,7 @@ public class ClientProtocol extends Protocol
 
 	int eIndex = 2;
 
-	if (tokens[1].equals("GAMEOVER")){
+	if (tokens[1].equals("GAMEOVER") || tokens[1].equals("GET")){
 	    eIndex = 3;
 	}
 
@@ -288,6 +288,7 @@ public class ClientProtocol extends Protocol
 	else if (tokens[1].equals("GET")){
 
 	    if (error == null){
+		System.out.println(tokens[2] + " record(s) found:\n");
 		getMatchedRecords(socket, server);
 	    }
 
@@ -297,9 +298,12 @@ public class ClientProtocol extends Protocol
 
 	else if (tokens[1].equals("GAMEOVER")){
 
-	    tokens[2] = tokens[2].replaceAll("_", " ");
-	    System.out.println("server's response: " + tokens[2]);
-	    system_msg = "game over";
+	    if (error == null){
+		tokens[2] = tokens[2].replaceAll("_", " ");
+		System.out.println("server's response: " + tokens[2]);
+		system_msg = "game over";
+	    }
+
 	}
 
 	else if (tokens[1].equals("TEST")){
