@@ -30,8 +30,6 @@ public class Server
 
 	boolean wait = false;
 
-	port = 1648;
-
 
 	    // Open the socket connection
 	try {
