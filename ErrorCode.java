@@ -52,7 +52,7 @@ public enum ErrorCode
 		break;
 
 		// Server is busy with something
-	    case 1973:
+	    case 9876:
 
 		ec = ErrorCode.SERVER_BUSY;
 		break;
