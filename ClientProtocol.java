@@ -16,8 +16,8 @@ public class ClientProtocol extends Protocol
 {
 
 	// Define the basic inputs
-    private static String cmdRegex = "^(set|insert|delete|get|quit|" +
-				     "gameover|help|\\?).*$";
+    private static String cmdRegex = "^(server|insert|delete|find|quit|" +
+				     "kill|help|\\?).*$";
 
     private static boolean timeout = false;
 
@@ -134,7 +134,7 @@ public class ClientProtocol extends Protocol
 	    }
 
 		// Get records from the server
-	    else if (command.matches("^get(\\s[A-Za-z0-9\\.]){0,2}.*")){
+	    else if (command.matches("^find(\\s[A-Za-z0-9\\.]){0,2}.*")){
 
 		    // Get the regex for the name
 		name = parseParameter("Please enter the alphanumeric name " +
@@ -154,7 +154,7 @@ public class ClientProtocol extends Protocol
 	    }
 
 		// Set the address and port of the server
-	    else if (command.matches("^set(\\s[A-Za-z0-9\\.]){0,2}.*")){
+	    else if (command.matches("^server(\\s[A-Za-z0-9\\.]){0,2}.*")){
 
 		IPAddress tempAddr = null;
 
@@ -217,7 +217,7 @@ public class ClientProtocol extends Protocol
 	    }
 
 		// Shut down client and server
-	    else if (command.equals("gameover")){
+	    else if (command.equals("kill")){
 		cmd = ProtocolCommand.GAMEOVER;
 	    }
 
@@ -423,7 +423,7 @@ public class ClientProtocol extends Protocol
 	}
 
 	    // Keep looping until user passes in an acceptable value
-	while (!input.matches(regexp)){
+	while (!input.matches(regexp) && value.equals("")){
 
 		// Print out the prompt for input
 	    System.out.print(prompt + " ");
