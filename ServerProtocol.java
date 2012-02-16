@@ -45,7 +45,11 @@ public class ServerProtocol extends Protocol
 
 		// Create the record and add it to the list
 	    Record record = new Record(name, ipAddress);
-	    Server.addRecord(record);
+	    boolean added = Server.addRecord(record);
+
+	    if (!added){
+		error = ErrorCode.FAIL_WHALE;
+	    }
 
 	    cmd = ProtocolCommand.INSERT;
 	    system_msg = "insert";
@@ -126,7 +130,7 @@ public class ServerProtocol extends Protocol
 
 	    cmd = ProtocolCommand.GAMEOVER;
 	    system_msg = "gameover";
-
+	    args = "game_over,_man!_game_over!";
 	}
 
 	    // Client sent test message

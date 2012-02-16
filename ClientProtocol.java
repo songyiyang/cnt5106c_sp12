@@ -265,10 +265,17 @@ public class ClientProtocol extends Protocol
 
 	ErrorCode error = null;
 
-	if (tokens.length >= 3 && tokens[2].equals("ERROR")){
-	    int errorNumber = Integer.parseInt(tokens[3]);
+	int eIndex = 2;
+
+	if (tokens[1].equals("GAMEOVER")){
+	    eIndex = 3;
+	}
+
+	if (tokens.length >= (eIndex+1) && tokens[eIndex].equals("ERROR")){
+	    int errorNumber = Integer.parseInt(tokens[eIndex+1]);
 	    error = ErrorCode.getErrorCode(errorNumber);
 	}
+
 
 	if (tokens[1].equals("INSERT")){
 	    system_msg = "INSERT";
@@ -289,6 +296,9 @@ public class ClientProtocol extends Protocol
 	}
 
 	else if (tokens[1].equals("GAMEOVER")){
+
+	    tokens[2] = tokens[2].replaceAll("_", " ");
+	    System.out.println("server's response: " + tokens[2]);
 	    system_msg = "game over";
 	}
 

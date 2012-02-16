@@ -86,6 +86,8 @@ public enum ProtocolCommand {
 		    // message.
 		payloadExists = true;
 
+		msg = msg.concat(" " + args);
+
 		break;
 
 		// format: DIR TEST {SUCCESS | ERROR code}

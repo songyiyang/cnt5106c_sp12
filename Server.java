@@ -85,8 +85,25 @@ public class Server
     /**
      * Add a new record to the list of records.
      */
-    public static void addRecord(Record record){
-	records.addLast(record);
+    public static boolean addRecord(Record record){
+
+	boolean added = false;
+	boolean duplicateExists = false;
+
+	for (Record temp : records){
+	    if (temp.getName().equals(record.getName())){
+		duplicateExists = true;
+		break;
+	    }
+	}
+
+	if (!duplicateExists){
+	    records.addLast(record);
+	    added = true;
+	}
+
+	return added;
+
     } // end method addRecord
 
     /**
