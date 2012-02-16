@@ -335,34 +335,40 @@ public class ClientProtocol extends Protocol
 
 	int i = 0;
 
+	    // While there are records to get, print them out
 	while (getRecords){
 
 	    inPacket = new DatagramPacket(new byte[PACKET_SIZE], PACKET_SIZE);
 
+		// Ask for data
 	    server = receive(socket, inPacket);
+
+		// Parse packet for records
 	    response = Protocol.extractMessage(inPacket);
 	    tokens = response.split("\\s+");
 
+		// If this is the last packet, stop looping
 	    if (tokens[2].equals("YAH")){
 		getRecords = false;
-		System.out.println("gsdgrdf");
 	    }
 
+		// Loop through packet message and get data
 	    i = 3;
-
 	    while (i < tokens.length){
 
 		name = tokens[i];
 		address = tokens[i+1].split("\\:");
 
+		    // Print out record information
 		System.out.println("Record: name = " + name +
-				   "; IP = " + address[0] +
-				   "; port = " + address[1]);
+				   ", IP = " + address[0] +
+				   ", port = " + address[1]);
 
 		i += 2;
 
 	    } // end while i
 
+		// Inform server of success/failure
 	    message = ProtocolCommand.createPacket(cmd, "", null, "", 1, null);
 	    send(socket, message, server);
 
