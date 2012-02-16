@@ -17,7 +17,7 @@ public class ClientProtocol extends Protocol
 
 	// Define the basic inputs
     private static String cmdRegex = "^(server|insert|delete|find|quit|" +
-				     "kill|help|\\?).*$";
+				     "kill).*$";
 
     private static boolean timeout = false;
 
@@ -159,13 +159,13 @@ public class ClientProtocol extends Protocol
 
 		    // Get the regex for the IP address
 		addr = parseParameter("Please enter the IP address:",
-			 IPAddress.ipRegex, tokens, 2, in, false);
+			 IPAddress.ipRegex, tokens, 1, in, false);
 
 		    // The port number of the remote socket
 		    // Note the port can be anything that isn't 0
 		while (port < 1024 || port > 65535){
 		    portStr = parseParameter("Please enter the port number:",
-			 "^[1-9][0-9]{3,4}$", tokens, 3, in, false);
+			 "^[1-9][0-9]{3,4}$", tokens, 2, in, false);
 		    port = Integer.parseInt(portStr);
 		}
 

@@ -49,6 +49,13 @@ public class Client
 	String prompt = "$ ";
 	IPAddress server = null;
 
+	    // Print inital message to user
+	System.out.println("\nWelcome to client application. Available \n" +
+			   "commands are insert, delete, find, server, \n" +
+			   "kill, and quit. Please refer to the \n" +
+			   "DOCUMENTATION_P1.txt file for information on \n" +
+			   "how to use these commands.\n");
+
 	    // Loop forever until shutdown signal sent
 	while (wait){
 
