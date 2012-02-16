@@ -48,6 +48,7 @@ public class ServerProtocol extends Protocol
 	    Server.addRecord(record);
 
 	    cmd = ProtocolCommand.INSERT;
+	    system_msg = "insert";
 
 	}
 
@@ -88,6 +89,7 @@ public class ServerProtocol extends Protocol
 	    }
 
 	    cmd = ProtocolCommand.DELETE;
+	    system_msg = "delete";
 
 	}
 
@@ -108,6 +110,7 @@ public class ServerProtocol extends Protocol
 	    }
 
 	    cmd = ProtocolCommand.GET;
+	    system_msg = "get";
 
 	}
 
@@ -122,20 +125,22 @@ public class ServerProtocol extends Protocol
 	    // processing in a thread
 
 	    cmd = ProtocolCommand.GAMEOVER;
+	    system_msg = "gameover";
 
 	}
 
 	    // Client sent test message
 	else if (tokens[1].equals("TEST")){
 	    cmd = ProtocolCommand.TEST;
+	    system_msg = "test";
 	}
 
 	    // If the server needs to respond, send response
 	    // to the client
 	if (cmd != null){
-	    system_msg = ProtocolCommand.createPacket(cmd, name,
+	    String msg = ProtocolCommand.createPacket(cmd, name,
 					              client, args, 1, error);
-	    send(socket, system_msg, client);
+	    send(socket, msg, client);
 	}
 
 	    // In the event that the server has found records for
