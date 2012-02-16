@@ -49,7 +49,13 @@ make clean
 and all the class files will be removed.
 
 ============================================
- 2. Basic Usage
+ 2. Known Problems
+============================================
+
+There are currently no known problems with the system.
+
+============================================
+ 3. Basic Usage
 ============================================
 
 a. Client
@@ -95,7 +101,7 @@ a client issues a GAMEOVER packet. (See Section 3: Client Commands for more.)
 Otherwise, the server will run until stopped by the user.
 
 ============================================
- 3. Client Commands
+ 4. Client Commands
 ============================================
 
 The following are the commands the client can perform. This section does not
@@ -108,8 +114,8 @@ the fields.
 
   Tells the application to use the given IP and port pair as the server
   to contact. A test ping is done to ensure that the server exists; if it does
-  not, or if it does not respond within 5 seconds, an error message is printed out
-  and the client's variables are not set to send to that IP/port pair.
+  not, or if it does not respond within 5 seconds, an error message is printed
+  out and the client's variables are not set to send to that IP/port pair.
 
 - insert {name} {IP} {port}
 
@@ -135,7 +141,7 @@ the fields.
   Closes the client application AND closes the server application.
 
 ============================================
- 4. Messages
+ 5. Messages
 ============================================
 
 a. Basic Structure
@@ -149,13 +155,13 @@ where:
 
     1. DIRECTION = SND (for initial requests) or RCV (for acknowledgements);
     2. COMMAND = one of the commands listed later in this section;
-    3. [name] [port] [args] = a name, IP/port and list of optional arguments; and
+    3. [name] [port] [args] = a name, IP/port and list of optional arguments;
     4. {SUCCESS| ERROR code} = a status string indicating successful completion
        of the specified task or a specific error condition.
 
-Typically, for RCV messages, there are no additional arguments; there is only the
-status message. Conversely SND messages do not have status messages but will have
-some sort of argument list.
+Typically, for RCV messages, there are no additional arguments; there is only
+the status message. Conversely SND messages do not have status messages but
+will have some sort of argument list.
 
 b. Types of Messages
 
