@@ -9,6 +9,7 @@ import java.util.LinkedList;
 public class Server
 {
 
+    private static RecordFile recordFile;
     private static ConfigFile config;
     private static DatagramSocket socket;
     private static int port;
@@ -18,6 +19,9 @@ public class Server
 
 
     public static void main(String[] args){
+
+	recordFile = new RecordFile("Records.db");
+	recordFile.addRecordsToList(records);
 
 	    // Determine this host's IP and port
 	determineIPAndPortNumber(args);
@@ -61,12 +65,14 @@ public class Server
 	    system_msg = ServerProtocol.parseMessage(socket, packetIn, client);
 
 		// If shutdown command sent, end looping
-	    if (system_msg.matches("^.+ GAMEOVER$")){
+	    if (system_msg.matches("gameover")){
 		wait = false;
 	    }
 
 	} // end while wait
 
+
+	recordFile.writeRecordsToFile(records);
 
 	    // Close the socket
 	try {
