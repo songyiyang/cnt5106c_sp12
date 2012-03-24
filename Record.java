@@ -8,10 +8,12 @@ public class Record
 
     private String name;
     private IPAddress ipAddress;
+    private boolean linked;
 
     public Record(String _name, IPAddress _ipAddress){
 	name = _name;
 	ipAddress = _ipAddress;
+	linked = false;
     }
 
     /**
@@ -52,6 +54,10 @@ public class Record
 	return ipAddress;
     }
 
+    public boolean getLinked(){
+	return linked;
+    }
+
 
     /**
      * Mutator methods
@@ -65,6 +71,9 @@ public class Record
 	ipAddress = _ipAddress;
     }
 
+    public void setLinked(boolean _linked){
+	linked = _linked;
+    }
 
     /**
      * toString()
