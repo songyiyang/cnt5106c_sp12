@@ -6,6 +6,12 @@ public enum ProtocolCommand {
     GAMEOVER("GAMEOVER"),
     TEST("TEST"),
     TRANSMIT("TRANSMIT");
+    LINK("LINK");
+    UNLINK("UNLINK");
+    REGISTER("REGISTER");
+    UNREGISTER("UNREGISTER");
+    LIST("REGISTER");
+    SEND("SEND");
 
     private String command;
 
@@ -111,11 +117,30 @@ public enum ProtocolCommand {
 
 		break;
 
+		// format: DIR LINK name {SUCCESS | ERROR code}
+	    case LINK:
+
+		if (direction == 0){
+		    msg = msg.concat(" " + name);
+		}
+
+		break;
+
+		// format: DIR UNLINK name {SUCCESS | ERROR code}
+	    case UNLINK:
+
+		if (direction == 0){
+		    msg = msg.concat(" " + name);
+		}
+
+		break;
+
+
 	} // end switch cmd
 
 
 	    // Add "SUCCESS" or "ERROR code" to message
-            // if this is a RCV message and there
+            // if this is a RCV message and there is a payload
 	if (payloadExists && direction == 1){
 
 		// If no error, then success
@@ -128,7 +153,7 @@ public enum ProtocolCommand {
 		msg = msg.concat(" " + errorPayload + error.getNumber());
 	    }
 
-	}
+	} // end if payloadExists
 
 	return msg;
 
