@@ -17,7 +17,8 @@ public class ClientProtocol extends Protocol
 
 	// Define the basic inputs
     private static String cmdRegex = "^(server|insert|delete|find|quit|" +
-				     "kill).*$";
+				     "kill|link|unlink|register|" +
+				     "unregister|list|send).*$";
 
     private static boolean timeout = false;
 
@@ -207,6 +208,18 @@ public class ClientProtocol extends Protocol
 		    system_msg = "set " + tempAddr.toString();
 		}
 
+
+	    }
+
+		// Get records from the server
+	    else if (command.matches("^link(\\s[A-Za-z0-9])?.*")){
+
+		    // Get the regex for the name
+		name = parseParameter("Please enter the alphanumeric name " +
+			 "(max 80 chars): ","([A-Za-z0-9]{1,80}|\\*{1})",
+			 tokens, 1, in, false);
+
+		cmd = ProtocolCommand.LINK;
 
 	    }
 
