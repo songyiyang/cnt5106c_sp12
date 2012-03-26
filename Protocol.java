@@ -1,6 +1,7 @@
 import java.io.IOException;
 import java.net.DatagramSocket;
 import java.net.DatagramPacket;
+import java.net.SocketException;
 import java.net.SocketTimeoutException;
 
 /**
@@ -17,6 +18,12 @@ public class Protocol
 
 	// Default packet size is 1024 bytes
     public static final int PACKET_SIZE = 1024;
+	// Large packet size is 1024 * 20 bytes
+    public static final int PACKET_SIZE_LARGE = 1024 * 20;
+	// Default timeout is 5 seconds
+    public static final int MAX_TIMEOUT = 1000 * 5;
+
+    private static boolean timeoutIsSet = false;
 
    /**
     * Remove the payload from the packet, removing any
@@ -55,12 +62,23 @@ public class Protocol
 
 	    // Receive a packet sent to the socket
 	try {
+
 	    socket.receive(packet);
 	    address = new IPAddress(packet.getAddress(), packet.getPort());
+
+	    if (timeoutIsSet){
+		timeoutIsSet = false;
+		socket.setSoTimeout(0);
+	    }
+
 	}
 
 	catch (SocketTimeoutException e){
 	    throw new SocketTimeoutException();
+	}
+
+	catch (SocketException e){
+	    // do something
 	}
 
 	catch (IOException e){
@@ -87,12 +105,23 @@ public class Protocol
      *    otherwise.
      */
     protected static boolean send(DatagramSocket socket, String msg,
-		                  IPAddress address){
+		                  IPAddress address, boolean timeout){
 
 	boolean success = false;
 
 	byte[] msgBytes = msg.getBytes();
 	DatagramPacket packet = null;
+
+	    // If timeout is set, set the socket timeout
+	if (timeout){
+
+	    timeoutIsSet = true;
+
+	    try {
+		socket.setSoTimeout(MAX_TIMEOUT);
+	    }
+	    catch (SocketException e) { }
+	} // end if timeout
 
 	try {
 
