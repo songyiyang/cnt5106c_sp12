@@ -129,42 +129,48 @@ public class ServerProtocol extends Protocol
 	    system_msg = "test";
 
 	}	
-/*
+
 	    // Link to a given server known to the current server
 	else if (tokens[1].equals("LINK")){
 
 	    name = tokens[2];
 
 		// Attempt to find record
-	    link = Server.getRecord(name);
+	    Record link = Server.getRecord(name);
 
 		// If the server to which to link is not known,
-		// send client a SERVER_NOT_FOUND message
+		// send client a SERVER_NOT_KNOWN message
 	    if (link == null){
-		error = ErrorCode.SERVER_NOT_FOUND;
+		error = ErrorCode.SERVER_NOT_KNOWN;
 	    }
 		// If the servers are already linked, throw error
 		// message
-	    else if (link.getLink() == true){
+	    else if (link.getLinked() == true){
 		error = ErrorCode.SERVER_ALREADY_LINKED;
 	    }
 		// Else try to link the two servers
 	    else {
 
-		String clientCmd = "server " + link.getIPAddress() + " " +
-				    link.getPort();
+		IPAddress server = link.getIPAddress();
+		IPAddress me = Server.getIPAddress();
+		DatagramPacket in = new DatagramPacket(
+					new byte[PACKET_SIZE], PACKET_SIZE);
 
-		String msg = ClientProtocol.parseCommand(clientCmd, socket);
+		String msg = ProtocolCommand.createPacket(
+			ProtocolCommand.CONNECT, me.getIPAddress(),
+			me, "", 0, null);
 
-		ClientProtocol.send(ClientProtocol.clientSocket, msg);
+		ClientProtocol.setTimeout();
+		ClientProtocol.send(msg, server);
+		server = ClientProtocol.receive(in);
 
 		    // If server could not link to other server,
 		    // report TIMEOUT error
-		if (server_rsp_ip == NULL){
+		if (server == null){
 		    error = ErrorCode.TIMEOUT;
 		}
 		else {
-
+		    link.setLinked(true);
 		}
 
 	    } // end else
@@ -174,33 +180,65 @@ public class ServerProtocol extends Protocol
 
 	}
 
+	    // Add link to the given server
+	else if (tokens[1].equals("CONNECT")){
+
+	    name = tokens[2];
+	    String[] address = tokens[3].split(":");
+	    port = Integer.parseInt(address[1]);
+
+	    ipAddress = new IPAddress(address[0], port);
+
+	    Record record = new Record(name, ipAddress, true);
+	    Server.addRecord(record);
+
+	    cmd = ProtocolCommand.CONNECT;
+	    system_msg = "connect";
+
+	}
+
 	    // Link to a given server known to the current server
 	else if (tokens[1].equals("UNLINK")){
 
 	    name = tokens[2];
 
 		// Attempt to find record
-	    link = Server.getRecord(name);
+	    Record link = Server.getRecord(name);
 
 		// If the server to which to link is not known,
 		// send client a SERVER_NOT_FOUND message
 	    if (link == null) {
-		error = ErrorCode.SERVER_NOT_FOUND;
+		error = ErrorCode.SERVER_NOT_KNOWN;
 	    }
 		// If the servers are not linked, throw error
 		// message
-	    else if (link.getLink() == false) {
+	    else if (link.getLinked() == false) {
 		error = ErrorCode.SERVER_NOT_LINKED;
 	    }
 		// Else try to link the two servers
 	    else {
 
-//		String clientCmd = "server " + link.getIPAddress() + " " +
-//				    link.getPort();
+		IPAddress server = link.getIPAddress();
+		IPAddress me = Server.getIPAddress();
+		DatagramPacket in = new DatagramPacket(
+					new byte[PACKET_SIZE], PACKET_SIZE);
 
-//		String msg = ClientProtocol.parseCommand(clientCmd, socket);
+		String msg = ProtocolCommand.createPacket(
+			ProtocolCommand.DISCONNECT, me.getIPAddress(),
+			me, "", 0, null);
 
-		link.setLinked(false);
+		ClientProtocol.setTimeout();
+		ClientProtocol.send(msg, server);
+		server = ClientProtocol.receive(in);
+
+		    // If server could not link to other server,
+		    // report TIMEOUT error
+		if (server == null){
+		    error = ErrorCode.TIMEOUT;
+		}
+		else {
+		    link.setLinked(false);
+		}
 
 	    }
 
@@ -208,7 +246,21 @@ public class ServerProtocol extends Protocol
 	    system_msg = "link";
 
 	}
-*/
+
+
+	    // Remove link to the given server
+	else if (tokens[1].equals("DISCONNECT")){
+
+	    name = tokens[2];
+
+	    Record record = Server.getRecord(name);
+	    record.setLinked(false);
+
+	    cmd = ProtocolCommand.DISCONNECT;
+	    system_msg = "disconnect";
+
+	}
+
 	    // Process a shutdown request
 	else if (tokens[1].equals("GAMEOVER")){
 
