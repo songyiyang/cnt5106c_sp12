@@ -15,12 +15,15 @@ import java.net.SocketTimeoutException;
 public class ClientProtocol extends Protocol
 {
 
+    public static DatagramSocket socket;
+
 	// Define the basic inputs
     private static String cmdRegex = "^(server|insert|delete|find|quit|" +
 				     "kill|link|unlink|register|" +
 				     "unregister|list|send).*$";
 
     private static boolean timeout = false;
+    private static int MAX_TIMEOUT = 1000 * 5;
 
     /**
      * Parse the response from the server. May invoke threads
@@ -40,7 +43,7 @@ public class ClientProtocol extends Protocol
      *    be sent to the server, or that should be handled
      *    solely by the client.
      */
-    public static String parseCommand(String command, DatagramSocket socket){
+    public static String parseCommand(String command){
 
 	    // Set default messages and cmd variables
 	String system_msg = "WTF";
@@ -78,6 +81,7 @@ public class ClientProtocol extends Protocol
 		    // The IP address of the remote site
 		addr = parseParameter("Please enter the IP address:",
 			 IPAddress.ipRegex, tokens, 2, in, false);
+
 		    // The port number of the remote socket
 		    // Note the port can be anything that isn't 0
 		while (port < 1024 || port > 65535){
@@ -170,48 +174,18 @@ public class ClientProtocol extends Protocol
 		    port = Integer.parseInt(portStr);
 		}
 
-		    // Attempt to ping the remote server
-		try {
 
-		    int TIMEOUT = 1000 * 5;
-		    InetAddress tempInet = InetAddress.getByName(addr);
-		    tempAddr = new IPAddress(tempInet, port);
+		    // Only the name and IP regex will be checked
+		    // against records, port is not important
+		address = new IPAddress(addr, port);
 
-		    String tempMsg = ProtocolCommand.createPacket(
-				   ProtocolCommand.TEST, "", null, "", 0, null);
-		    DatagramPacket packet = new DatagramPacket(
-					    new byte[PACKET_SIZE], PACKET_SIZE);
+		setTimeout();
 
-		    socket.setSoTimeout(TIMEOUT);
-
-		    send(socket, tempMsg, tempAddr);
-		    tempAddr = receive(socket, packet);
-
-		}
-
-		catch (Exception e){ }
-
-		    // Reset the timeout counter
-		try {
-		    socket.setSoTimeout(0);
-		}
-		catch (SocketException e) { }
-
-
-		if (tempAddr == null){
-		    System.out.println("error: specified server unreachable");
-		    system_msg = "set";
-		}
-		else {
-		    System.out.println("Server IP = " + addr + ", " +
-				       "port = " + port);
-		    system_msg = "set " + tempAddr.toString();
-		}
-
+		cmd = ProtocolCommand.TEST;
 
 	    }
-
-		// Get records from the server
+/*
+		// link current server to another server
 	    else if (command.matches("^link(\\s[A-Za-z0-9])?.*")){
 
 		    // Get the regex for the name
@@ -223,6 +197,51 @@ public class ClientProtocol extends Protocol
 
 	    }
 
+		// unlink current server from another server
+	    else if (command.matches("^unlink(\\s[A-Za-z0-9])?.*")){
+
+		    // Get the regex for the name
+		name = parseParameter("Please enter the alphanumeric name " +
+			 "(max 80 chars): ","([A-Za-z0-9]{1,80}|\\*{1})",
+			 tokens, 1, in, false);
+
+		cmd = ProtocolCommand.UNLINK;
+
+	    }
+
+		// register name on the server
+	    else if (command.matches("^register(\\s[A-Za-z0-9]){0,2}.*")){
+
+		    // Get the regex for the name
+		name = parseParameter("Please enter the alphanumeric name " +
+			 "(max 80 chars): ","([A-Za-z0-9]{1,80}|\\*{1})",
+			 tokens, 1, in, false);
+
+		    // The port number of the remote socket
+		    // Note the port can be anything that isn't 0
+		while (port < 1024 || port > 65535){
+		    portStr = parseParameter("Please enter the port number:",
+			 "^[1-9][0-9]{3,4}$", tokens, 3, in, false);
+		    port = Integer.parseInt(portStr);
+		}
+
+		cmd = ProtocolCommand.REGISTER;
+
+	    }
+
+
+		// register name on the server
+	    else if (command.matches("^unregister(\\s[A-Za-z0-9])?.*")){
+
+		    // Get the regex for the name
+		name = parseParameter("Please enter the alphanumeric name " +
+			 "(max 80 chars): ","([A-Za-z0-9]{1,80}|\\*{1})",
+			 tokens, 1, in, false);
+
+		cmd = ProtocolCommand.UNREGISTER;
+
+	    }
+*/
 		// Force the client to exit
 	    else if (command.equals("quit")){
 		system_msg = "quit";
@@ -268,8 +287,7 @@ public class ClientProtocol extends Protocol
      *    The client may act on the system or may
      *    ignore it, depending on the type of message.
      */
-    public static String parseResponse(DatagramSocket socket,
-				       DatagramPacket packet,
+    public static String parseResponse(DatagramPacket packet,
 				       IPAddress server){
 
 	String system_msg = "";
@@ -302,7 +320,7 @@ public class ClientProtocol extends Protocol
 
 	    if (error == null){
 		System.out.println(tokens[2] + " record(s) found:\n");
-		getMatchedRecords(socket, server);
+		getMatchedRecords(server);
 	    }
 
 	    system_msg = "GET";
@@ -345,8 +363,7 @@ public class ClientProtocol extends Protocol
      * @param server
      *    The IPAddress of the server.
      */
-    private static void getMatchedRecords(DatagramSocket socket,
-					  IPAddress server){
+    private static void getMatchedRecords(IPAddress server){
 
 	boolean getRecords = true;
 	DatagramPacket inPacket = null;
@@ -367,7 +384,7 @@ public class ClientProtocol extends Protocol
 	    inPacket = new DatagramPacket(new byte[PACKET_SIZE], PACKET_SIZE);
 
 		// Ask for data
-	    server = receive(socket, inPacket);
+	    server = receive(inPacket);
 
 		// Parse packet for records
 	    response = Protocol.extractMessage(inPacket);
@@ -396,7 +413,7 @@ public class ClientProtocol extends Protocol
 
 		// Inform server of success/failure
 	    message = ProtocolCommand.createPacket(cmd, "", null, "", 1, null);
-	    send(socket, message, server);
+	    send(message, server);
 
 	} // end while getRecords
 
@@ -492,8 +509,8 @@ public class ClientProtocol extends Protocol
      *    The IPAddress of the server from which the packet
      *    originated.
      */
-    public static IPAddress receive(DatagramSocket socket,
-				       DatagramPacket packet){
+    public static IPAddress receive(DatagramPacket packet){
+
 	IPAddress addr = null;
 
 	try {
@@ -522,9 +539,12 @@ public class ClientProtocol extends Protocol
      *    TRUE if the send operation was successful, FALSE
      *    otherwise.
      */
-    public static boolean send(DatagramSocket socket, String msg,
-		              IPAddress address){
-	return Protocol.send(socket, msg, address);
+    public static boolean send(String msg, IPAddress address){
+	return Protocol.send(socket, msg, address, timeout);
     } // end method send
+
+    public static void setTimeout(){
+	timeout = true;
+    }
 
 } // end class ClientProtocol
