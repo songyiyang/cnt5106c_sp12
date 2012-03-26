@@ -122,6 +122,93 @@ public class ServerProtocol extends Protocol
 	}
 
 
+	    // Check to see if there are records to return
+	else if (tokens[1].equals("TEST")){
+
+	    cmd = ProtocolCommand.TEST;
+	    system_msg = "test";
+
+	}	
+/*
+	    // Link to a given server known to the current server
+	else if (tokens[1].equals("LINK")){
+
+	    name = tokens[2];
+
+		// Attempt to find record
+	    link = Server.getRecord(name);
+
+		// If the server to which to link is not known,
+		// send client a SERVER_NOT_FOUND message
+	    if (link == null){
+		error = ErrorCode.SERVER_NOT_FOUND;
+	    }
+		// If the servers are already linked, throw error
+		// message
+	    else if (link.getLink() == true){
+		error = ErrorCode.SERVER_ALREADY_LINKED;
+	    }
+		// Else try to link the two servers
+	    else {
+
+		String clientCmd = "server " + link.getIPAddress() + " " +
+				    link.getPort();
+
+		String msg = ClientProtocol.parseCommand(clientCmd, socket);
+
+		ClientProtocol.send(ClientProtocol.clientSocket, msg);
+
+		    // If server could not link to other server,
+		    // report TIMEOUT error
+		if (server_rsp_ip == NULL){
+		    error = ErrorCode.TIMEOUT;
+		}
+		else {
+
+		}
+
+	    } // end else
+
+	    cmd = ProtocolCommand.LINK;
+	    system_msg = "link";
+
+	}
+
+	    // Link to a given server known to the current server
+	else if (tokens[1].equals("UNLINK")){
+
+	    name = tokens[2];
+
+		// Attempt to find record
+	    link = Server.getRecord(name);
+
+		// If the server to which to link is not known,
+		// send client a SERVER_NOT_FOUND message
+	    if (link == null) {
+		error = ErrorCode.SERVER_NOT_FOUND;
+	    }
+		// If the servers are not linked, throw error
+		// message
+	    else if (link.getLink() == false) {
+		error = ErrorCode.SERVER_NOT_LINKED;
+	    }
+		// Else try to link the two servers
+	    else {
+
+//		String clientCmd = "server " + link.getIPAddress() + " " +
+//				    link.getPort();
+
+//		String msg = ClientProtocol.parseCommand(clientCmd, socket);
+
+		link.setLinked(false);
+
+	    }
+
+	    cmd = ProtocolCommand.UNLINK;
+	    system_msg = "link";
+
+	}
+*/
 	    // Process a shutdown request
 	else if (tokens[1].equals("GAMEOVER")){
 
@@ -264,7 +351,7 @@ public class ServerProtocol extends Protocol
 
     public static boolean send(DatagramSocket socket, String msg,
 		               IPAddress address){
-	return Protocol.send(socket, msg, address);
+	return Protocol.send(socket, msg, address, false);
     } // end method send
 
 
