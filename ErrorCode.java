@@ -16,7 +16,7 @@ public enum ErrorCode
     RECORD_NOT_FOUND(404, "cannot find record"),
     SERVER_NOT_KNOWN(405, "can't find that server"),
     SERVER_NOT_LINKED(406, "we're not linked, dude"),
-    SERVER_ALREADY_LINKED(406, "we're not linked, dude"),
+    SERVER_ALREADY_LINKED(407, "we're not linked, dude"),
     SERVER_BUSY(9876, "server is busy, go away!");
 
     private int number;
@@ -39,10 +39,37 @@ public enum ErrorCode
 		ec = ErrorCode.FAIL_WHALE;
 		break;
 
+		// Name already taken at server
+	    case 101:
+
+		ec = ErrorCode.NAME_PREVIOUSLY_REGISTERED;
+		break;
+
+		// Can't find given name
+	    case 102:
+
+		ec = ErrorCode.NAME_NOT_FOUND;
+		break;
+
 		// Record could not be found
 	    case 404:
 
 		ec = ErrorCode.RECORD_NOT_FOUND;
+		break;
+
+		// Don't know what server user is mentioning
+	    case 405:
+		ec = ErrorCode.SERVER_NOT_KNOWN;
+		break;
+
+		// Not linked to given server
+	    case 406:
+		ec = ErrorCode.SERVER_NOT_LINKED;
+		break;
+
+		// Already linked to specified server
+	    case 407:
+		ec = ErrorCode.SERVER_ALREADY_LINKED;
 		break;
 
 		// Packet died horrible death
