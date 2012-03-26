@@ -184,7 +184,7 @@ public class ClientProtocol extends Protocol
 		cmd = ProtocolCommand.TEST;
 
 	    }
-/*
+
 		// link current server to another server
 	    else if (command.matches("^link(\\s[A-Za-z0-9])?.*")){
 
@@ -208,7 +208,7 @@ public class ClientProtocol extends Protocol
 		cmd = ProtocolCommand.UNLINK;
 
 	    }
-
+/*
 		// register name on the server
 	    else if (command.matches("^register(\\s[A-Za-z0-9]){0,2}.*")){
 
@@ -295,25 +295,26 @@ public class ClientProtocol extends Protocol
 	String[] tokens = message.split("\\s+");
 
 	ErrorCode error = null;
+	int eIndex = -1;
 
-	int eIndex = 2;
-
-	if (tokens[1].equals("GAMEOVER") || tokens[1].equals("GET")){
-	    eIndex = 3;
+	for (int i = 0; i < tokens.length; i++){
+	    if (tokens[i].equals("ERROR")){
+		eIndex = i++;
+		break;
+	    }
 	}
 
-	if (tokens.length >= (eIndex+1) && tokens[eIndex].equals("ERROR")){
+	if (eIndex >= 0){
 	    int errorNumber = Integer.parseInt(tokens[eIndex+1]);
 	    error = ErrorCode.getErrorCode(errorNumber);
 	}
 
-
 	if (tokens[1].equals("INSERT")){
-	    system_msg = "INSERT";
+	    system_msg = "insert";
 	}
 
 	else if (tokens[1].equals("DELETE")){
-	    system_msg = "DELETE";
+	    system_msg = "delete";
 	}
 
 	else if (tokens[1].equals("GET")){
@@ -323,7 +324,27 @@ public class ClientProtocol extends Protocol
 		getMatchedRecords(server);
 	    }
 
-	    system_msg = "GET";
+	    system_msg = "get";
+
+	}
+
+	else if (tokens[1].equals("LINK")){
+
+	    if (error == null){
+		System.out.println("server now linked");
+	    }
+
+	    system_msg = "link";
+
+	}
+
+	else if (tokens[1].equals("UNLINK")){
+
+	    if (error == null){
+		System.out.println("server now unlinked");
+	    }
+
+	    system_msg = "unlink";
 
 	}
 
@@ -517,7 +538,7 @@ public class ClientProtocol extends Protocol
 	    addr = Protocol.receive(socket, packet);
 	}
 	catch (SocketTimeoutException e){
-	    // do something here
+	    timeout = false;
 	}
 
 	return addr;
