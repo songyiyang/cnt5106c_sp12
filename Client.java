@@ -9,7 +9,7 @@ public class Client
 {
 
     private static IPAddress server = null;
-    private static DatagramSocket socket = null;
+//    private static DatagramSocket socket = null;
     private static BufferedReader in = null;
 
 
@@ -23,7 +23,7 @@ public class Client
 	    // First, establish a socket and set up the
 	    // server's IP address.
 	try {
-	    socket = new DatagramSocket();
+	    ClientProtocol.socket = new DatagramSocket();
 	    wait = true;
 	}
 	catch (SocketException e){
@@ -74,36 +74,11 @@ public class Client
 	    }
 
 		// Parse the input and return a system message
-	    system_msg = ClientProtocol.parseCommand(input, socket);
+	    system_msg = ClientProtocol.parseCommand(input);
 
 		// If user wants to close the client, do so
 	    if (system_msg.equals("quit")){
 		break;
-	    }
-
-		// If user set variables for server, loop back
-		// around so that s/he can begin sending commands
-	    else if (system_msg.matches("set.*")){
-
-		if (system_msg.matches("set .+")){
-		    String[] address = system_msg.split("\\s");
-		    String[] ip = address[1].split(":");
-
-		    InetAddress inetAddress = null;
-
-		    try {
-			inetAddress = InetAddress.getByName(ip[0]);
-		    }
-		    catch (UnknownHostException e){
-			// do nothing, it's been verified already
-		    }
-
-		    int port = Integer.parseInt(ip[1]);
-
-		    server = new IPAddress(inetAddress, port);
-		}
-
-		continue;
 	    }
 
 		// Program couldn't understand the output.
@@ -113,30 +88,45 @@ public class Client
 		continue;
 	    }
 
+	    else if (system_msg.matches(".*TEST.*")){
+
+		String testMsg[] = system_msg.split("\\s");
+		String ipPortion[] = testMsg[testMsg.length-1].split(":");
+
+		server = new IPAddress(ipPortion[0],
+				       Integer.parseInt(ipPortion[1]));
+	    }
+
 	    else if (server == null){
 		System.out.println("must set server IP and port!");
 		continue;
 	    }
 
 		// Send the packet to the server
-	    ClientProtocol.send(socket, system_msg, server);
+	    ClientProtocol.send(system_msg, server);
 
 		// Get the response
-	    server = ClientProtocol.receive(socket, packetIn);
+	    server = ClientProtocol.receive(packetIn);
 
-		// Finally parse the response
-	    system_msg = ClientProtocol.parseResponse(socket, packetIn, server);
+	    if (server != null){
+		    // Finally parse the response
+		system_msg = ClientProtocol.parseResponse(packetIn, server);
 
-		// If system gives the signal, shut program down
-	    if (system_msg.equals("game over")){
-		server = null;
+		    // If system gives the signal, shut program down
+		if (system_msg.equals("game over")){
+		    server = null;
+		}
+
+	    }
+	    else {
+		System.out.println("error: specified server unreachable");
 	    }
 
 	} // end while true
 
 	    // Close the socket
 	try {
-	    socket.close();
+	    ClientProtocol.socket.close();
 	}
 	catch (Exception e){
 	    e.printStackTrace();
