@@ -13,7 +13,8 @@ public class Server
     private static RecordFile recordFile;
     private static ConfigFile config;
     private static DatagramSocket socket;
-    private static int port;
+    private static int port = -1;
+    private static IPAddress myIP;
 
 	// Keep track of all the records known to the server
     private static LinkedList<Record> records = new LinkedList<Record>();
@@ -251,10 +252,26 @@ public class Server
 	    host = InetAddress.getLocalHost();
 	    System.out.println("IP is " + host.getHostAddress() +
 			       ", port is " + port);
+	    myIP = new IPAddress(host, port);
 	}
 	catch (UnknownHostException e){ }
 
     } // end determineIPAndPortNumber
+
+    public static Record getRecord(String name){
+
+	Record record = null;
+
+	for (Record temp : records){
+	    if (temp.getName().equals(name)){
+		record = temp;
+		break;
+	    }
+	}
+
+	return record;
+
+    }
 
     /**
      * Find records that match the given regular expressions.
@@ -292,8 +309,8 @@ public class Server
 
     } // end method findRecords
 
-    public static int getPort(){
-	return port;
+    public static IPAddress getIPAddress(){
+	return myIP;
     }
 
 } // end class Server
