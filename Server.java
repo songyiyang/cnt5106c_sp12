@@ -1,5 +1,6 @@
 import java.io.*;
 import java.net.*;
+import java.util.Random;
 import java.util.LinkedList;
 
 /**
@@ -47,6 +48,29 @@ public class Server
 	catch (SocketException e) {
 	    System.out.println("server could not open UDP port on port "
 			       + port);
+	}
+
+
+	    // Try to open a socket on the server for client connections
+
+	DatagramSocket clientSocket;
+	Random r = new Random();
+	int clientPort = 0;
+
+	    // Create a socket that the server may use as a temporary
+	    // client to some other server.
+	while (true) {
+
+	    while (clientPort < 1024 || clientPort > 65535){
+		clientPort = r.nextInt(65535);
+	    }
+
+	    try {
+		ClientProtocol.socket = new DatagramSocket(clientPort);
+		break;
+	    }
+	    catch (SocketException e){ }
+
 	}
 
 	String system_msg = null;
@@ -267,5 +291,9 @@ public class Server
 	return matchedRecords;
 
     } // end method findRecords
+
+    public static int getPort(){
+	return port;
+    }
 
 } // end class Server
