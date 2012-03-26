@@ -5,12 +5,14 @@ public enum ProtocolCommand {
     GET("GET"),
     GAMEOVER("GAMEOVER"),
     TEST("TEST"),
-    TRANSMIT("TRANSMIT");
-    LINK("LINK");
-    UNLINK("UNLINK");
-    REGISTER("REGISTER");
-    UNREGISTER("UNREGISTER");
-    LIST("REGISTER");
+    TRANSMIT("TRANSMIT"),
+    LINK("LINK"),
+    UNLINK("UNLINK"),
+    CONNECT("CONNECT"),
+    DISCONNECT("DISCONNECT"),
+    REGISTER("REGISTER"),
+    UNREGISTER("UNREGISTER"),
+    LIST("REGISTER"),
     SEND("SEND");
 
     private String command;
@@ -105,6 +107,10 @@ public enum ProtocolCommand {
 		    // No payload to send...yet
 		payloadExists = false;
 
+		if (direction == 0){
+		    msg = msg.concat(" " + address.toString()); 
+		}
+
 		break;
 
 		// format: DIR TRANSMIT {YAH|NAW} {name ip:port}+
@@ -126,6 +132,15 @@ public enum ProtocolCommand {
 
 		break;
 
+		// format: DIR CONNECT name ip:port {SUCCESS | ERROR code}
+	    case CONNECT:
+
+		if (direction == 0){
+		    msg = msg.concat(" " + name + " " + address.toString());
+		}
+
+		break;
+
 		// format: DIR UNLINK name {SUCCESS | ERROR code}
 	    case UNLINK:
 
@@ -135,6 +150,31 @@ public enum ProtocolCommand {
 
 		break;
 
+
+		// format: DIR DISCONNECT name {SUCCESS | ERROR code}
+	    case DISCONNECT:
+
+		if (direction == 0){
+		    msg = msg.concat(" " + name);
+		}
+
+		// format: DIR REGISTER name port {SUCCESS | ERROR code}
+	    case REGISTER:
+
+		if (direction == 0){
+		    msg = msg.concat(" " + name + " " + args);
+		}
+
+		break;
+
+		// format: DIR UNREGISTER name {SUCCESS | ERROR code}
+	    case UNREGISTER:
+
+		if (direction == 0){
+		    msg = msg.concat(" " + name);
+		}
+
+		break;
 
 	} // end switch cmd
 
