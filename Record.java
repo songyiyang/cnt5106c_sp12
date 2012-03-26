@@ -16,6 +16,13 @@ public class Record
 	linked = false;
     }
 
+    public Record(String _name, IPAddress _ipAddress, boolean _linked){
+	name = _name;
+	ipAddress = _ipAddress;
+	linked = _linked;
+    }
+
+
     /**
      * Check to see if the given name and IP regular expressions
      * match those fields in the current record.
