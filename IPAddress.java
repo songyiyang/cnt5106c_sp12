@@ -1,4 +1,5 @@
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 /**
  * @desc Acts as a wrapper to contain
@@ -43,6 +44,12 @@ public class IPAddress
     public IPAddress(String _ipAddress, int _port){
 	ipAddress = _ipAddress;
 	port = _port;
+
+	try {
+	    ipNetAddress = InetAddress.getByName(_ipAddress);
+	}
+	catch (UnknownHostException e){ }
+
     }
 
     public IPAddress(InetAddress _ipNetAddress, int _port){
