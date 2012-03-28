@@ -23,8 +23,6 @@ public class Protocol
 	// Default timeout is 5 seconds
     public static final int MAX_TIMEOUT = 1000 * 5;
 
-    private static boolean timeoutIsSet = false;
-
    /**
     * Remove the payload from the packet, removing any
     * extra whitespace in the process.
@@ -59,31 +57,23 @@ public class Protocol
 				throws SocketTimeoutException {
 
 	    IPAddress address = null;
+	    boolean throwTimeoutException = false;
 
 	    // Receive a packet sent to the socket
 	try {
-
 	    socket.receive(packet);
 	    address = new IPAddress(packet.getAddress(), packet.getPort());
-
-	    if (timeoutIsSet){
-		timeoutIsSet = false;
-		socket.setSoTimeout(0);
-	    }
-
 	}
-
 	catch (SocketTimeoutException e){
 	    throw new SocketTimeoutException();
 	}
-
 	catch (SocketException e){
 	    // do something
-	}
-
+	}	
 	catch (IOException e){
 	    // do something
 	}
+
 
 	return address;
 
@@ -105,23 +95,12 @@ public class Protocol
      *    otherwise.
      */
     protected static boolean send(DatagramSocket socket, String msg,
-		                  IPAddress address, boolean timeout){
+		                  IPAddress address){
 
 	boolean success = false;
 
 	byte[] msgBytes = msg.getBytes();
 	DatagramPacket packet = null;
-
-	    // If timeout is set, set the socket timeout
-	if (timeout){
-
-	    timeoutIsSet = true;
-
-	    try {
-		socket.setSoTimeout(MAX_TIMEOUT);
-	    }
-	    catch (SocketException e) { }
-	} // end if timeout
 
 	try {
 

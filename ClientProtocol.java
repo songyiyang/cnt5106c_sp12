@@ -576,12 +576,20 @@ public class ClientProtocol extends Protocol
 
 	IPAddress addr = null;
 
+	    // Try to get a packet
 	try {
 	    addr = Protocol.receive(socket, packet);
 	}
 	catch (SocketTimeoutException e){
 	    timeout = false;
 	}
+
+	    // Reset the socket
+	try {
+	    socket.setSoTimeout(0);
+	}
+	catch (SocketException e) { }
+
 
 	return addr;
 
@@ -603,11 +611,18 @@ public class ClientProtocol extends Protocol
      *    otherwise.
      */
     public static boolean send(String msg, IPAddress address){
-	return Protocol.send(socket, msg, address, timeout);
+	return Protocol.send(socket, msg, address);
     } // end method send
 
     public static void setTimeout(){
-	timeout = true;
+
+	    // Set the socket's timeout
+	try {
+	    socket.setSoTimeout(MAX_TIMEOUT);
+	    timeout = true;
+	}
+	catch (SocketException e) { }
+
     }
 
 } // end class ClientProtocol

@@ -275,6 +275,7 @@ public class ServerProtocol extends Protocol
 		error = ErrorCode.NAME_PREVIOUSLY_REGISTERED;
 	    }
 	    else {
+		args = "" + port;
 		rname = new RegisteredName(name, client, port);
 		Server.registerClient(rname);
 	    }
@@ -412,13 +413,15 @@ public class ServerProtocol extends Protocol
     } // end method 
 
     public static IPAddress receive(DatagramSocket socket,
-				       DatagramPacket packet){
+				    DatagramPacket packet){
 	IPAddress addr = null;
 
 	try {
 	    addr = Protocol.receive(socket, packet);
 	}
-	catch (SocketTimeoutException e){ }
+	catch (SocketTimeoutException e){
+
+	}
 
 	return addr;
 
@@ -426,7 +429,7 @@ public class ServerProtocol extends Protocol
 
     public static boolean send(DatagramSocket socket, String msg,
 		               IPAddress address){
-	return Protocol.send(socket, msg, address, false);
+	return Protocol.send(socket, msg, address);
     } // end method send
 
 
