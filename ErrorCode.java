@@ -8,7 +8,7 @@ public enum ErrorCode
 
 
     FAIL_WHALE(72, "fail whale is failing, unknown error occurred"),
-    NAME_PREVIOUSLY_REGISTERED(101, "someone else using name"),
+    NAME_PREVIOUSLY_REGISTERED(101, "someone else using name or ip"),
     NAME_NOT_FOUND (102, "name wasn't found, maybe"),
     PACKET_EXPLODED(777, "packet inexplicably blew up"),
     TIMEOUT(1973, "server's response timed out - it is wasting the "+
