@@ -44,8 +44,8 @@ public class MailDaemon extends Thread
 
 	while (!shutdown){
 
-		// Daemon blocks until mail arrives
-		// May never unblock, if no mail is received!
+		// Will keep timing out and restarting
+		// receive command until message is retrieved
 	    try {
 		from = Protocol.receive(mailSocket, packet);
 	    }
