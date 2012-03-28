@@ -208,7 +208,7 @@ public class ClientProtocol extends Protocol
 		cmd = ProtocolCommand.UNLINK;
 
 	    }
-/*
+
 		// register name on the server
 	    else if (command.matches("^register(\\s[A-Za-z0-9]){0,2}.*")){
 
@@ -217,19 +217,38 @@ public class ClientProtocol extends Protocol
 			 "(max 80 chars): ","([A-Za-z0-9]{1,80}|\\*{1})",
 			 tokens, 1, in, false);
 
+		boolean portAvailable = false;
+		DatagramSocket test = null;
+
 		    // The port number of the remote socket
 		    // Note the port can be anything that isn't 0
-		while (port < 1024 || port > 65535){
+		while ((port < 1024 || port > 65535) && !portAvailable){
+
 		    portStr = parseParameter("Please enter the port number:",
 			 "^[1-9][0-9]{3,4}$", tokens, 3, in, false);
 		    port = Integer.parseInt(portStr);
-		}
+
+		    try {
+			test = new DatagramSocket(port);
+			test.setReuseAddress(true);
+			portAvailable = true;
+		    }
+		    catch (IOException e) { }
+		    finally {
+			if (test != null){
+			    test.close();
+			} // end if ds
+		    } // end finally
+
+		} // end while port
+
+		args = "" + port;
 
 		cmd = ProtocolCommand.REGISTER;
 
 	    }
 
-
+/*
 		// register name on the server
 	    else if (command.matches("^unregister(\\s[A-Za-z0-9])?.*")){
 
@@ -348,6 +367,15 @@ public class ClientProtocol extends Protocol
 
 	}
 
+	else if (tokens[1].equals("REGISTER")){
+
+	    if (error == null){
+		int port = Integer.parseInt(tokens[3]);
+		Client.createMailDaemon(tokens[2], port, server);
+	    }
+
+	}
+
 	else if (tokens[1].equals("GAMEOVER")){
 
 	    if (error == null){
@@ -361,7 +389,6 @@ public class ClientProtocol extends Protocol
 	else if (tokens[1].equals("TEST")){
 	    system_msg = "test";
 	}
-
 
 	if (error != null){
 	    System.out.println("error: " + error.getMessage());
@@ -516,6 +543,21 @@ public class ClientProtocol extends Protocol
 	return value;
 
     } // end method parseParameter
+
+    /**
+     * Extract the message from a packet. This is useful if
+     * the calling object does not want to use the main
+     * client socket (e.g. the MailDaemon threads).
+     *
+     * @param packet
+     *    The DatagramPacket to parse.
+     *
+     * @return
+     *    The String message contained in the packet.
+     */
+    public static String extract(DatagramPacket packet){
+	return extractMessage(packet);
+    }
 
     /**
      * Receive a packet from some server.
