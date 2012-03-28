@@ -161,9 +161,7 @@ public enum ProtocolCommand {
 		// format: DIR REGISTER name port {SUCCESS | ERROR code}
 	    case REGISTER:
 
-		if (direction == 0){
-		    msg = msg.concat(" " + name + " " + args);
-		}
+		msg = msg.concat(" " + name + " " + args);
 
 		break;
 
