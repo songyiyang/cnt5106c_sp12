@@ -19,6 +19,9 @@ public class Server
 	// Keep track of all the records known to the server
     private static LinkedList<Record> records = new LinkedList<Record>();
 
+	// Keep track of all registered users
+    private static LinkedList<RegisteredName> registrar =
+		    new LinkedList<RegisteredName>();
 
     public static void main(String[] args){
 
@@ -107,6 +110,147 @@ public class Server
 
     } // end main
 
+    /****************************************************
+
+
+	utility methods
+
+
+    *****************************************************/
+
+
+    /**
+     * Prints out the IP and port number of the server.
+     * This method also determines what the port number 
+     * will be.
+     * 
+     * @param args[]
+     *    An array of Strings as passed to main()
+     * 
+     */
+    private static void determineIPAndPortNumber(String args[]){
+
+	config = new ConfigFile("config.ini");
+	boolean finished = false;
+
+	int selectedPort = 0;
+
+	    // Highest priority is given to command-line argument
+	if (args.length >= 1){
+		selectedPort = Integer.parseInt(args[0]);
+	    try {
+		if (selectedPort >= 1024 && selectedPort <= 65535){
+		    finished = true;
+		}
+	    }
+	    catch (NumberFormatException e){ 
+
+	    }
+	} // end if args.length
+
+	    // If no argument is passed, or passed arg was not a valid
+	    // port number, read in the configuration file
+	if (!finished){
+		// Second-highest priority is given to server config file
+	    selectedPort = config.getPort();
+
+	    if (selectedPort >= 1024 && selectedPort <= 65535){
+		finished = true;
+	    }
+	}
+
+
+	    // If someone modified the config file to have an invalid
+	    // port, then randomly choose one. it's getting reported to the
+	    // user anyhow, until it gets changed of course.
+	if (!finished){
+	    selectedPort = 8080;
+	    finished = true;
+	}
+
+	    
+	port = selectedPort;
+
+	InetAddress host = null;
+
+	    // Print out IP address and port
+	try {
+	    host = InetAddress.getLocalHost();
+	    System.out.println("IP is " + host.getHostAddress() +
+			       ", port is " + port);
+	    myIP = new IPAddress(host, port);
+	}
+	catch (UnknownHostException e){ }
+
+    } // end determineIPAndPortNumber
+
+    public static IPAddress getIPAddress(){
+	return myIP;
+    } // end getIPAddress
+
+
+    /****************************************************
+
+
+	methods to add/delete/find registered names
+
+
+    *****************************************************/
+
+    public static RegisteredName findRegisteredName(String name){
+
+	RegisteredName rname = null;
+
+	for (RegisteredName temp : registrar){
+	    if (temp.getName().equals(name)){
+		rname = temp;
+		break;
+	    } // end if name.matches()
+	} // end for RegisteredName
+
+	return rname;
+
+    } // end findRegisteredName
+
+
+    public static void registerClient(RegisteredName rname){
+	registrar.add(rname);
+    }
+
+
+    public static void sendMailToClients(String[] names, String message){
+
+	if (names.length == 1 && names[0].equals("*")){
+	    for (RegisteredName name : registrar){
+		ClientProtocol.send(message, name.getMailAddress());
+	    }
+	} // end if names.length
+	else {
+
+	    RegisteredName temp = null;
+
+	    for (int i = 0; i < names.length; i++){
+
+		temp = findRegisteredName(names[i]);
+
+		if (temp != null){
+		    ClientProtocol.send(message, temp.getMailAddress());
+		}
+
+	    } // end for i
+	}
+    } // end sendMailToClients
+
+
+    /****************************************************
+
+
+	methods to add/delete/find records
+
+
+    *****************************************************/
+
+
     /**
      * Add a new record to the list of records.
      */
@@ -193,70 +337,6 @@ public class Server
 
     } // end method deleteRecord
 
-    /**
-     * Prints out the IP and port number of the server.
-     * This method also determines what the port number 
-     * will be.
-     * 
-     * @param args[]
-     *    An array of Strings as passed to main()
-     * 
-     */
-    private static void determineIPAndPortNumber(String args[]){
-
-	config = new ConfigFile("config.ini");
-	boolean finished = false;
-
-	int selectedPort = 0;
-
-	    // Highest priority is given to command-line argument
-	if (args.length >= 1){
-		selectedPort = Integer.parseInt(args[0]);
-	    try {
-		if (selectedPort >= 1024 && selectedPort <= 65535){
-		    finished = true;
-		}
-	    }
-	    catch (NumberFormatException e){ 
-
-	    }
-	} // end if args.length
-
-	    // If no argument is passed, or passed arg was not a valid
-	    // port number, read in the configuration file
-	if (!finished){
-		// Second-highest priority is given to server config file
-	    selectedPort = config.getPort();
-
-	    if (selectedPort >= 1024 && selectedPort <= 65535){
-		finished = true;
-	    }
-	}
-
-
-	    // If someone modified the config file to have an invalid
-	    // port, then randomly choose one. it's getting reported to the
-	    // user anyhow, until it gets changed of course.
-	if (!finished){
-	    selectedPort = 8080;
-	    finished = true;
-	}
-
-	    
-	port = selectedPort;
-
-	InetAddress host = null;
-
-	    // Print out IP address and port
-	try {
-	    host = InetAddress.getLocalHost();
-	    System.out.println("IP is " + host.getHostAddress() +
-			       ", port is " + port);
-	    myIP = new IPAddress(host, port);
-	}
-	catch (UnknownHostException e){ }
-
-    } // end determineIPAndPortNumber
 
     public static Record getRecord(String name){
 
@@ -308,9 +388,5 @@ public class Server
 	return matchedRecords;
 
     } // end method findRecords
-
-    public static IPAddress getIPAddress(){
-	return myIP;
-    }
 
 } // end class Server
