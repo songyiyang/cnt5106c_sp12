@@ -261,6 +261,29 @@ public class ServerProtocol extends Protocol
 
 	}
 
+	    // Register a name on the server
+	else if (tokens[1].equals("REGISTER")){
+
+	    name = tokens[2];
+
+	    port = Integer.parseInt(tokens[3]);
+	    args = tokens[3];
+
+	    RegisteredName rname = Server.findRegisteredName(name);
+
+	    if (rname != null){
+		error = ErrorCode.NAME_PREVIOUSLY_REGISTERED;
+	    }
+	    else {
+		rname = new RegisteredName(name, client, port);
+		Server.registerClient(rname);
+	    }
+
+	    cmd = ProtocolCommand.REGISTER;
+	    system_msg = "register";
+
+	}
+
 	    // Process a shutdown request
 	else if (tokens[1].equals("GAMEOVER")){
 
