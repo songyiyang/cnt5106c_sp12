@@ -1,5 +1,6 @@
 import java.io.*;
 import java.net.*;
+import java.util.LinkedList;
 
 /**
  * @desc This the client process that communicates
@@ -9,8 +10,11 @@ public class Client
 {
 
     private static IPAddress server = null;
-//    private static DatagramSocket socket = null;
     private static BufferedReader in = null;
+
+    private static LinkedList<String> mailbox = new LinkedList<String>();
+    private static LinkedList<MailDaemon> daemons =
+		   new LinkedList<MailDaemon>();
 
 
     public static void main(String[] args){
@@ -133,5 +137,48 @@ public class Client
 	}
 
     } // end main method
+
+    public static void addMailToQueue(String message){
+
+	synchronized(mailbox){
+	    mailbox.addLast(message);
+	}
+
+    } // end method addMailToQueue
+
+    private static int checkMailbox(){
+
+	int mailcount = 0;
+
+	synchronized(mailbox){
+	    mailcount = mailbox.size();
+	}
+
+	return mailcount;
+
+    } // end method checkMailbox
+
+    public static void createMailDaemon(String name, int port,
+					IPAddress server){
+
+	MailDaemon daemon = new MailDaemon(name, port, server);
+	daemon.setDaemon(true);
+	daemon.start();
+	daemons.addLast(daemon);
+
+    } // end method createMailDaemon
+
+    public static void destroyMailDaemon(String name, IPAddress server){
+
+	for (MailDaemon daemon : daemons){
+
+	    if (daemon.matches(name,server)){
+		daemon.endDaemon();
+	    }
+
+	} // end foreach daemon
+
+    } // end method destroyMailDaemon
+
 
 } // end class Client
