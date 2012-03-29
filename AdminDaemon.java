@@ -12,6 +12,7 @@ public class AdminDaemon extends Thread
 {
 
     boolean shutdown;
+    DatagramPacket packet;
     private LinkedList<String> jobQueue;
     private LinkedList<String> processedMsgs;
 
@@ -57,7 +58,7 @@ public class AdminDaemon extends Thread
 	boolean jobsExist = false;
 
 	synchronized(jobQueue){
-	    jobsExist = (boolean) jobQueue.size();
+	    jobsExist = (jobQueue.size() > 0);
 	}
 
 	return jobsExist;
@@ -74,6 +75,10 @@ public class AdminDaemon extends Thread
 
 	
 
+    }
+
+    private String getUnprocessedJob(){
+	return null;
     }
 
     public void endDaemon(){
