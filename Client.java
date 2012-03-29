@@ -174,6 +174,7 @@ public class Client
 
 	    if (daemon.matches(name,server)){
 		daemon.endDaemon();
+		break;
 	    }
 
 	} // end foreach daemon
