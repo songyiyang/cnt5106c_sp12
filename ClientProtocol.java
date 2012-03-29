@@ -73,10 +73,12 @@ public class ClientProtocol extends Protocol
 		// Insert a new record
 	    if (command.matches("^insert(\\s[A-Za-z0-9\\.]){0,3}.*")){
 
-		    // The name to insert at remote site
-		name = parseParameter("Please enter the alphanumeric name " +
-			 "(max 80 chars): ","[A-Za-z0-9]{1,80}", tokens, 1,
-			 in, false);
+		while (!name.equals("SELF")){
+			// The name to insert at remote site
+		    name = parseParameter("Please enter the alphanumeric"+
+			 "name (max 80 chars): ","[A-Za-z0-9]{1,80}",
+			 tokens, 1, in, false);
+		}
 
 		    // The IP address of the remote site
 		addr = parseParameter("Please enter the IP address:",
@@ -99,10 +101,12 @@ public class ClientProtocol extends Protocol
 		// Delete a record from the server
 	    else if (command.matches("^delete(\\s[A-Za-z0-9\\.]){0,2}.*")){
 
-		    // Get the name of the record to delete
-		name = parseParameter("Please enter the alphanumeric name " +
-			 "(max 80 chars): ","[A-Za-z0-9]{1,80}", tokens, 1,
-			 in, false);
+		while (!name.equals("SELF")){
+			// The name to insert at remote site
+		    name = parseParameter("Please enter the alphanumeric"+
+			 "name (max 80 chars): ","[A-Za-z0-9]{1,80}",
+			 tokens, 1, in, false);
+		}
 
 		    // Get the IP address to delete
 		    // This field is optional
@@ -188,10 +192,12 @@ public class ClientProtocol extends Protocol
 		// link current server to another server
 	    else if (command.matches("^link(\\s[A-Za-z0-9])?.*")){
 
-		    // Get the regex for the name
-		name = parseParameter("Please enter the alphanumeric name " +
-			 "(max 80 chars): ","([A-Za-z0-9]{1,80}{1})",
+
+		while (!name.equals("SELF")){
+		    name = parseParameter("Please enter the alphanumeric"+
+			 "name (max 80 chars): ","[A-Za-z0-9]{1,80}",
 			 tokens, 1, in, false);
+		}
 
 		cmd = ProtocolCommand.LINK;
 
@@ -200,10 +206,11 @@ public class ClientProtocol extends Protocol
 		// unlink current server from another server
 	    else if (command.matches("^unlink(\\s[A-Za-z0-9])?.*")){
 
-		    // Get the regex for the name
-		name = parseParameter("Please enter the alphanumeric name " +
-			 "(max 80 chars): ","([A-Za-z0-9]{1,80}{1})",
+		while (!name.equals("SELF")){
+		    name = parseParameter("Please enter the alphanumeric"+
+			 "name (max 80 chars): ","[A-Za-z0-9]{1,80}",
 			 tokens, 1, in, false);
+		}
 
 		cmd = ProtocolCommand.UNLINK;
 
@@ -212,10 +219,11 @@ public class ClientProtocol extends Protocol
 		// register name on the server
 	    else if (command.matches("^register(\\s[A-Za-z0-9]){0,2}.*")){
 
-		    // Get the regex for the name
-		name = parseParameter("Please enter the alphanumeric name " +
-			 "(max 80 chars): ","([A-Za-z0-9]{1,80}{1})",
+		while (!name.equals("SELF")){
+		    name = parseParameter("Please enter the alphanumeric"+
+			 "name (max 80 chars): ","[A-Za-z0-9]{1,80}",
 			 tokens, 1, in, false);
+		}
 
 		boolean portAvailable = false;
 		DatagramSocket test = null;
@@ -258,6 +266,78 @@ public class ClientProtocol extends Protocol
 			 tokens, 1, in, false);
 
 		cmd = ProtocolCommand.UNREGISTER;
+
+	    }
+
+
+		// list names on servers
+	    else if (command.matches("^list")){
+
+		String nameList;
+		String serverList;
+
+		    // Get the regex for the name
+		nameList = parseParameter("Please enter the client names, " +
+			 "separated with spaces:", 
+			 "(\\*|[A-Za-z0-9]{1,80}{1}(\\s+[A-Za-z0-9]{1,80})*)",
+			 tokens, 2, in, false);
+
+		    // Get the regex for the name
+		serverList = parseParameter("Please enter the " +
+			 "servers names, separated with spaces:", 
+			 "(\\*|[A-Za-z0-9]{1,80}{1}(\\s+[A-Za-z0-9]{1,80})*)",
+			 tokens, 3, in, false);
+
+		nameList = nameList.trim();
+		nameList = nameList.replace("\\s+", ",");
+
+		serverList = serverList.trim();
+		serverList = serverList.replace("\\s+", ",");
+
+		args = nameList + " " + serverList;
+
+		cmd = ProtocolCommand.LIST;
+
+	    }
+
+
+		// send mail to users
+	    else if (command.matches("^send")){
+
+		String nameList;
+		String serverList;
+		String message;
+
+		    // Get the regex for the name
+		nameList = parseParameter("Please enter the client names, " +
+			 "separated with spaces:", 
+			 "(\\*|[A-Za-z0-9]{1,80}{1}(\\s+[A-Za-z0-9]{1,80})*)",
+			 tokens, 2, in, false);
+
+		    // Get the regex for the name
+		serverList = parseParameter("Please enter the " +
+			 "servers names, separated with spaces:", 
+			 "(\\*|[A-Za-z0-9]{1,80}{1}(\\s+[A-Za-z0-9]{1,80})*)",
+			 tokens, 3, in, false);
+
+		    // Get the regex for the name
+		message = parseParameter("Please enter the "+
+			 "message to send:", ".+", tokens, 4, in, false);
+
+		nameList = nameList.trim();
+		nameList = nameList.replace("\\s+", ",");
+
+		serverList = serverList.trim();
+		serverList = serverList.replace("\\s+", ",");
+
+		args = nameList + " " + serverList;
+
+		message = message.trim();
+		message = message.concat("\n.\n");
+
+		args = args.concat(" " + message);
+
+		cmd = ProtocolCommand.SEND;
 
 	    }
 
