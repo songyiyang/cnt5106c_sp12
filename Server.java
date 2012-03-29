@@ -24,7 +24,7 @@ public class Server
 		    new LinkedList<RegisteredName>();
 
 	// Daemon thread that process network information
-    private static AdminDaemon admin = new AdminDaemon();
+    public static AdminDaemon admin = new AdminDaemon();
 
     public static void main(String[] args){
 
