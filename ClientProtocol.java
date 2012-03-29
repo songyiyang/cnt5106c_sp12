@@ -190,7 +190,7 @@ public class ClientProtocol extends Protocol
 
 		    // Get the regex for the name
 		name = parseParameter("Please enter the alphanumeric name " +
-			 "(max 80 chars): ","([A-Za-z0-9]{1,80}|\\*{1})",
+			 "(max 80 chars): ","([A-Za-z0-9]{1,80}{1})",
 			 tokens, 1, in, false);
 
 		cmd = ProtocolCommand.LINK;
@@ -202,7 +202,7 @@ public class ClientProtocol extends Protocol
 
 		    // Get the regex for the name
 		name = parseParameter("Please enter the alphanumeric name " +
-			 "(max 80 chars): ","([A-Za-z0-9]{1,80}|\\*{1})",
+			 "(max 80 chars): ","([A-Za-z0-9]{1,80}{1})",
 			 tokens, 1, in, false);
 
 		cmd = ProtocolCommand.UNLINK;
@@ -214,7 +214,7 @@ public class ClientProtocol extends Protocol
 
 		    // Get the regex for the name
 		name = parseParameter("Please enter the alphanumeric name " +
-			 "(max 80 chars): ","([A-Za-z0-9]{1,80}|\\*{1})",
+			 "(max 80 chars): ","([A-Za-z0-9]{1,80}{1})",
 			 tokens, 1, in, false);
 
 		boolean portAvailable = false;
@@ -225,7 +225,7 @@ public class ClientProtocol extends Protocol
 		while ((port < 1024 || port > 65535) && !portAvailable){
 
 		    portStr = parseParameter("Please enter the port number:",
-			 "^[1-9][0-9]{3,4}$", tokens, 3, in, false);
+			 "^[1-9][0-9]{3,4}$", tokens, 2, in, false);
 		    port = Integer.parseInt(portStr);
 
 		    try {
@@ -248,19 +248,19 @@ public class ClientProtocol extends Protocol
 
 	    }
 
-/*
+
 		// register name on the server
 	    else if (command.matches("^unregister(\\s[A-Za-z0-9])?.*")){
 
 		    // Get the regex for the name
 		name = parseParameter("Please enter the alphanumeric name " +
-			 "(max 80 chars): ","([A-Za-z0-9]{1,80}|\\*{1})",
+			 "(max 80 chars): ","([A-Za-z0-9]{1,80}{1})",
 			 tokens, 1, in, false);
 
 		cmd = ProtocolCommand.UNREGISTER;
 
 	    }
-*/
+
 		// Force the client to exit
 	    else if (command.equals("quit")){
 		system_msg = "quit";
@@ -372,6 +372,16 @@ public class ClientProtocol extends Protocol
 	    if (error == null){
 		int port = Integer.parseInt(tokens[3]);
 		Client.createMailDaemon(tokens[2], port, server);
+		System.out.println("successfully registered on the server.");
+	    }
+
+	}
+
+	else if (tokens[1].equals("UNREGISTER")){
+
+	    if (error == null){
+		Client.destroyMailDaemon(tokens[2], server);
+		System.out.println("successfully unregistered from the server.");
 	    }
 
 	}
