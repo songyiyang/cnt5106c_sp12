@@ -1,5 +1,6 @@
 import java.net.*;
 import java.io.IOException;
+import java.util.TreeMap;
 import java.util.LinkedList;
 
 /**
@@ -73,21 +74,72 @@ public class AdminDaemon extends Thread
 	    return;
 	}
 
-	
+	    // Handle a LIST request
+	if (message.matches(".+LIST.+")){
+	    // process LIST
+	}
+
+	    // Handle a SEND request
+	else if (message.matches(".+SEND.+")){
+	    // process SEND
+	}
+
+	    // Handle a REGISTER request
+	else if (message.matches(".+REGISTER.+")){
+	    // process REGISTER
+	}
+
+	    // Handle an UNREGISTER request
+	else if (message.matches(".+UNREGISTER.+")){
+	    // process UNREGISTER
+	}
+
+	    // Handle some CONTROL message
+	else {
+	    // process CONTROL message
+
+		// remember message in case someone sends this to you
+	    AddMessageToProcessedList(message);
+
+	}
+
+    } // end processJob
+
+    private String getUnprocessedJob(){
+
+	String message = null;
+	String temp = null;
+
+	while (message != null && doJobsExist() > 0){
+
+	    temp = jobsQueue.removeFirst();
+
+	    if (!processedMsgs.contains(temp)){
+		message = temp;
+	    }
+
+	} // end while message
+
+	return message;
+
+    } // end getUnprocessedJob
+
+
+    private void processListCmd(){
 
     }
 
-    private String getUnprocessedJob(){
-	return null;
+    private void processSendCmd(){
+
     }
 
     public void endDaemon(){
 	shutdown = true;
-    } // end method endDaemon
+    } // end endDaemon
 
     private void resetPacket(){
 	packet = new DatagramPacket(new byte[Protocol.PACKET_SIZE_LARGE],
 				    Protocol.PACKET_SIZE_LARGE);
-    } // end method resetPacket
+    } // end resetPacket
 
 } // end class MailDaemon
