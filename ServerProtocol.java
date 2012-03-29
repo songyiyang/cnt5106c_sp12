@@ -304,6 +304,21 @@ public class ServerProtocol extends Protocol
 
 	}
 
+	    // Get a list of all the clients in the network
+	else if (tokens[1].equals("LIST")){
+
+	    cmd = ProtocolCommand.LIST;
+	    system_msg = "list";
+
+	}
+
+	    // Send mail to clients in the network
+	else if (tokens[1].equals("SEND")){
+
+	    cmd = ProtocolCommand.SEND;
+	    system_msg = "send";
+
+	}
 
 	    // Process a shutdown request
 	else if (tokens[1].equals("GAMEOVER")){
