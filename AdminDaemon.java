@@ -13,17 +13,28 @@ public class AdminDaemon extends Thread
 {
 
     boolean shutdown;
+    int historyLength;
     DatagramPacket packet;
+
+    private TreeMap<String,LinkedList<String>> clients;
+
+    private LinkedList<Record> links;
     private LinkedList<String> jobQueue;
     private LinkedList<String> processedMsgs;
 
-    private static long SLEEP_TIMER = 1000 * 30;
+    private static final int DEFAULT_MAX_HISTORY = 20;
+    private static final long SLEEP_TIMER = 1000 * 30;
 
     public AdminDaemon(){
 
 	shutdown = false;
+	historyLength = DEFAULT_MAX_HISTORY;
+
+	links = new LinkedList<Record>();
 	jobQueue = new LinkedList<String>();
 	processedMsgs = new LinkedList<String>();
+
+	clients = new TreeMap<String,LinkedList<String>>()
 
 	resetPacket();
 
@@ -34,12 +45,10 @@ public class AdminDaemon extends Thread
 	while (!shutdown){
 
 	    if (!doJobsExist()){
-
 		try {
 		    sleep(SLEEP_TIMER);
 		}
 		catch (InterruptedException e){ }
-
 	    }
 
 	    processJob();
@@ -84,13 +93,13 @@ public class AdminDaemon extends Thread
 	    // process SEND
 	}
 
-	    // Handle a REGISTER request
-	else if (message.matches(".+REGISTER.+")){
-	    // process REGISTER
+	    // Handle registration requests
+	else if (message.matches(".+(UN)?REGISTER.+")){
+	    
 	}
 
-	    // Handle an UNREGISTER request
-	else if (message.matches(".+UNREGISTER.+")){
+	    // Handle link requests
+	else if (message.matches(".+(UN)?LINK.+")){
 	    // process UNREGISTER
 	}
 
@@ -130,6 +139,31 @@ public class AdminDaemon extends Thread
     }
 
     private void processSendCmd(){
+
+    }
+
+
+    private void processRegisterCmd(){
+
+    }
+
+    private void processLinkCmd(){
+
+    }
+
+
+    private void processControlCmd(){
+
+    }
+
+
+    public void addLink(Record record){
+
+	synchronized(links){
+	    links.addLast(record);
+	}
+
+	processLinkCmd();
 
     }
 
