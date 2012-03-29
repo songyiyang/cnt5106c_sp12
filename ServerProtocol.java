@@ -307,6 +307,7 @@ public class ServerProtocol extends Protocol
 	    // Get a list of all the clients in the network
 	else if (tokens[1].equals("LIST")){
 
+	    Server.admin.addJobToQueue(message);
 	    cmd = ProtocolCommand.LIST;
 	    system_msg = "list";
 
@@ -315,6 +316,7 @@ public class ServerProtocol extends Protocol
 	    // Send mail to clients in the network
 	else if (tokens[1].equals("SEND")){
 
+	    Server.admin.addJobToQueue(message);
 	    cmd = ProtocolCommand.SEND;
 	    system_msg = "send";
 
