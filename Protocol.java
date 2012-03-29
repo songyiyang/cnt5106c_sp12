@@ -18,10 +18,16 @@ public class Protocol
 
 	// Default packet size is 1024 bytes
     public static final int PACKET_SIZE = 1024;
-	// Large packet size is 1024 * 20 bytes
-    public static final int PACKET_SIZE_LARGE = 1024 * 20;
+	// Large packet size is 1024 * 100 bytes
+    public static final int PACKET_SIZE_LARGE = 1024 * 100;
+
 	// Default timeout is 5 seconds
     public static final int MAX_TIMEOUT = 1000 * 5;
+
+	// Minimum port value allowed
+    public static final int MIN_PORT = 1024;
+	// Maximum port value allowed
+    public static final int MAX_PORT = 65535;
 
    /**
     * Remove the payload from the packet, removing any
