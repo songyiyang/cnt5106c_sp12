@@ -218,6 +218,10 @@ public class Server
     }
 
 
+    public static void removeClient(RegisteredName rname){
+	registrar.remove(rname);
+    }
+
     public static void sendMailToClients(String[] names, String message){
 
 	if (names.length == 1 && names[0].equals("*")){
