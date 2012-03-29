@@ -285,6 +285,26 @@ public class ServerProtocol extends Protocol
 
 	}
 
+	    // Register a name on the server
+	else if (tokens[1].equals("UNREGISTER")){
+
+	    name = tokens[2];
+
+	    RegisteredName rname = Server.findRegisteredName(name);
+
+	    if (rname == null){
+		error = ErrorCode.NAME_NOT_FOUND;
+	    }
+	    else {
+		Server.removeClient(rname);
+	    }
+
+	    cmd = ProtocolCommand.UNREGISTER;
+	    system_msg = "unregister";
+
+	}
+
+
 	    // Process a shutdown request
 	else if (tokens[1].equals("GAMEOVER")){
 
