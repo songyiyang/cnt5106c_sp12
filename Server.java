@@ -23,6 +23,9 @@ public class Server
     private static LinkedList<RegisteredName> registrar =
 		    new LinkedList<RegisteredName>();
 
+	// Daemon thread that process network information
+    private static AdminDaemon admin = new AdminDaemon();
+
     public static void main(String[] args){
 
 	recordFile = new RecordFile("Records.db");
@@ -30,6 +33,9 @@ public class Server
 
 	    // Determine this host's IP and port
 	determineIPAndPortNumber(args);
+
+	    // Start server daemon thread
+	admin.start();
 
 	    // Define a packet with which to receive data
 	DatagramPacket packetIn = null;
@@ -65,7 +71,8 @@ public class Server
 	    // client to some other server.
 	while (true) {
 
-	    while (clientPort < 1024 || clientPort > 65535){
+	    while (clientPort < Protocol.MIN_PORT ||
+		   clientPort > Protocol.MAX_PORT){
 		clientPort = r.nextInt(65535);
 	    }
 
@@ -75,7 +82,7 @@ public class Server
 	    }
 	    catch (SocketException e){ }
 
-	}
+	} // end while true
 
 	String system_msg = null;
 
@@ -197,6 +204,15 @@ public class Server
 
     *****************************************************/
 
+    /**
+     * Finds and returns the registered name, if it exists. 
+     *
+     * @param name
+     *    The name on which to search.
+     *
+     * @return
+     *    The RegisteredName object if found, or null if not found.
+     */
     public static RegisteredName findRegisteredName(String name){
 
 	RegisteredName rname = null;
@@ -213,36 +229,67 @@ public class Server
     } // end findRegisteredName
 
 
+    /**
+     * Registers a name on the server.
+     *
+     * @param rname
+     *    The RegisteredName to register.
+     */
     public static void registerClient(RegisteredName rname){
 	registrar.add(rname);
     }
 
-
+    /**
+     * Removes a registered name from the server.
+     *
+     * @param rname
+     *    The RegisteredName to remove.
+     */
     public static void removeClient(RegisteredName rname){
 	registrar.remove(rname);
     }
 
+    /**
+     * Send mail to the recipients on this server.
+     *
+     * @param names
+     *    A String array of names representing registered users.
+     * @param message
+     *    The message to send to the clients.
+     */
     public static void sendMailToClients(String[] names, String message){
 
+	    // If the user specified all registered names using the
+	    // '*' character, send to all registered clients on the
+	    // server
 	if (names.length == 1 && names[0].equals("*")){
 	    for (RegisteredName name : registrar){
 		ClientProtocol.send(message, name.getMailAddress());
 	    }
 	} // end if names.length
+
+	    // Else only send mail to those names that are
+	    // registered on this server
 	else {
 
 	    RegisteredName temp = null;
 
+		// Go through each name and see if it exists
+		// on this server
 	    for (int i = 0; i < names.length; i++){
 
+		    // Is name registered on this server?
 		temp = findRegisteredName(names[i]);
 
+		    // If so, send the mail
 		if (temp != null){
 		    ClientProtocol.send(message, temp.getMailAddress());
 		}
 
 	    } // end for i
-	}
+
+	} // end else
+
     } // end sendMailToClients
 
 
