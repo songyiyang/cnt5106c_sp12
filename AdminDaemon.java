@@ -157,11 +157,39 @@ public class AdminDaemon extends Thread
 
 	    // Convert names into string form
 
+	Set<String> keys = 
+
     }
 
     private void processSendCmd(){
 
+	String[] tokens = t.getMessage().split("\\s+");
+	String names = tokens[];
+	String servers = tokens[];
+
+	names = "(" + names.replace(",", "|") + ")";
+	servers = "(" + servers.replace(",", "|") + ")";
+
+	ClientList list = null;
+
 	    // For each link, send out the message
+
+	Set<String> keys = clients.keySet();
+
+	for (String key : keys){
+
+	    if (!key.matches(servers)){
+		continue;
+	    }
+
+	    list = clients.get(key);
+
+	    for (String entry : list){
+		
+	    }
+
+	} // end foreach keys
+	
 
     }
 
@@ -195,8 +223,9 @@ public class AdminDaemon extends Thread
 	}
 	else {
 
-	    // For each link, send message to unregister user
-	    // for this server
+		// First, create the message to the remote servers
+	    args = tranid + " " + daemonIP.toString() + " "
+		   + tokens[2];
 
 	    message = ProtocolCommand.createPacket(ProtocolCommand.CTRL_RM,
 		      "", null, args, 0, null);
@@ -204,10 +233,10 @@ public class AdminDaemon extends Thread
 		// For each link, send message to register user for
 		// this server
 	    for (Record r : links){
-//		ClientProtocol.send(message, r.getIPAddress());
-//		rsp = ClientProtocol.receive(packet);
+		send(message, r.getIPAddress());
+		rsp = receive();
+		resetPacket();
 	    }
-
 
 	}
 
@@ -370,8 +399,31 @@ public class AdminDaemon extends Thread
 
 	}
 
+	    // CTRL_RM - remove a registered name from the list
+	else if (tokens[1].matches("CTRL_RM")) {
 
-	// CTRL_RM
+	    String[] idParts = tokens[2].split("-");
+
+	    args = tranid + " " + daemonIP.toString();
+
+	    reply = ProtocolCommand.createPacket(ProtocolCommand.CTRL_RM,
+			  "", null, args, 1, null);
+
+	    send(message, t.getIP());
+
+	    if (clients.containsKey(idParts[1])){
+		clients.get(idParts[1]).remove(tokens[4]);
+	    }
+
+	    for (Record temp : links){
+		if (!temp.getName().equals(idParts[1])){
+		    send(message, temp.getIPAddress());
+		    rsp = receive();
+		    resetPacket();
+		}
+	    }
+
+	}
 
 	// CTRL_SEND
 
