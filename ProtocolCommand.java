@@ -135,15 +135,6 @@ public enum ProtocolCommand {
 
 		break;
 
-		// format: DIR CONNECT name ip:port {SUCCESS | ERROR code}
-	    case CTRL_CONNECT:
-
-		if (direction == 0){
-		    msg = msg.concat(" " + name + " " + address.toString());
-		}
-
-		break;
-
 		// format: DIR UNLINK name {SUCCESS | ERROR code}
 	    case UNLINK:
 
@@ -152,14 +143,6 @@ public enum ProtocolCommand {
 		}
 
 		break;
-
-
-		// format: DIR DISCONNECT name {SUCCESS | ERROR code}
-	    case CTRL_DISCONNECT:
-
-		if (direction == 0){
-		    msg = msg.concat(" " + name);
-		}
 
 		// format: DIR REGISTER name port {SUCCESS | ERROR code}
 	    case REGISTER:
@@ -176,6 +159,22 @@ public enum ProtocolCommand {
 		}
 
 		break;
+
+		// format: DIR CTRL_CONNECT tid addr # {client_list}
+		//         {SUCCESS | ERROR code}
+	    case CTRL_CONNECT:
+
+		payloadExists = true;
+		msg = msg.concat(" " + args);
+
+		break;
+
+		// format: DIR CTRL_DISCONNECT tid addr {SUCCESS | ERROR code}
+	    case CTRL_DISCONNECT:
+
+		if (direction == 0){
+		    msg = msg.concat(" " + name);
+		}
 
 	} // end switch cmd
 
