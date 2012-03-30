@@ -176,6 +176,23 @@ public enum ProtocolCommand {
 		    msg = msg.concat(" " + name);
 		}
 
+
+		// format: DIR CTRL_ADD tid addr name {SUCCESS | ERROR code}
+	    case CTRL_ADD:
+
+		payloadExists = true;
+		msg = msg.concat(" " + args);
+
+		break;
+
+		// format: DIR CTRL_RM tid addr name {SUCCESS | ERROR code}
+	    case CTRL_RM:
+
+		if (direction == 0){
+		    msg = msg.concat(" " + name);
+		}
+
+
 	} // end switch cmd
 
 
