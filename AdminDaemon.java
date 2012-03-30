@@ -13,11 +13,13 @@ import java.util.LinkedList;
 public class AdminDaemon extends Thread
 {
 
-    boolean shutdown;
-    int historyLength;
-    DatagramPacket packet;
     int id;
     Transaction t;
+    boolean shutdown;
+    int historyLength;
+    IPAddress daemonIP;
+    DatagramSocket socket;
+    DatagramPacket packet;
 
     private TreeMap<String,ClientList> clients;
 
@@ -41,6 +43,15 @@ public class AdminDaemon extends Thread
 
 	clients = new TreeMap<String,ClientList>();
 
+	try {
+	    socket = new DatagramSocket();
+	    daemonIP = new IPAddress(Server.myIP.getIPAddress(),
+		       socket.getPort());
+	}
+	catch (SocketException e){
+
+	}
+
 	resetPacket();
 
     } // end constructor
@@ -63,9 +74,11 @@ public class AdminDaemon extends Thread
     } // end method run
 
     public void addJobToQueue(Transaction transaction){
+
 	synchronized(jobQueue){
 	    jobQueue.addLast(transaction);
 	}
+
     }
 
     private boolean doJobsExist(){
@@ -88,7 +101,7 @@ public class AdminDaemon extends Thread
 	    return;
 	}
 
-	String tid = id + "-" + Server.getIPAddress().toString();
+	String tranid = id + "-" + Server.getIPAddress().toString();
 
 	    // Handle a LIST request
 	if (t.getMessage().matches(".+LIST.+")){
@@ -102,21 +115,20 @@ public class AdminDaemon extends Thread
 
 	    // Handle registration requests
 	else if (t.getMessage().matches(".+(UN)?REGISTER.+")){
-	    processLinkCmd(tid);	    
+	    processLinkCmd(tranid);	    
 	}
 
 	    // Handle registration requests
 	else if (t.getMessage().matches(".+(UN)?LINK.+")){
-	    processLinkCmd(tid);
+	    processLinkCmd(tranid);
 	}
 
 	    // Handle some CONTROL message
 	else {
 	    // process CONTROL message
-
+	    processControlCmd(tranid);
 		// remember message in case someone sends this to you
 	    addMessageToProcessedList();
-
 	}
 
 	id++;
@@ -154,7 +166,7 @@ public class AdminDaemon extends Thread
     }
 
 
-    private void processRegisterCmd(String tid){
+    private void processRegisterCmd(String tranid){
 
 	String[] tokens = t.getMessage().split("\\s+");
 	String message = "";
@@ -171,8 +183,8 @@ public class AdminDaemon extends Thread
 		// For each link, send message to register user for
 		// this server
 	    for (Record r : links){
-		ClientProtocol.send(message, r.getIPAddress());
-		rsp = ClientProtocol.receive(packet);
+//		ClientProtocol.send(message, r.getIPAddress());
+//		rsp = ClientProtocol.receive(packet);
 	    }
 
 	}
@@ -187,8 +199,8 @@ public class AdminDaemon extends Thread
 		// For each link, send message to register user for
 		// this server
 	    for (Record r : links){
-		ClientProtocol.send(message, r.getIPAddress());
-		rsp = ClientProtocol.receive(packet);
+//		ClientProtocol.send(message, r.getIPAddress());
+//		rsp = ClientProtocol.receive(packet);
 	    }
 
 
@@ -196,7 +208,7 @@ public class AdminDaemon extends Thread
 
     } // end processRegisterCmd
 
-    private void processLinkCmd(String tid){
+    private void processLinkCmd(String tranid){
 
 	String[] tokens = t.getMessage().split("\\s+");
 	String message = "";
@@ -209,22 +221,28 @@ public class AdminDaemon extends Thread
 
 		// First, send a message to the remote server, listing off
 		// our known contacts.
-	    args = generateClientList();
+	    args = tranid + " " + daemonIP.toString() + " "
+		   + generateClientList();
 
 	    message = ProtocolCommand.createPacket(ProtocolCommand.CTRL_CONNECT,
 		      "", null, args, 0, null);
 
-	    ClientProtocol.send(message, record.getIPAddress());
+	    send(message, record.getIPAddress());
 
 		// Then, receive a message from the remote server and 
 		// merge its client list into the one maintained here.
-	    rsp = ClientProtocol.receive(packet);
+	    rsp = receive();
 
 	    if (rsp != null){
 
 		message = ClientProtocol.extract(packet);
 	        tokens = message.split("\\s+");
-		mergeClientList(tokens[3]);
+
+		int numNames = Integer.parseInt(tokens[4]);
+
+		if (numNames > 0){
+		    mergeClientList(tokens[5]);
+		}
 
 	    }
 
@@ -254,11 +272,50 @@ public class AdminDaemon extends Thread
     } // end processLinkCmd
 
 
-    private void processControlCmd(){
+    private void processControlCmd(String tranid){
 
-	// CTRL_CONNECT - send clients to user
+	String reply = "";
+	String message = t.getMessage();
+	String[] tokens = message.split("\\s+");
+	String args = "";	
 
-	// CTRL_DISCONNECT - delete clients used by user
+	IPAddress rsp;
+
+	    // CTRL_CONNECT - send clients to user
+	if (tokens[1].matches("CTRL_CONNECT")) {
+
+	    args = tokens[2] + " " + daemonIP.toString() + " "
+		   + generateClientList();
+
+	    reply = ProtocolCommand.createPacket(ProtocolCommand.CTRL_CONNECT,
+		         "", null, args, 1, null);
+
+	    send(reply, t.getIP());
+
+	    int numNames = Integer.parseInt(tokens[4]);
+
+	    if (numNames > 0){
+		mergeClientList(tokens[4]);
+	    }
+
+	}
+
+	    // CTRL_DISCONNECT - delete clients used by user
+	else if (tokens[1].matches("CTRL_DISCONNECT")) {
+
+	    args = tranid + " " + daemonIP.toString() + " "
+		   + generateClientList();
+
+	    message = ProtocolCommand.createPacket(ProtocolCommand.CTRL_CONNECT,
+		      "", null, args, 1, null);
+
+	    ClientProtocol.send(message, t.getIP());
+
+	    message = ClientProtocol.extract(packet);
+	    tokens = message.split("\\s+");
+	    mergeClientList(tokens[4]);
+
+	}
 
 	// CTRL_ADD
 
@@ -278,6 +335,7 @@ public class AdminDaemon extends Thread
 	String clientData = "";
 	int numSemicolons = 0;
 	int i = 0;
+	int count = 0;
 
 	synchronized(Server.registrar){
 
@@ -285,6 +343,8 @@ public class AdminDaemon extends Thread
 	    i = 0;
 
 	    for (RegisteredName rn : Server.registrar){
+
+		count++;
 
 		clientData += Server.getIPAddress().toString() + "#" +
 			      rn.getName();
@@ -311,6 +371,8 @@ public class AdminDaemon extends Thread
 
 	    for (String name : list.getList()){
 
+		count++;
+
 		clientData += key + "#" + name;
 
 		if (i < numSemicolons){
@@ -321,6 +383,8 @@ public class AdminDaemon extends Thread
 	    } // end foreach key
 
 	}
+
+	clientData = "" + count + " " + clientData;
 
 	return clientData;
 
@@ -349,6 +413,24 @@ public class AdminDaemon extends Thread
 
     private void addMessageToProcessedList(){
 
+    }
+
+
+    private IPAddress receive(){
+
+	IPAddress addr = null;
+
+	try {
+	    addr = Protocol.receive(socket, packet);
+	}
+	catch (SocketTimeoutException e){ }
+
+	return addr;
+
+    }
+
+    private void send(String message, IPAddress recipient){
+	Protocol.send(socket, message, recipient);
     }
 
     public void endDaemon(){
