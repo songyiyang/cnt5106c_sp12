@@ -256,6 +256,11 @@ public class ServerProtocol extends Protocol
 		args = "" + port;
 		rname = new RegisteredName(name, client, port);
 		Server.registerClient(rname);
+
+		Server.admin.addJobToQueue(new Transaction(message,
+			    client.getIPNetAddress(), client.getPort()));
+		Server.admin.interrupt();
+
 	    }
 
 	    cmd = ProtocolCommand.REGISTER;
@@ -342,6 +347,16 @@ public class ServerProtocol extends Protocol
 
 	}
 
+	    // Remove link to the given server
+	else if (tokens[1].equals("CTRL_ADD")){
+
+	    Server.admin.addJobToQueue(new Transaction(message,
+			client.getIPNetAddress(), client.getPort()));
+	    Server.admin.interrupt();
+
+	    system_msg = "add";
+
+	}
 
 	    // If the server needs to respond, send response
 	    // to the client
