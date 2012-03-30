@@ -8,12 +8,15 @@ public enum ProtocolCommand {
     TRANSMIT("TRANSMIT"),
     LINK("LINK"),
     UNLINK("UNLINK"),
-    CONNECT("CONNECT"),
-    DISCONNECT("DISCONNECT"),
     REGISTER("REGISTER"),
     UNREGISTER("UNREGISTER"),
     LIST("REGISTER"),
-    SEND("SEND");
+    SEND("SEND"),
+
+    CTRL_CONNECT("CTRL_CONNECT"),
+    CTRL_DISCONNECT("CTRL_DISCONNECT"),
+    CTRL_ADD("CTRL_ADD"),
+    CTRL_RM("CTRL_RM");
 
     private String command;
 
@@ -133,7 +136,7 @@ public enum ProtocolCommand {
 		break;
 
 		// format: DIR CONNECT name ip:port {SUCCESS | ERROR code}
-	    case CONNECT:
+	    case CTRL_CONNECT:
 
 		if (direction == 0){
 		    msg = msg.concat(" " + name + " " + address.toString());
@@ -152,7 +155,7 @@ public enum ProtocolCommand {
 
 
 		// format: DIR DISCONNECT name {SUCCESS | ERROR code}
-	    case DISCONNECT:
+	    case CTRL_DISCONNECT:
 
 		if (direction == 0){
 		    msg = msg.concat(" " + name);
