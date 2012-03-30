@@ -49,8 +49,7 @@ public class ClientProtocol extends Protocol
 	String system_msg = "WTF";
 	ProtocolCommand cmd = null;
 
-	    // Reset the timeout flag
-	timeout = false;
+	setTimeout(false);
 
 	if (command.matches(cmdRegex)){
 
@@ -73,7 +72,7 @@ public class ClientProtocol extends Protocol
 		// Insert a new record
 	    if (command.matches("^insert(\\s[A-Za-z0-9\\.]){0,3}.*")){
 
-		while (!name.equals("SELF")){
+		while (name.equals("SELF")){
 			// The name to insert at remote site
 		    name = parseParameter("Please enter the alphanumeric"+
 			 "name (max 80 chars): ","[A-Za-z0-9]{1,80}",
@@ -101,7 +100,7 @@ public class ClientProtocol extends Protocol
 		// Delete a record from the server
 	    else if (command.matches("^delete(\\s[A-Za-z0-9\\.]){0,2}.*")){
 
-		while (!name.equals("SELF")){
+		while (name.equals("SELF")){
 			// The name to insert at remote site
 		    name = parseParameter("Please enter the alphanumeric"+
 			 "name (max 80 chars): ","[A-Za-z0-9]{1,80}",
@@ -183,7 +182,7 @@ public class ClientProtocol extends Protocol
 		    // against records, port is not important
 		address = new IPAddress(addr, port);
 
-		setTimeout();
+		setTimeout(true);
 
 		cmd = ProtocolCommand.TEST;
 
@@ -193,7 +192,7 @@ public class ClientProtocol extends Protocol
 	    else if (command.matches("^link(\\s[A-Za-z0-9])?.*")){
 
 
-		while (!name.equals("SELF")){
+		while (name.equals("SELF") || name.equals("")){
 		    name = parseParameter("Please enter the alphanumeric"+
 			 "name (max 80 chars): ","[A-Za-z0-9]{1,80}",
 			 tokens, 1, in, false);
@@ -206,7 +205,7 @@ public class ClientProtocol extends Protocol
 		// unlink current server from another server
 	    else if (command.matches("^unlink(\\s[A-Za-z0-9])?.*")){
 
-		while (!name.equals("SELF")){
+		while (name.equals("SELF")){
 		    name = parseParameter("Please enter the alphanumeric"+
 			 "name (max 80 chars): ","[A-Za-z0-9]{1,80}",
 			 tokens, 1, in, false);
@@ -219,7 +218,7 @@ public class ClientProtocol extends Protocol
 		// register name on the server
 	    else if (command.matches("^register(\\s[A-Za-z0-9]){0,2}.*")){
 
-		while (!name.equals("SELF")){
+		while (name.equals("SELF")){
 		    name = parseParameter("Please enter the alphanumeric"+
 			 "name (max 80 chars): ","[A-Za-z0-9]{1,80}",
 			 tokens, 1, in, false);
@@ -671,15 +670,8 @@ public class ClientProtocol extends Protocol
 	    addr = Protocol.receive(socket, packet);
 	}
 	catch (SocketTimeoutException e){
-	    timeout = false;
-	}
 
-	    // Reset the socket
-	try {
-	    socket.setSoTimeout(0);
 	}
-	catch (SocketException e) { }
-
 
 	return addr;
 
@@ -704,14 +696,27 @@ public class ClientProtocol extends Protocol
 	return Protocol.send(socket, msg, address);
     } // end method send
 
-    public static void setTimeout(){
+    public static void setTimeout(boolean set){
 
-	    // Set the socket's timeout
-	try {
-	    socket.setSoTimeout(MAX_TIMEOUT);
-	    timeout = true;
+	if (set){
+		// Set the socket's timeout
+	    try {
+		socket.setSoTimeout(MAX_TIMEOUT);
+		timeout = true;
+	    }
+	    catch (SocketException e) { }
 	}
-	catch (SocketException e) { }
+	else {
+		// Set the socket's timeout
+	    try {
+		socket.setSoTimeout(0);
+		timeout = false;
+	    }
+	    catch (SocketException e) {
+
+	     }	    
+	}
+
 
     }
 
