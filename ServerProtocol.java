@@ -157,12 +157,13 @@ public class ServerProtocol extends Protocol
 					new byte[PACKET_SIZE], PACKET_SIZE);
 
 		String msg = ProtocolCommand.createPacket(
-			ProtocolCommand.CTRL_CONNECT, me.getIPAddress(),
+			ProtocolCommand.TEST, me.getIPAddress(),
 			me, "", 0, null);
 
-		ClientProtocol.setTimeout();
+		ClientProtocol.setTimeout(true);
 		ClientProtocol.send(msg, server);
 		server = ClientProtocol.receive(in);
+		ClientProtocol.setTimeout(false);
 
 		    // If server could not link to other server,
 		    // report TIMEOUT error
@@ -171,6 +172,9 @@ public class ServerProtocol extends Protocol
 		}
 		else {
 		    link.setLinked(true);
+		    Server.admin.addJobToQueue(new Transaction(message,
+			    client.getIPNetAddress(), client.getPort()));
+		    Server.admin.interrupt();
 		}
 
 	    } // end else
@@ -210,9 +214,10 @@ public class ServerProtocol extends Protocol
 			ProtocolCommand.CTRL_DISCONNECT, me.getIPAddress(),
 			me, "", 0, null);
 
-		ClientProtocol.setTimeout();
+		ClientProtocol.setTimeout(true);
 		ClientProtocol.send(msg, server);
 		server = ClientProtocol.receive(in);
+		ClientProtocol.setTimeout(false);
 
 		    // If server could not link to other server,
 		    // report TIMEOUT error
@@ -277,7 +282,7 @@ public class ServerProtocol extends Protocol
 	    // Get a list of all the clients in the network
 	else if (tokens[1].equals("LIST")){
 
-	    Server.admin.addJobToQueue(new Transaction(message, client));
+//	    Server.admin.addJobToQueue(new Transaction(message, client));
 //	    cmd = ProtocolCommand.LIST;
 	    system_msg = "list";
 
@@ -286,8 +291,8 @@ public class ServerProtocol extends Protocol
 	    // Send mail to clients in the network
 	else if (tokens[1].equals("SEND")){
 
-	    Server.admin.addJobToQueue(new Transaction(message, client));
-	    cmd = ProtocolCommand.SEND;
+//	    Server.admin.addJobToQueue(new Transaction(message, client));
+//	    cmd = ProtocolCommand.SEND;
 	    system_msg = "send";
 
 	}
@@ -314,7 +319,7 @@ public class ServerProtocol extends Protocol
 
 	    // Add link to the given server
 	else if (tokens[1].equals("CTRL_CONNECT")){
-
+/*
 	    name = tokens[2];
 	    String[] address = tokens[3].split(":");
 	    port = Integer.parseInt(address[1]);
@@ -323,8 +328,13 @@ public class ServerProtocol extends Protocol
 
 	    Record record = new Record(name, ipAddress, true);
 	    Server.addRecord(record);
+*/
 
-	    cmd = ProtocolCommand.CTRL_CONNECT;
+	    Server.admin.addJobToQueue(new Transaction(message,
+			client.getIPNetAddress(), client.getPort()));
+	    Server.admin.interrupt();
+
+//	    cmd = ProtocolCommand.CTRL_CONNECT;
 	    system_msg = "connect";
 
 	}
