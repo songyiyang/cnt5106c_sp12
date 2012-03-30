@@ -280,6 +280,10 @@ public class ServerProtocol extends Protocol
 	    }
 	    else {
 		Server.removeClient(rname);
+
+		Server.admin.addJobToQueue(new Transaction(message,
+			    client.getIPNetAddress(), client.getPort()));
+		Server.admin.interrupt();
 	    }
 
 	    cmd = ProtocolCommand.UNREGISTER;
@@ -290,7 +294,9 @@ public class ServerProtocol extends Protocol
 	    // Get a list of all the clients in the network
 	else if (tokens[1].equals("LIST")){
 
-//	    Server.admin.addJobToQueue(new Transaction(message, client));
+	    Server.admin.addJobToQueue(new Transaction(message,
+			    client.getIPNetAddress(), client.getPort()));
+	    Server.admin.interrupt();
 //	    cmd = ProtocolCommand.LIST;
 	    system_msg = "list";
 
@@ -299,8 +305,11 @@ public class ServerProtocol extends Protocol
 	    // Send mail to clients in the network
 	else if (tokens[1].equals("SEND")){
 
-//	    Server.admin.addJobToQueue(new Transaction(message, client));
-//	    cmd = ProtocolCommand.SEND;
+	    Server.admin.addJobToQueue(new Transaction(message,
+			    client.getIPNetAddress(), client.getPort()));
+	    Server.admin.interrupt();
+
+	    cmd = ProtocolCommand.SEND;
 	    system_msg = "send";
 
 	}
