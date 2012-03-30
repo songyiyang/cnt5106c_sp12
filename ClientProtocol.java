@@ -205,7 +205,7 @@ public class ClientProtocol extends Protocol
 		// unlink current server from another server
 	    else if (command.matches("^unlink(\\s[A-Za-z0-9])?.*")){
 
-		while (name.equals("SELF")){
+		while (name.equals("SELF") || name.equals("")){
 		    name = parseParameter("Please enter the alphanumeric"+
 			 "name (max 80 chars): ","[A-Za-z0-9]{1,80}",
 			 tokens, 1, in, false);
