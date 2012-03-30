@@ -24,7 +24,7 @@ public class Server
 		    new LinkedList<RegisteredName>();
 
 	// Daemon thread that process network information
-    public static AdminDaemon admin = new AdminDaemon();
+    public static AdminDaemon admin;
 
     public static void main(String[] args){
 
@@ -33,9 +33,6 @@ public class Server
 
 	    // Determine this host's IP and port
 	determineIPAndPortNumber(args);
-
-	    // Start server daemon thread
-	admin.start();
 
 	    // Define a packet with which to receive data
 	DatagramPacket packetIn = null;
@@ -83,6 +80,12 @@ public class Server
 	    catch (SocketException e){ }
 
 	} // end while true
+
+	    // Start server daemon thread
+	admin = new AdminDaemon();
+	admin.setDaemon(true);
+	admin.start();
+
 
 	String system_msg = null;
 
