@@ -226,6 +226,9 @@ public class ServerProtocol extends Protocol
 		}
 		else {
 		    link.setLinked(false);
+		    Server.admin.addJobToQueue(new Transaction(message,
+			    client.getIPNetAddress(), client.getPort()));
+		    Server.admin.interrupt();
 		}
 
 	    }
@@ -319,22 +322,11 @@ public class ServerProtocol extends Protocol
 
 	    // Add link to the given server
 	else if (tokens[1].equals("CTRL_CONNECT")){
-/*
-	    name = tokens[2];
-	    String[] address = tokens[3].split(":");
-	    port = Integer.parseInt(address[1]);
-
-	    ipAddress = new IPAddress(address[0], port);
-
-	    Record record = new Record(name, ipAddress, true);
-	    Server.addRecord(record);
-*/
 
 	    Server.admin.addJobToQueue(new Transaction(message,
 			client.getIPNetAddress(), client.getPort()));
 	    Server.admin.interrupt();
 
-//	    cmd = ProtocolCommand.CTRL_CONNECT;
 	    system_msg = "connect";
 
 	}
@@ -342,12 +334,10 @@ public class ServerProtocol extends Protocol
 	    // Remove link to the given server
 	else if (tokens[1].equals("CTRL_DISCONNECT")){
 
-	    name = tokens[2];
+	    Server.admin.addJobToQueue(new Transaction(message,
+			client.getIPNetAddress(), client.getPort()));
+	    Server.admin.interrupt();
 
-	    Record record = Server.getRecord(name);
-	    record.setLinked(false);
-
-	    cmd = ProtocolCommand.CTRL_DISCONNECT;
 	    system_msg = "disconnect";
 
 	}
