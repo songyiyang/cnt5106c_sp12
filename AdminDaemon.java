@@ -251,17 +251,20 @@ public class AdminDaemon extends Thread
 	    // Else it's an UNLINK command, remove data
 	else {
 
+	    args = tranid + " " + daemonIP.toString() + " "
+		   + generateClientList();
+
 		// First, disconnect from the remote server.
 	    message = ProtocolCommand.createPacket(
 			ProtocolCommand.CTRL_DISCONNECT, "", null, args, 0, null);
-
-	    ClientProtocol.send(message, record.getIPAddress());
-	    rsp = ClientProtocol.receive(packet);
+System.out.println("to: " + message);
+	    send(message, record.getIPAddress());
+	    rsp = receive();
 	    message = ClientProtocol.extract(packet);
-
+System.out.println("from: " + message);
 		// Now, delete all the information the other server
 		// passed on.
-
+	    clients.remove(record.getIPAddress().toString());
 
 		// Finally, ask remaining links for client information
 
@@ -295,7 +298,7 @@ public class AdminDaemon extends Thread
 	    int numNames = Integer.parseInt(tokens[4]);
 
 	    if (numNames > 0){
-		mergeClientList(tokens[4]);
+		mergeClientList(tokens[5]);
 	    }
 
 	}
@@ -303,17 +306,14 @@ public class AdminDaemon extends Thread
 	    // CTRL_DISCONNECT - delete clients used by user
 	else if (tokens[1].matches("CTRL_DISCONNECT")) {
 
-	    args = tranid + " " + daemonIP.toString() + " "
-		   + generateClientList();
+	    args = tranid + " " + daemonIP.toString();
 
-	    message = ProtocolCommand.createPacket(ProtocolCommand.CTRL_CONNECT,
-		      "", null, args, 1, null);
+	    reply = ProtocolCommand.createPacket(ProtocolCommand.CTRL_CONNECT,
+			  "", null, args, 1, null);
 
-	    ClientProtocol.send(message, t.getIP());
+	    send(message, t.getIP());
 
-	    message = ClientProtocol.extract(packet);
-	    tokens = message.split("\\s+");
-	    mergeClientList(tokens[4]);
+	    clients.remove(t.getIP().toString());
 
 	}
 
