@@ -72,7 +72,7 @@ public class ClientProtocol extends Protocol
 		// Insert a new record
 	    if (command.matches("^insert(\\s[A-Za-z0-9\\.]){0,3}.*")){
 
-		while (name.equals("SELF")){
+		while (name.equals("SELF") || name.equals("")){
 			// The name to insert at remote site
 		    name = parseParameter("Please enter the alphanumeric"+
 			 "name (max 80 chars): ","[A-Za-z0-9]{1,80}",
@@ -100,7 +100,7 @@ public class ClientProtocol extends Protocol
 		// Delete a record from the server
 	    else if (command.matches("^delete(\\s[A-Za-z0-9\\.]){0,2}.*")){
 
-		while (name.equals("SELF")){
+		while (name.equals("SELF") || name.equals("")){
 			// The name to insert at remote site
 		    name = parseParameter("Please enter the alphanumeric"+
 			 "name (max 80 chars): ","[A-Za-z0-9]{1,80}",
@@ -218,7 +218,7 @@ public class ClientProtocol extends Protocol
 		// register name on the server
 	    else if (command.matches("^register(\\s[A-Za-z0-9]){0,2}.*")){
 
-		while (name.equals("SELF")){
+		while (name.equals("SELF") || name.equals("")){
 		    name = parseParameter("Please enter the alphanumeric"+
 			 "name (max 80 chars): ","[A-Za-z0-9]{1,80}",
 			 tokens, 1, in, false);
