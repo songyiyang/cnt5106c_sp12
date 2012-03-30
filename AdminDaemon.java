@@ -115,7 +115,7 @@ public class AdminDaemon extends Thread
 
 	    // Handle registration requests
 	else if (t.getMessage().matches(".+(UN)?REGISTER.+")){
-	    processLinkCmd(tranid);	    
+	    processRegisterCmd(tranid);	    
 	}
 
 	    // Handle registration requests
@@ -177,14 +177,19 @@ public class AdminDaemon extends Thread
 
 	if (t.getMessage().matches(".+REGISTER.+")){
 
+		// First, create the message to the remote servers
+	    args = tranid + " " + daemonIP.toString() + " "
+		   + tokens[2];
+
 	    message = ProtocolCommand.createPacket(ProtocolCommand.CTRL_ADD,
 		      "", null, args, 0, null);
 
 		// For each link, send message to register user for
 		// this server
 	    for (Record r : links){
-//		ClientProtocol.send(message, r.getIPAddress());
-//		rsp = ClientProtocol.receive(packet);
+		send(message, r.getIPAddress());
+		rsp = receive();
+		resetPacket();
 	    }
 
 	}
@@ -235,6 +240,8 @@ public class AdminDaemon extends Thread
 
 	    if (rsp != null){
 
+		links.addLast(record);
+
 		message = ClientProtocol.extract(packet);
 	        tokens = message.split("\\s+");
 
@@ -257,14 +264,15 @@ public class AdminDaemon extends Thread
 		// First, disconnect from the remote server.
 	    message = ProtocolCommand.createPacket(
 			ProtocolCommand.CTRL_DISCONNECT, "", null, args, 0, null);
-System.out.println("to: " + message);
+
 	    send(message, record.getIPAddress());
 	    rsp = receive();
 	    message = ClientProtocol.extract(packet);
-System.out.println("from: " + message);
+
 		// Now, delete all the information the other server
 		// passed on.
 	    clients.remove(record.getIPAddress().toString());
+	    links.remove(record);
 
 		// Finally, ask remaining links for client information
 
@@ -295,6 +303,10 @@ System.out.println("from: " + message);
 
 	    send(reply, t.getIP());
 
+	    String[] idParts = tokens[2].split("-");
+
+	    links.addLast(new Record(idParts[1], t.getIP(), true));
+
 	    int numNames = Integer.parseInt(tokens[4]);
 
 	    if (numNames > 0){
@@ -308,16 +320,56 @@ System.out.println("from: " + message);
 
 	    args = tranid + " " + daemonIP.toString();
 
-	    reply = ProtocolCommand.createPacket(ProtocolCommand.CTRL_CONNECT,
+	    reply = ProtocolCommand.createPacket(ProtocolCommand.CTRL_DISCONNECT,
 			  "", null, args, 1, null);
 
 	    send(message, t.getIP());
+
+
+	    int index = 0;
+	    if (links.size() > 0){
+		for (Record temp : links){
+		    if (temp.getName().equals(tokens[3])){
+			break;
+		    }
+		}
+		links.remove(index);
+	    }
 
 	    clients.remove(t.getIP().toString());
 
 	}
 
-	// CTRL_ADD
+	    // CTRL_ADD - add a registered name to list
+	else if (tokens[1].matches("CTRL_ADD")) {
+
+	    String[] idParts = tokens[2].split("-");
+
+	    args = tranid + " " + daemonIP.toString();
+
+	    reply = ProtocolCommand.createPacket(ProtocolCommand.CTRL_ADD,
+			  "", null, args, 1, null);
+
+	    send(message, t.getIP());
+
+	    if (!clients.containsKey(idParts[1])){
+		clients.put(idParts[1],new ClientList());
+	    }
+
+
+	    clients.get(idParts[1]).add(tokens[4]);
+
+
+	    for (Record temp : links){
+		if (!temp.getName().equals(idParts[1])){
+		    send(message, temp.getIPAddress());
+		    rsp = receive();
+		    resetPacket();
+		}
+	    }
+
+	}
+
 
 	// CTRL_RM
 
@@ -413,16 +465,16 @@ System.out.println("from: " + message);
 
     private void addMessageToProcessedList(){
 
-	if (processedList.size() == historyLength){
+	if (processedMsgs.size() == historyLength){
 
 	    int numToRemove = historyLength / 2;
 
 	    for (int i = 0; i < numToRemove; i++){
-		processedList.removeFirst();
+		processedMsgs.removeFirst();
 	    }
 	}
 
-        processedList.addLast(t.getMessage());
+        processedMsgs.addLast(t.getMessage());
 
     } // end addMessageToProcessedList
 
