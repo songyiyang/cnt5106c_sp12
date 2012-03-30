@@ -277,21 +277,21 @@ public class ClientProtocol extends Protocol
 
 		    // Get the regex for the name
 		nameList = parseParameter("Please enter the client names, " +
-			 "separated with spaces:", 
-			 "(\\*|[A-Za-z0-9]{1,80}{1}(\\s+[A-Za-z0-9]{1,80})*)",
+			 "separated with commas (no spaces):", 
+			 "(\\*|[A-Za-z0-9]{1,80}{1}(,[A-Za-z0-9]{1,80})*)",
 			 tokens, 2, in, false);
 
 		    // Get the regex for the name
 		serverList = parseParameter("Please enter the " +
-			 "servers names, separated with spaces:", 
-			 "(\\*|[A-Za-z0-9]{1,80}{1}(\\s+[A-Za-z0-9]{1,80})*)",
+			 "servers names, separated with commas (no spaces):", 
+			 "(\\*|[A-Za-z0-9]{1,80}{1}(,[A-Za-z0-9]{1,80})*)",
 			 tokens, 3, in, false);
 
 		nameList = nameList.trim();
-		nameList = nameList.replace("\\s+", ",");
+//		nameList = nameList.replace("\\s+", ",");
 
 		serverList = serverList.trim();
-		serverList = serverList.replace("\\s+", ",");
+//		serverList = serverList.replace("\\s+", ",");
 
 		args = nameList + " " + serverList;
 
