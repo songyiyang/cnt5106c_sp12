@@ -157,7 +157,7 @@ public class ServerProtocol extends Protocol
 					new byte[PACKET_SIZE], PACKET_SIZE);
 
 		String msg = ProtocolCommand.createPacket(
-			ProtocolCommand.CONNECT, me.getIPAddress(),
+			ProtocolCommand.CTRL_CONNECT, me.getIPAddress(),
 			me, "", 0, null);
 
 		ClientProtocol.setTimeout();
@@ -177,23 +177,6 @@ public class ServerProtocol extends Protocol
 
 	    cmd = ProtocolCommand.LINK;
 	    system_msg = "link";
-
-	}
-
-	    // Add link to the given server
-	else if (tokens[1].equals("CONNECT")){
-
-	    name = tokens[2];
-	    String[] address = tokens[3].split(":");
-	    port = Integer.parseInt(address[1]);
-
-	    ipAddress = new IPAddress(address[0], port);
-
-	    Record record = new Record(name, ipAddress, true);
-	    Server.addRecord(record);
-
-	    cmd = ProtocolCommand.CONNECT;
-	    system_msg = "connect";
 
 	}
 
@@ -224,7 +207,7 @@ public class ServerProtocol extends Protocol
 					new byte[PACKET_SIZE], PACKET_SIZE);
 
 		String msg = ProtocolCommand.createPacket(
-			ProtocolCommand.DISCONNECT, me.getIPAddress(),
+			ProtocolCommand.CTRL_DISCONNECT, me.getIPAddress(),
 			me, "", 0, null);
 
 		ClientProtocol.setTimeout();
@@ -247,19 +230,6 @@ public class ServerProtocol extends Protocol
 
 	}
 
-
-	    // Remove link to the given server
-	else if (tokens[1].equals("DISCONNECT")){
-
-	    name = tokens[2];
-
-	    Record record = Server.getRecord(name);
-	    record.setLinked(false);
-
-	    cmd = ProtocolCommand.DISCONNECT;
-	    system_msg = "disconnect";
-
-	}
 
 	    // Register a name on the server
 	else if (tokens[1].equals("REGISTER")){
@@ -307,8 +277,8 @@ public class ServerProtocol extends Protocol
 	    // Get a list of all the clients in the network
 	else if (tokens[1].equals("LIST")){
 
-	    Server.admin.addJobToQueue(message);
-	    cmd = ProtocolCommand.LIST;
+	    Server.admin.addJobToQueue(new Transaction(message, client));
+//	    cmd = ProtocolCommand.LIST;
 	    system_msg = "list";
 
 	}
@@ -316,7 +286,7 @@ public class ServerProtocol extends Protocol
 	    // Send mail to clients in the network
 	else if (tokens[1].equals("SEND")){
 
-	    Server.admin.addJobToQueue(message);
+	    Server.admin.addJobToQueue(new Transaction(message, client));
 	    cmd = ProtocolCommand.SEND;
 	    system_msg = "send";
 
@@ -341,6 +311,37 @@ public class ServerProtocol extends Protocol
 	    cmd = ProtocolCommand.TEST;
 	    system_msg = "test";
 	}
+
+	    // Add link to the given server
+	else if (tokens[1].equals("CTRL_CONNECT")){
+
+	    name = tokens[2];
+	    String[] address = tokens[3].split(":");
+	    port = Integer.parseInt(address[1]);
+
+	    ipAddress = new IPAddress(address[0], port);
+
+	    Record record = new Record(name, ipAddress, true);
+	    Server.addRecord(record);
+
+	    cmd = ProtocolCommand.CTRL_CONNECT;
+	    system_msg = "connect";
+
+	}
+
+	    // Remove link to the given server
+	else if (tokens[1].equals("CTRL_DISCONNECT")){
+
+	    name = tokens[2];
+
+	    Record record = Server.getRecord(name);
+	    record.setLinked(false);
+
+	    cmd = ProtocolCommand.CTRL_DISCONNECT;
+	    system_msg = "disconnect";
+
+	}
+
 
 	    // If the server needs to respond, send response
 	    // to the client
