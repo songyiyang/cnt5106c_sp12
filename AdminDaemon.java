@@ -413,7 +413,18 @@ System.out.println("from: " + message);
 
     private void addMessageToProcessedList(){
 
-    }
+	if (processedList.size() == historyLength){
+
+	    int numToRemove = historyLength / 2;
+
+	    for (int i = 0; i < numToRemove; i++){
+		processedList.removeFirst();
+	    }
+	}
+
+        processedList.addLast(t.getMessage());
+
+    } // end addMessageToProcessedList
 
 
     private IPAddress receive(){
