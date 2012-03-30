@@ -14,13 +14,13 @@ public class Server
     private static ConfigFile config;
     private static DatagramSocket socket;
     private static int port = -1;
-    private static IPAddress myIP;
+    public static IPAddress myIP;
 
 	// Keep track of all the records known to the server
     private static LinkedList<Record> records = new LinkedList<Record>();
 
 	// Keep track of all registered users
-    private static LinkedList<RegisteredName> registrar =
+    public static LinkedList<RegisteredName> registrar =
 		    new LinkedList<RegisteredName>();
 
 	// Daemon thread that process network information
