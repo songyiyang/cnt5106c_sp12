@@ -16,7 +16,8 @@ public enum ProtocolCommand {
     CTRL_CONNECT("CTRL_CONNECT"),
     CTRL_DISCONNECT("CTRL_DISCONNECT"),
     CTRL_ADD("CTRL_ADD"),
-    CTRL_RM("CTRL_RM");
+    CTRL_RM("CTRL_RM"),
+    CTRL_SEND("CTRL_SEND");
 
     private String command;
 
@@ -160,7 +161,17 @@ public enum ProtocolCommand {
 
 		break;
 
-		// format: DIR CTRL_CONNECT tid addr # {client_list}
+		// format: DIR SEND clients servers message
+		// {SUCCESS | ERROR code}
+	    case SEND:
+
+		if (direction == 0){
+		    msg = msg.concat(" " + args);
+		}
+
+		break;
+
+		// format: DIR CTRL_CONNECT tid # {client_list}
 		//         {SUCCESS | ERROR code}
 	    case CTRL_CONNECT:
 
@@ -169,15 +180,15 @@ public enum ProtocolCommand {
 
 		break;
 
-		// format: DIR CTRL_DISCONNECT tid addr {SUCCESS | ERROR code}
+		// format: DIR CTRL_DISCONNECT tid {SUCCESS | ERROR code}
 	    case CTRL_DISCONNECT:
 
 		if (direction == 0){
-		    msg = msg.concat(" " + name);
+		    msg = msg.concat(" " + args);
 		}
 
 
-		// format: DIR CTRL_ADD tid addr name {SUCCESS | ERROR code}
+		// format: DIR CTRL_ADD tid name {SUCCESS | ERROR code}
 	    case CTRL_ADD:
 
 		payloadExists = true;
@@ -185,13 +196,18 @@ public enum ProtocolCommand {
 
 		break;
 
-		// format: DIR CTRL_RM tid addr name {SUCCESS | ERROR code}
+		// format: DIR CTRL_RM tid name {SUCCESS | ERROR code}
 	    case CTRL_RM:
 
 		if (direction == 0){
 		    msg = msg.concat(" " + name);
 		}
 
+		// format: DIR CTRL_SEND tid client_names {yes|no}
+		// message {SUCCESS | ERROR code}
+	    case CTRL_SEND:
+
+		msg = msg.concat(" " + args);
 
 	} // end switch cmd
 

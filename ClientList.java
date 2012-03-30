@@ -26,4 +26,8 @@ public class ClientList
 	return list.size();
     }
 
+    public void remove(String name){
+	list.remove(name);
+    }
+
 } // end class ClientList

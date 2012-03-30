@@ -100,7 +100,22 @@ public class Client
 		server = new IPAddress(ipPortion[0],
 				       Integer.parseInt(ipPortion[1]));
 	    }
+	    else if (system_msg.equals("mail")){
 
+		System.out.println("Your messages:\n");
+
+		if (checkMailbox() > 0){
+		    synchronized(mailbox){
+			System.out.println(mailbox.removeFirst() + "\n");
+		    }
+		}
+		else {
+		    System.out.println("No messages to show");
+		}
+
+		continue;
+
+	    }
 	    else if (server == null){
 		System.out.println("must set server IP and port!");
 		continue;
@@ -124,6 +139,11 @@ public class Client
 	    }
 	    else {
 		System.out.println("error: specified server unreachable");
+	    }
+
+	    if (checkMailbox() > 0){
+		System.out.println("Mail exists. Type 'mail' at prompt to " +
+				   "see all messages.");
 	    }
 
 	} // end while true

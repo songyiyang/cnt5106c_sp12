@@ -20,7 +20,7 @@ public class ClientProtocol extends Protocol
 	// Define the basic inputs
     private static String cmdRegex = "^(server|insert|delete|find|quit|" +
 				     "kill|link|unlink|register|" +
-				     "unregister|list|send).*$";
+				     "unregister|list|send|mail).*$";
 
     private static boolean timeout = false;
     private static int MAX_TIMEOUT = 1000 * 5;
@@ -77,6 +77,11 @@ public class ClientProtocol extends Protocol
 		    name = parseParameter("Please enter the alphanumeric"+
 			 "name (max 80 chars): ","[A-Za-z0-9]{1,80}",
 			 tokens, 1, in, false);
+
+		    if (name.equals("SELF")){
+			tokens[1] = "";
+		    }
+
 		}
 
 		    // The IP address of the remote site
@@ -105,6 +110,11 @@ public class ClientProtocol extends Protocol
 		    name = parseParameter("Please enter the alphanumeric"+
 			 "name (max 80 chars): ","[A-Za-z0-9]{1,80}",
 			 tokens, 1, in, false);
+
+		    if (name.equals("SELF")){
+			tokens[1] = "";
+		    }
+
 		}
 
 		    // Get the IP address to delete
@@ -193,9 +203,15 @@ public class ClientProtocol extends Protocol
 
 
 		while (name.equals("SELF") || name.equals("")){
+
 		    name = parseParameter("Please enter the alphanumeric"+
 			 "name (max 80 chars): ","[A-Za-z0-9]{1,80}",
 			 tokens, 1, in, false);
+
+		    if (name.equals("SELF")){
+			tokens[1] = "";
+		    }
+
 		}
 
 		cmd = ProtocolCommand.LINK;
@@ -206,9 +222,15 @@ public class ClientProtocol extends Protocol
 	    else if (command.matches("^unlink(\\s[A-Za-z0-9])?.*")){
 
 		while (name.equals("SELF") || name.equals("")){
+
 		    name = parseParameter("Please enter the alphanumeric"+
 			 "name (max 80 chars): ","[A-Za-z0-9]{1,80}",
 			 tokens, 1, in, false);
+
+		    if (name.equals("SELF")){
+			name = "";
+		    }
+
 		}
 
 		cmd = ProtocolCommand.UNLINK;
@@ -219,9 +241,15 @@ public class ClientProtocol extends Protocol
 	    else if (command.matches("^register(\\s[A-Za-z0-9]){0,2}.*")){
 
 		while (name.equals("SELF") || name.equals("")){
+
 		    name = parseParameter("Please enter the alphanumeric"+
 			 "name (max 80 chars): ","[A-Za-z0-9]{1,80}",
 			 tokens, 1, in, false);
+
+		    if (name.equals("SELF")){
+			tokens[1] = "";
+		    }
+
 		}
 
 		boolean portAvailable = false;
@@ -309,13 +337,13 @@ public class ClientProtocol extends Protocol
 
 		    // Get the regex for the name
 		nameList = parseParameter("Please enter the client names, " +
-			 "separated with spaces:", 
+			 "separated with spaces, or '*':", 
 			 "(\\*|[A-Za-z0-9]{1,80}{1}(\\s+[A-Za-z0-9]{1,80})*)",
 			 tokens, 2, in, false);
 
 		    // Get the regex for the name
 		serverList = parseParameter("Please enter the " +
-			 "servers names, separated with spaces:", 
+			 "servers names, separated with spaces, or '*':", 
 			 "(\\*|[A-Za-z0-9]{1,80}{1}(\\s+[A-Za-z0-9]{1,80})*)",
 			 tokens, 3, in, false);
 
@@ -329,7 +357,7 @@ public class ClientProtocol extends Protocol
 		serverList = serverList.trim();
 		serverList = serverList.replace("\\s+", ",");
 
-		args = nameList + " " + serverList;
+		args = nameList + " " + serverList + " !";
 
 		message = message.trim();
 		message = message.concat("\n.\n");
@@ -348,6 +376,11 @@ public class ClientProtocol extends Protocol
 		// Shut down server
 	    else if (command.equals("kill")){
 		cmd = ProtocolCommand.GAMEOVER;
+	    }
+
+		// Shut down server
+	    else if (command.equals("mail")){
+		system_msg = "mail";
 	    }
 
 		// Get system help

@@ -297,7 +297,7 @@ public class ServerProtocol extends Protocol
 	    Server.admin.addJobToQueue(new Transaction(message,
 			    client.getIPNetAddress(), client.getPort()));
 	    Server.admin.interrupt();
-//	    cmd = ProtocolCommand.LIST;
+	    cmd = ProtocolCommand.LIST;
 	    system_msg = "list";
 
 	}

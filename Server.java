@@ -262,6 +262,9 @@ public class Server
      */
     public static void sendMailToClients(String[] names, String message){
 
+	    // Strip the message of ("\n.\n")
+	message = message.replace("\n.\n","");
+
 	    // If the user specified all registered names using the
 	    // '*' character, send to all registered clients on the
 	    // server
@@ -283,7 +286,7 @@ public class Server
 
 		    // Is name registered on this server?
 		temp = findRegisteredName(names[i]);
-
+System.out.println(temp == null);
 		    // If so, send the mail
 		if (temp != null){
 		    ClientProtocol.send(message, temp.getMailAddress());
