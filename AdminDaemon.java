@@ -1,6 +1,7 @@
 import java.net.*;
 import java.io.IOException;
 import java.util.TreeMap;
+import java.util.Set;
 import java.util.LinkedList;
 
 /**
@@ -15,11 +16,13 @@ public class AdminDaemon extends Thread
     boolean shutdown;
     int historyLength;
     DatagramPacket packet;
+    int id;
+    Transaction t;
 
-    private TreeMap<String,LinkedList<String>> clients;
+    private TreeMap<String,ClientList> clients;
 
     private LinkedList<Record> links;
-    private LinkedList<String> jobQueue;
+    private LinkedList<Transaction> jobQueue;
     private LinkedList<String> processedMsgs;
 
     private static final int DEFAULT_MAX_HISTORY = 20;
@@ -27,14 +30,16 @@ public class AdminDaemon extends Thread
 
     public AdminDaemon(){
 
+	id = 0;
+	t = null;
 	shutdown = false;
 	historyLength = DEFAULT_MAX_HISTORY;
 
 	links = new LinkedList<Record>();
-	jobQueue = new LinkedList<String>();
+	jobQueue = new LinkedList<Transaction>();
 	processedMsgs = new LinkedList<String>();
 
-	clients = new TreeMap<String,LinkedList<String>>()
+	clients = new TreeMap<String,ClientList>();
 
 	resetPacket();
 
@@ -57,9 +62,9 @@ public class AdminDaemon extends Thread
 
     } // end method run
 
-    private void addJob(String message){
+    public void addJobToQueue(Transaction transaction){
 	synchronized(jobQueue){
-	    jobQueue.addLast(message);
+	    jobQueue.addLast(transaction);
 	}
     }
 
@@ -77,30 +82,32 @@ public class AdminDaemon extends Thread
 
     private void processJob(){
 
-	String message = getUnprocessedJob();
+	getUnprocessedJob();
 
-	if (message == null){
+	if (t == null){
 	    return;
 	}
 
+	String tid = id + "-" + Server.getIPAddress().toString();
+
 	    // Handle a LIST request
-	if (message.matches(".+LIST.+")){
+	if (t.getMessage().matches(".+LIST.+")){
 	    // process LIST
 	}
 
 	    // Handle a SEND request
-	else if (message.matches(".+SEND.+")){
+	else if (t.getMessage().matches(".+SEND.+")){
 	    // process SEND
 	}
 
 	    // Handle registration requests
-	else if (message.matches(".+(UN)?REGISTER.+")){
-	    
+	else if (t.getMessage().matches(".+(UN)?REGISTER.+")){
+	    processLinkCmd(tid);	    
 	}
 
-	    // Handle link requests
-	else if (message.matches(".+(UN)?LINK.+")){
-	    // process UNREGISTER
+	    // Handle registration requests
+	else if (t.getMessage().matches(".+(UN)?LINK.+")){
+	    processLinkCmd(tid);
 	}
 
 	    // Handle some CONTROL message
@@ -108,62 +115,239 @@ public class AdminDaemon extends Thread
 	    // process CONTROL message
 
 		// remember message in case someone sends this to you
-	    AddMessageToProcessedList(message);
+	    addMessageToProcessedList();
 
 	}
 
+	id++;
+	t = null;
+
     } // end processJob
 
-    private String getUnprocessedJob(){
+    private void getUnprocessedJob(){
 
-	String message = null;
-	String temp = null;
+	Transaction temp;
 
-	while (message != null && doJobsExist() > 0){
+	while (t == null && doJobsExist()){
 
-	    temp = jobsQueue.removeFirst();
+	    temp = jobQueue.removeFirst();
 
-	    if (!processedMsgs.contains(temp)){
-		message = temp;
+	    if (!processedMsgs.contains(temp.getMessage())){
+		t = temp;
 	    }
 
 	} // end while message
-
-	return message;
 
     } // end getUnprocessedJob
 
 
     private void processListCmd(){
 
+	    // Convert names into string form
+
     }
 
     private void processSendCmd(){
 
-    }
-
-
-    private void processRegisterCmd(){
+	    // For each link, send out the message
 
     }
 
-    private void processLinkCmd(){
 
-    }
+    private void processRegisterCmd(String tid){
+
+	String[] tokens = t.getMessage().split("\\s+");
+	String message = "";
+	String args = "";
+
+	IPAddress rsp = null;
+
+
+	if (t.getMessage().matches(".+REGISTER.+")){
+
+	    message = ProtocolCommand.createPacket(ProtocolCommand.CTRL_ADD,
+		      "", null, args, 0, null);
+
+		// For each link, send message to register user for
+		// this server
+	    for (Record r : links){
+		ClientProtocol.send(message, r.getIPAddress());
+		rsp = ClientProtocol.receive(packet);
+	    }
+
+	}
+	else {
+
+	    // For each link, send message to unregister user
+	    // for this server
+
+	    message = ProtocolCommand.createPacket(ProtocolCommand.CTRL_RM,
+		      "", null, args, 0, null);
+
+		// For each link, send message to register user for
+		// this server
+	    for (Record r : links){
+		ClientProtocol.send(message, r.getIPAddress());
+		rsp = ClientProtocol.receive(packet);
+	    }
+
+
+	}
+
+    } // end processRegisterCmd
+
+    private void processLinkCmd(String tid){
+
+	String[] tokens = t.getMessage().split("\\s+");
+	String message = "";
+	String args = "";
+
+	Record record = Server.getRecord(tokens[2]);
+	IPAddress rsp = null;
+
+	if (t.getMessage().matches(".+LINK.+")){
+
+		// First, send a message to the remote server, listing off
+		// our known contacts.
+	    args = generateClientList();
+
+	    message = ProtocolCommand.createPacket(ProtocolCommand.CTRL_CONNECT,
+		      "", null, args, 0, null);
+
+	    ClientProtocol.send(message, record.getIPAddress());
+
+		// Then, receive a message from the remote server and 
+		// merge its client list into the one maintained here.
+	    rsp = ClientProtocol.receive(packet);
+
+	    if (rsp != null){
+
+		message = ClientProtocol.extract(packet);
+	        tokens = message.split("\\s+");
+		mergeClientList(tokens[3]);
+
+	    }
+
+	} // end if LINK
+
+	    // Else it's an UNLINK command, remove data
+	else {
+
+		// First, disconnect from the remote server.
+	    message = ProtocolCommand.createPacket(
+			ProtocolCommand.CTRL_DISCONNECT, "", null, args, 0, null);
+
+	    ClientProtocol.send(message, record.getIPAddress());
+	    rsp = ClientProtocol.receive(packet);
+	    message = ClientProtocol.extract(packet);
+
+		// Now, delete all the information the other server
+		// passed on.
+
+
+		// Finally, ask remaining links for client information
+
+	}
+
+	resetPacket();
+
+    } // end processLinkCmd
 
 
     private void processControlCmd(){
 
+	// CTRL_CONNECT - send clients to user
+
+	// CTRL_DISCONNECT - delete clients used by user
+
+	// CTRL_ADD
+
+	// CTRL_RM
+
+	// CTRL_SEND
+
+	// CTRL_UPDATE
+
+	resetPacket();
+
     }
 
 
-    public void addLink(Record record){
+    private String generateClientList(){
 
-	synchronized(links){
-	    links.addLast(record);
+	String clientData = "";
+	int numSemicolons = 0;
+	int i = 0;
+
+	synchronized(Server.registrar){
+
+	    numSemicolons = Server.registrar.size() - 1;
+	    i = 0;
+
+	    for (RegisteredName rn : Server.registrar){
+
+		clientData += Server.getIPAddress().toString() + "#" +
+			      rn.getName();
+
+		if (i < numSemicolons){
+		    clientData += ";";
+		    i++;
+		}
+
+	    } // end foreach rn
+
+	} // end synchronized
+
+	    // Get all the keys in the mapping
+	Set<String> set = clients.keySet();
+
+	    // For each key, add server names
+	for (String key : set){
+
+	    ClientList list = clients.get((Object)key);
+
+	    numSemicolons = list.size() - 1;
+	    i = 0;
+
+	    for (String name : list.getList()){
+
+		clientData += key + "#" + name;
+
+		if (i < numSemicolons){
+		    clientData += ";";
+		    i++;
+		}
+
+	    } // end foreach key
+
 	}
 
-	processLinkCmd();
+	return clientData;
+
+    } // end generateClientList
+
+    private void mergeClientList(String toParse){
+
+	String[] pairs = toParse.split(";");
+
+	for (int i = 0; i < pairs.length; i++){
+
+	    String[] pair = pairs[i].split("#");
+
+		// Add client if key exists
+	    if (!clients.containsKey(pair[0])){
+		clients.put(pair[0], new ClientList());
+	    }
+
+	    clients.get(pair[0]).add(pair[1]);
+
+	    System.out.println(pair[0] + " " + pair[1] );
+
+	} // end for int i
+
+    } // end mergeClientList
+
+    private void addMessageToProcessedList(){
 
     }
 
