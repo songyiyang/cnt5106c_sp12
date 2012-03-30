@@ -1,12 +1,14 @@
+import java.net.*;
+
 public class Transaction
 {
 
     private String message;
     private IPAddress ip;
 
-    public Transaction(String _message, IPAddress _ip){
+    public Transaction(String _message, InetAddress _ip, int _port){
 	message = _message;
-	IPAddress ip = _ip;
+	ip = new IPAddress(_ip, _port);
     }
 
     public String getMessage(){
@@ -15,6 +17,7 @@ public class Transaction
 
     public IPAddress getIP(){
 	return ip;
+//	return new IPAddress(ip, port);
     }
 
 } // end class Transaction
