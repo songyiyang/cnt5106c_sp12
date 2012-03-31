@@ -155,6 +155,53 @@ if it fails the check the user will be prompted to enter valid data.
   if there are no records to report. Otherwise, the client receives
   the number of matched records and the records themselves.
 
+- link {server}
+  Adds a logical link from the active server to the specified record.
+  The two machines exchange client lists in the process. May return
+  SERVER_NOT_KNOWN if the server isn't known to the active server,
+  SERVER_ALREADY_LINKED if the server is logically connected already
+  and TIMEOUT if the test connection times out.
+
+- unlink {server}
+  Removes the logical link between the active server and the specified
+  server. May return SERVER_NOT_KNOWN if the server isn't known to
+  the active server and SERVER_NOT_LINKED if the server isn't logically
+  connected.
+
+- register {name} {port}
+  Assigns the given name on the server and registers the client's
+  IP and the port on which it will listen for messages. May
+  return a NAME_ALREADY_REGISTERED error if that server has registered
+  the given name.
+
+- unregister {name}
+  Assigns the given name on the server and registers the client's
+  IP and the port on which it will listen for messages. May
+  return a FAIL_WHALE error if the user is unregistering a name
+  that doesn't belong to him/her, or a NAME_NOT_FOUND error if
+  the name wasn't found.
+
+
+- list {name-list} {server-list}
+  This lists off all the registered names that the active
+  server knows about. In addition to its own names, it may
+  return names that it has heard about through its links.
+
+  name-list and server-list are either space-deliminated
+  strings or the wildcard (*). The server returns results
+  appropriately to the client. 
+
+- send {name-list} {server-list} {message}
+  This sends a message to the indicated recipients located
+  on the indicated servers. It makes a best-effort to do
+  so; it does not guarantee the named clients receive or
+  read the mail. It sends the list to its links as needed.
+
+  name-list and server-list are either space-deliminated
+  strings or the wildcard (*). The server returns indicates
+  that it has attempted to send the mail in order to keep
+  the client from blocking.
+
 - quit
   Closes the client application. The server continues to run.
 
@@ -185,6 +232,19 @@ where:
 Typically, for RCV messages, there are no additional arguments; there is only
 the status message. Conversely SND messages do not have status messages but
 will have some sort of argument list.
+
+With the LINK, UNLINK, REGISTER, UNREGISTER, and SEND messages are further
+messages used by the server to communicate with its peers. These are known
+as Control Messages. They are included here for completeness but are
+mentioned very little, as their purpose is mostly to inform servers
+on how to handle requests.
+
+One key element of the Control Messages, however, is the tid field, which
+is almost always present. This is used to distinguish messages passed
+between servers, preventing uncontrolled flooding. The tid consists
+of an integer unique to the originating server, plus the server's IP
+and port. It is in the format #-IP:port. Each server maintains some
+history of past requests. If it is seen again, the message is discarded.
 
 b. Types of Messages
 
@@ -249,7 +309,97 @@ iii.  GET
     lists the name of the record and the IP and port of the record for all
     records returned.
 
-  v.  GAMEOVER
+  v. LINK
+
+    SND LINK name
+    RCV LINK name {SUCCESS | ERROR code}
+
+    DIR CTRL_CONNECT tid # {client_list} {SUCCESS | ERROR code}
+
+    LINK indicates that the current server should link with another
+    server. A RCV is sent when it is determined if the link can be
+    established or not. The client does not block for the server
+    to establish the link.
+
+    The control message is used to exchange the client lists
+    of the two servers. These messages are passed between the
+    servers without blocking the user or server. 
+
+ vi. UNLINK
+
+    SND UNLINK name
+    RCV UNLINK name {SUCCESS | ERROR code}
+
+    DIR CTRL_DISCONNECT tid name {SUCCESS | ERROR code}    
+
+    UNLINK indicates that the current server should disconnect from another
+    server. A RCV is sent when it is determined if the link can be
+    destroyed. The client does not block for the server
+    to destroy the link.
+
+    The control message is used to indicate that the servers should
+    disconnect.
+
+vii. REGISTER
+
+    SND REGISTER name port
+    RCV REGISTER name port {SUCCESS | ERROR code}
+
+    DIR CTRL_ADD tid name {SUCCESS | ERROR code}
+
+    REGISTER indicates that the current server should associate
+    a given name to the current client. The port is the port on
+    which the client will listen for messages.
+
+    The control message is used to indicate that the name should
+    be added to the other servers' knowledge about the active server.
+
+
+viii.UNREGISTER
+
+     SND UNREGISTER name
+     RCV UNREGISTER name {SUCCESS | ERROR code}
+
+     DIR CTRL_RM tid name {SUCCESS | ERROR code}
+
+    UNREGISTER indicates that the current server should disassociate
+    a given name with the current client. No further action is needed
+    by the client.
+
+    The control message is used to indicate that the name should
+    be removed to the other servers' knowledge about the active server.
+
+ ix. LIST
+
+     SND LIST clients servers
+     RCV LIST clients servers [names] {SUCCESS | ERROR code}
+
+    LIST asks the current server about names that it knows about.
+    The server then produces such a list, indicating the server and
+    the name registered there (useful especially for wildcard
+    queries). The client WILL block until the server is complete.
+
+    There are no control messages for LIST because the current
+    server should have sufficient information to return all the names.
+
+
+  x. SEND 
+
+     SND SEND clients servers
+     RCV SEND clients servers message {SUCCESS | ERROR code}
+
+     DIR CTRL_SEND tid client_names {yes|no} message {SUCCESS | ERROR code}
+
+    SEND sends a message to all clients listed on the listed servers.
+    The client is not blocked during the operation.
+
+    The control message is used to indicate if the message needs to
+    propagate through the network. In the case of a wildcard query
+    for the servers, "yes" will be chosen, otherwise "no". This ensures
+    that the messages only propagate to the active server's links or the
+    entire network as needed.
+
+ xi.  GAMEOVER
 
     SND GAMEOVER
     RCV GAMEOVER {MSG} {SUCCESS | ERROR code}
@@ -272,8 +422,20 @@ ErrorCode class:
 
     - 72 (FAIL_WHALE): An unexpected error occurred.
 
+    - 101 (NAME_PREVIOUSLY_REGISTERED): The given name is registered to
+      someone else on the server.
+
+    - 102 (NAME_NOT_FOUND): The given name is not registered on the server.
+
     - 404 (RECORD_NOT_FOUND): The server was unable to find a valid record.
       This message is passed in the DELETE and GET commands.
+
+    - 405 (SERVER_NOT_KNOWN): The server does not know about the given server.
+
+    - 406 (SERVER_NOT_LINKED): The server is not linked with the specified
+      server.
+
+    - 407 (SERVER_ALREADY_LINKED): The two servers are already linked logically.
 
     - 777 (PACKET_EXPLODED): A packet loss was detected by the receiver.
 
@@ -284,6 +446,8 @@ ErrorCode class:
     - 9876 (SERVER_BUSY): The client has indicated to the server that
       it should shut down (using the GAMEOVER message) but the server cannot
       stop because it is busy processing something.
+
+
 
 ============================================
  6. Test Cases
@@ -315,3 +479,29 @@ GET/TRANSMIT
 
 GAMEOVER
 - kill - should return with message "game over, man! game over!"
+
+LINK
+create a server as specified by the name serv1 in Records.db. Then
+
+- link serv1 - no failure
+- link serv1 - will return SERVER_ALREADY_LINKED
+
+UNLINK
+- unlink serv1
+- unlink NAN - SERVER_NOT_KNOWN error
+
+
+REGISTER
+- register npa - no failure
+- register npa - NAME_PREVIOUSLY_REGISTERED error
+
+UNREGISTER
+- unregister npa - no failure
+- unlink serv2 - will return NAME_NOT_FOUND
+
+
+LIST
+- input '*', '*' when prompted after registering a name
+
+SEND
+- input '*', '*', 'This is a test' when prompted after registering a name

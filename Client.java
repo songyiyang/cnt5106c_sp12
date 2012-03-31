@@ -52,7 +52,7 @@ public class Client
 
 	String prompt = "$ ";
 	IPAddress server = null;
-
+	IPAddress rsp = null;
 	    // Print inital message to user
 	System.out.println("\nWelcome to client application. Available \n" +
 			   "commands are insert, delete, find, server, \n" +
@@ -125,11 +125,11 @@ public class Client
 	    ClientProtocol.send(system_msg, server);
 
 		// Get the response
-	    server = ClientProtocol.receive(packetIn);
+	    rsp = ClientProtocol.receive(packetIn);
 
-	    if (server != null){
+	    if (rsp != null){
 		    // Finally parse the response
-		system_msg = ClientProtocol.parseResponse(packetIn, server);
+		system_msg = ClientProtocol.parseResponse(packetIn, rsp);
 
 		    // If system gives the signal, shut program down
 		if (system_msg.equals("game over")){

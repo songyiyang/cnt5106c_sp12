@@ -2,12 +2,14 @@ public class RegisteredName
 {
 
     private String name;
+    private IPAddress ip;
     private IPAddress mailAddress;
 
-    public RegisteredName(String _name, IPAddress ip, int port){
+    public RegisteredName(String _name, IPAddress _ip, int port){
 
 	name = _name;
-	mailAddress = new IPAddress(ip.getIPNetAddress(), port);
+	ip = _ip;
+	mailAddress = new IPAddress(_ip.getIPNetAddress(), port);
 
     } // end constructor
 
@@ -15,6 +17,9 @@ public class RegisteredName
 	return name;
     }
 
+    public IPAddress getIP(){
+	return ip;
+    }
 
     public IPAddress getMailAddress(){
 	return mailAddress;

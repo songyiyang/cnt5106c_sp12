@@ -204,33 +204,10 @@ public class ServerProtocol extends Protocol
 	    }
 		// Else try to link the two servers
 	    else {
-
-		IPAddress server = link.getIPAddress();
-		IPAddress me = Server.getIPAddress();
-		DatagramPacket in = new DatagramPacket(
-					new byte[PACKET_SIZE], PACKET_SIZE);
-
-		String msg = ProtocolCommand.createPacket(
-			ProtocolCommand.CTRL_DISCONNECT, me.getIPAddress(),
-			me, "", 0, null);
-
-		ClientProtocol.setTimeout(true);
-		ClientProtocol.send(msg, server);
-		server = ClientProtocol.receive(in);
-		ClientProtocol.setTimeout(false);
-
-		    // If server could not link to other server,
-		    // report TIMEOUT error
-		if (server == null){
-		    error = ErrorCode.TIMEOUT;
-		}
-		else {
-		    link.setLinked(false);
-		    Server.admin.addJobToQueue(new Transaction(message,
+		link.setLinked(false);
+		Server.admin.addJobToQueue(new Transaction(message,
 			    client.getIPNetAddress(), client.getPort()));
-		    Server.admin.interrupt();
-		}
-
+		Server.admin.interrupt();
 	    }
 
 	    cmd = ProtocolCommand.UNLINK;
@@ -278,6 +255,9 @@ public class ServerProtocol extends Protocol
 	    if (rname == null){
 		error = ErrorCode.NAME_NOT_FOUND;
 	    }
+	    else if (!rname.getIP().toString().equals(client.toString())){
+		error = ErrorCode.FAIL_WHALE;
+	    }
 	    else {
 		Server.removeClient(rname);
 
@@ -297,7 +277,7 @@ public class ServerProtocol extends Protocol
 	    Server.admin.addJobToQueue(new Transaction(message,
 			    client.getIPNetAddress(), client.getPort()));
 	    Server.admin.interrupt();
-	    cmd = ProtocolCommand.LIST;
+//	    cmd = ProtocolCommand.LIST;
 	    system_msg = "list";
 
 	}

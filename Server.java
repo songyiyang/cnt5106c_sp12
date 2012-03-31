@@ -93,7 +93,7 @@ public class Server
 	while (wait){
 
 		// Create a new packet in which to receive data
-	    dataIn = new byte[Protocol.PACKET_SIZE];
+	    dataIn = new byte[Protocol.PACKET_SIZE_LARGE];
 	    packetIn = new DatagramPacket(dataIn, dataIn.length);
 
 		// Get message from the client
@@ -286,7 +286,7 @@ public class Server
 
 		    // Is name registered on this server?
 		temp = findRegisteredName(names[i]);
-System.out.println(temp == null);
+
 		    // If so, send the mail
 		if (temp != null){
 		    ClientProtocol.send(message, temp.getMailAddress());

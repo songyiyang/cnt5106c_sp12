@@ -316,10 +316,10 @@ public class ClientProtocol extends Protocol
 			 tokens, 3, in, false);
 
 		nameList = nameList.trim();
-//		nameList = nameList.replace("\\s+", ",");
+		nameList = nameList.replace("\\s+", ",");
 
 		serverList = serverList.trim();
-//		serverList = serverList.replace("\\s+", ",");
+		serverList = serverList.replace("\\s+", ",");
 
 		args = nameList + " " + serverList;
 
@@ -495,6 +495,41 @@ public class ClientProtocol extends Protocol
 		Client.destroyMailDaemon(tokens[2], server);
 		System.out.println("successfully unregistered from the server.");
 	    }
+
+	}
+
+	else if (tokens[1].equals("LIST")){
+
+	    if (error == null){
+
+		System.out.println("names from server:");
+
+		if (tokens[4].equals("-")){
+		    System.out.println("no registered names found");
+		}
+		else {
+
+		    String[] names = tokens[4].split(";");
+
+		    for (int i = 0; i < names.length; i++){
+			System.out.println(names[i]);
+		    }
+
+		}
+
+	    }
+
+	    system_msg = "list";
+
+	}
+
+	else if (tokens[1].equals("SEND")){
+
+	    if (error == null){
+		System.out.println("message sent to recipients.");
+	    }
+
+	    system_msg = "send";
 
 	}
 

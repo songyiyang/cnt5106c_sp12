@@ -10,7 +10,7 @@ public enum ProtocolCommand {
     UNLINK("UNLINK"),
     REGISTER("REGISTER"),
     UNREGISTER("UNREGISTER"),
-    LIST("REGISTER"),
+    LIST("LIST"),
     SEND("SEND"),
 
     CTRL_CONNECT("CTRL_CONNECT"),
@@ -171,6 +171,14 @@ public enum ProtocolCommand {
 
 		break;
 
+		// format: DIR LIST clients servers [names]
+		// {SUCCESS | ERROR code}
+	    case LIST:
+
+		msg = msg.concat(" " + args);
+
+		break;
+
 		// format: DIR CTRL_CONNECT tid # {client_list}
 		//         {SUCCESS | ERROR code}
 	    case CTRL_CONNECT:
@@ -180,12 +188,10 @@ public enum ProtocolCommand {
 
 		break;
 
-		// format: DIR CTRL_DISCONNECT tid {SUCCESS | ERROR code}
+		// format: DIR CTRL_DISCONNECT tid name {SUCCESS | ERROR code}
 	    case CTRL_DISCONNECT:
 
-		if (direction == 0){
-		    msg = msg.concat(" " + args);
-		}
+		msg = msg.concat(" " + args);
 
 
 		// format: DIR CTRL_ADD tid name {SUCCESS | ERROR code}

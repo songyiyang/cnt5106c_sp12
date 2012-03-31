@@ -104,7 +104,7 @@ public class AdminDaemon extends Thread
 
 	    // Handle a LIST request
 	if (t.getMessage().matches(".+LIST.+")){
-	    // process LIST
+	    processListCmd();
 	}
 
 	    // Handle a SEND request
@@ -155,35 +155,77 @@ System.out.println("end of job");
     private void processListCmd(){
 
 	String[] tokens = t.getMessage().split("\\s+");
-/*	String names = tokens[];
-	String servers = tokens[];
+	String names = tokens[2];
+	String servers = tokens[3];
 
-	names = "(" + names.replace(",", "|") + ")";
-	servers = "(" + servers.replace(",", "|") + ")";
-*/
-	ClientList list = null;
+	String data = "";
+	String args = "";
+
+	String nameRegexp = "";
+	String serverRegexp = "";
+
+	if (!names.equals("*")){
+	    nameRegexp = "(" + names.replaceAll(",", "|") + ")";
+	}
+
+	if (!servers.equals("*")){
+	    serverRegexp = servers.replaceAll("SELF","");
+	    serverRegexp = servers.replaceAll(",,", ",");
+	    serverRegexp = "(" + servers.replaceAll(",", "|") + ")";
+	}
+
+
+	if (servers.indexOf("SELF") >= 0 || servers.equals("*")){
+
+	    for (RegisteredName rn : Server.registrar){
+
+		if (!names.equals("*") && !rn.getName().matches(nameRegexp)){
+		    continue;
+		}
+
+		data += "SELF:" + rn.getName() + ";";
+	    }
+
+	}
+
 
 	    // For each link, send out the message
 
-	Set<String> keys = clients.keySet();
+	if (clients.size() > 0){
 
-	for (String key : keys){
-/*
-	    if (!key.matches(servers)){
-		continue;
-	    }
+	    Set<String> keys = clients.keySet();
+	    LinkedList<String> nameList = null;
 
-	    list = clients.get(key);
+	    for (String key : keys){
 
-	    for (String entry : list){
-		
-	    }
-*/
-	} // end foreach keys
+		if (!servers.equals("*") && !key.matches(serverRegexp)){
+		    continue;
+		}
 
-	    // Convert names into string form
+		nameList = clients.get(key).getList();
 
-//	Set<String> keys = 
+		for (String entry : nameList){
+
+		    if (!names.equals("*") && !entry.matches(nameRegexp)){
+			continue;
+		    }
+
+		    data += key + ":" + entry + ";";
+		}
+
+	    } // end foreach keys
+	}
+
+	if (data.equals("")){
+	    data = "-";
+	}
+
+	args = tokens[2] + " " + tokens[3] + " " + data;
+
+	String message = ProtocolCommand.createPacket(ProtocolCommand.LIST,
+			      "", null, args, 1, null);
+
+	send(message, t.getIP());
 
     }
 
@@ -342,7 +384,7 @@ System.out.println("end of job");
 	    message = ProtocolCommand.createPacket(
 			ProtocolCommand.CTRL_DISCONNECT, "",
 			null, args, 0, null);
-
+System.out.println(message);
 	    send(message, record.getIPAddress());
 	    rsp = receive();
 	    message = ClientProtocol.extract(packet);
@@ -406,16 +448,18 @@ System.out.println("end of job");
 	    String idParts[] = tokens[2].split("-");
 
 	    int index = 0;
+	    String name = "";
 	    if (links.size() > 0){
 		for (Record temp : links){
 		    if (temp.getName().equals(idParts[1])){
+			name = temp.getName();
 			break;
 		    }
 		}
 		links.remove(index);
 	    }
 
-	    clients.remove(t.getIP().toString());
+	    clients.remove(name);
 
 	}
 
