@@ -10,6 +10,7 @@ import java.util.LinkedList;
 public class Server
 {
 
+    private static String name;
     private static RecordFile recordFile;
     private static ConfigFile config;
     private static DatagramSocket socket;
@@ -180,6 +181,17 @@ public class Server
 
 	    
 	port = selectedPort;
+
+
+	if (args.length == 2){
+	    name = args[1];
+	}
+	else if (!config.getName().equals("")){
+	    name = config.getName();
+	}
+	else {
+	    name = "default";
+	}
 
 	InetAddress host = null;
 
