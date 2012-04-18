@@ -11,6 +11,8 @@ public class ConfigFile
     private String path;
 	// The port number for the connection
     private int port;
+	// The name of the server
+    private String name;
 	// Set a flag to indicate that the file has been read
     private boolean hasBeenRead = false;
 
@@ -18,6 +20,7 @@ public class ConfigFile
 
 	path = _path;
 	port = 0;
+	name = "";
 
 	readConfigFile();
 
@@ -28,7 +31,11 @@ public class ConfigFile
      */
     public int getPort(){
 	return port;
-    } // end method hasFileBeenRead
+    } // end method getPort
+
+    public String getName(){
+	return name;
+    } // end method getName
 
 
     /**
@@ -75,10 +82,15 @@ public class ConfigFile
 		    // of a colon and whitespace.
 		tokenizedLine = line.split("\\s*=\\s*");
 
-		    // Get the chunk size
+		    // Get the port number
 		if (tokenizedLine[0].equals("port")){
 		    port = Integer.parseInt(tokenizedLine[1]);
 		} // end else if tokenizedLine[0]
+
+		    // Get the server name
+		else if (tokenizedLine[0].equals("name")){
+		    name = tokenizedLine[1];
+		}
 
 		    // Else an unknown item was found; set error flag
 		else {
