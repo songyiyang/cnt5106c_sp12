@@ -132,7 +132,7 @@ public class AdminDaemon extends Thread
 
 	id++;
 	t = null;
-System.out.println("end of job");
+
     } // end processJob
 
     private void getUnprocessedJob(){
@@ -384,7 +384,7 @@ System.out.println("end of job");
 	    message = ProtocolCommand.createPacket(
 			ProtocolCommand.CTRL_DISCONNECT, "",
 			null, args, 0, null);
-System.out.println(message);
+
 	    send(message, record.getIPAddress());
 	    rsp = receive();
 	    message = ClientProtocol.extract(packet);
@@ -626,7 +626,7 @@ System.out.println(message);
 
 	    clients.get(pair[0]).add(pair[1]);
 
-	    System.out.println(pair[0] + " " + pair[1] );
+//	    System.out.println(pair[0] + " " + pair[1] );
 
 	} // end for int i
 
