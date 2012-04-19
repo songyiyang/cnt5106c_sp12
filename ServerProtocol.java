@@ -245,7 +245,7 @@ public class ServerProtocol extends Protocol
 
 	}
 
-	    // Register a name on the server
+	    // Unregister a name on the server
 	else if (tokens[1].equals("UNREGISTER")){
 
 	    name = tokens[2];
