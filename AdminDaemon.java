@@ -281,14 +281,14 @@ public class AdminDaemon extends Thread
 	String message = "";
 	String args = "";
 
-	Record record = Server.getRecord(tokens[2]);
+	Record record = Server.rtable.getRecord(tokens[2]);
 	IPAddress rsp = null;
 
 	if (t.getMessage().matches(".+LINK.+")){
 
 		// First, send a message to the remote server, listing off
-		// our known contacts.
-	    args = tranid + " ";
+		// our routing information
+	    args = tranid + " " + Server.rtable.getRoutingInfo();
 
 	    message = ProtocolCommand.createPacket(ProtocolCommand.CTRL_CONNECT,
 		      "", null, args, 0, null);
@@ -296,12 +296,23 @@ public class AdminDaemon extends Thread
 	    send(message, record.getIPAddress());
 
 		// Then, receive a message from the remote server and 
-		// merge its client list into the one maintained here.
+		// update the routing table with the information
 	    rsp = receive();
 
 	    if (rsp != null){
 
 		message = ClientProtocol.extract(packet);
+		tokens = message.split("\\s+");
+
+		boolean modified = false;
+		String[] vector = tokens[3].split(";");
+
+		    // routing table will perform update
+		modified = Server.rtable.updateTable(record, vector);
+
+		if (modified){
+		    
+		} 
 
 	    }
 
@@ -323,10 +334,7 @@ public class AdminDaemon extends Thread
 
 		// Now, delete all the information the other server
 		// passed on.
-	    clients.remove(record.getIPAddress().toString());
-	    links.remove(record);
-
-		// Finally, ask remaining links for client information
+	    Server.rtable.removeEntry(record);
 
 	}
 
