@@ -30,8 +30,12 @@ public class RoutingEntry
 
     }
 
-    public void updateHopCount(int _newHopCount){
-	hopCount = _newHopCount;
+    public void setNeighbor(String _neighbor){
+	neighbor = _neighbor;
+    }
+
+    public void setHopCount(int _hopCount){
+	hopCount = _hopCount;
     }
 
     public String getServer(){
