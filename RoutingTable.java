@@ -42,6 +42,60 @@ public class RoutingTable
 
     }
 
+    public Record[] updateTable(Record neighbor, String[] vector){
+
+	Record[] links = null;
+
+	RoutingEntry entry = null;
+	boolean modified = false;
+
+	String[] vectorEntries = null;
+
+	String server = "";
+	String neighbor = "";
+	int hopCount = 0;
+
+
+	for (int i = 0; i < vector.size; i++){
+
+	    vectorEntries = vector[i].split(",");
+
+	    server = vectorEntries[0];
+	    neighbor = vectorEntries[1];
+	    hopCount = Integer.parseInt(vectorEntries[2]);
+
+	    if (entries.containsKey(server)){
+
+		entry = entries.get(server);
+
+		if (!entry.getNeighbor().equals(neighbor) ||
+		    !entry.getHopCount() == hopCount){
+
+		    entry.setNeighbor(neighbor);
+		    entry.setHopCount(hopCount);
+		    modified = true;
+
+		}
+
+	    } // end if entries.containsKey
+
+	    else {
+
+		entry = new RoutingEntry(server, neighbor, hopCount);
+		entries.put(server, hopCount);
+		modified = true;
+	    }
+
+	} // end for i
+
+	if (modified){
+
+	}
+
+	return links;
+
+    } // end updateTable
+
 
     /****************************************************
 
