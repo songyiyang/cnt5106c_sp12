@@ -45,7 +45,7 @@ public class ServerProtocol extends Protocol
 
 		// Create the record and add it to the list
 	    Record record = new Record(name, ipAddress);
-	    boolean added = Server.addRecord(record);
+	    boolean added = Server.rtable.addRecord(record);
 
 	    if (!added){
 		error = ErrorCode.FAIL_WHALE;
@@ -84,7 +84,7 @@ public class ServerProtocol extends Protocol
 	    }
 
 		// Attempt to delete the record
-	    boolean deleted = Server.deleteRecord(name, ipAddress);
+	    boolean deleted = Server.rtable.deleteRecord(name, ipAddress);
 
 		// If record could be deleted for some reason,
 		// set the error code to RECORD_NOT_FOUND
@@ -96,7 +96,6 @@ public class ServerProtocol extends Protocol
 	    system_msg = "delete";
 
 	}
-
 
 	    // Check to see if there are records to return
 	else if (tokens[1].equals("GET")){
@@ -136,7 +135,7 @@ public class ServerProtocol extends Protocol
 	    name = tokens[2];
 
 		// Attempt to find record
-	    Record link = Server.getRecord(name);
+	    Record link = Server.rtable.getRecord(name);
 
 		// If the server to which to link is not known,
 		// send client a SERVER_NOT_KNOWN message
@@ -190,7 +189,7 @@ public class ServerProtocol extends Protocol
 	    name = tokens[2];
 
 		// Attempt to find record
-	    Record link = Server.getRecord(name);
+	    Record link = Server.rtable.getRecord(name);
 
 		// If the server to which to link is not known,
 		// send client a SERVER_NOT_FOUND message
@@ -233,11 +232,6 @@ public class ServerProtocol extends Protocol
 		args = "" + port;
 		rname = new RegisteredName(name, client, port);
 		Server.registerClient(rname);
-
-		Server.admin.addJobToQueue(new Transaction(message,
-			    client.getIPNetAddress(), client.getPort()));
-		Server.admin.interrupt();
-
 	    }
 
 	    cmd = ProtocolCommand.REGISTER;
@@ -260,10 +254,6 @@ public class ServerProtocol extends Protocol
 	    }
 	    else {
 		Server.removeClient(rname);
-
-		Server.admin.addJobToQueue(new Transaction(message,
-			    client.getIPNetAddress(), client.getPort()));
-		Server.admin.interrupt();
 	    }
 
 	    cmd = ProtocolCommand.UNREGISTER;
@@ -277,7 +267,7 @@ public class ServerProtocol extends Protocol
 	    Server.admin.addJobToQueue(new Transaction(message,
 			    client.getIPNetAddress(), client.getPort()));
 	    Server.admin.interrupt();
-//	    cmd = ProtocolCommand.LIST;
+	    cmd = ProtocolCommand.LIST;
 	    system_msg = "list";
 
 	}
@@ -333,17 +323,6 @@ public class ServerProtocol extends Protocol
 	    Server.admin.interrupt();
 
 	    system_msg = "disconnect";
-
-	}
-
-	    // Remove link to the given server
-	else if (tokens[1].equals("CTRL_ADD")){
-
-	    Server.admin.addJobToQueue(new Transaction(message,
-			client.getIPNetAddress(), client.getPort()));
-	    Server.admin.interrupt();
-
-	    system_msg = "add";
 
 	}
 
