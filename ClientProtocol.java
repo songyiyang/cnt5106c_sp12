@@ -20,7 +20,8 @@ public class ClientProtocol extends Protocol
 	// Define the basic inputs
     private static String cmdRegex = "^(server|insert|delete|find|quit|" +
 				     "kill|link|unlink|register|" +
-				     "unregister|list|send|mail).*$";
+				     "unregister|list|send|mail|neighbors|"+
+				     "forwarding).*$";
 
     private static boolean timeout = false;
     private static int MAX_TIMEOUT = 1000 * 5;
