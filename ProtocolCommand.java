@@ -12,11 +12,12 @@ public enum ProtocolCommand {
     UNREGISTER("UNREGISTER"),
     LIST("LIST"),
     SEND("SEND"),
+    SEND_N("SEND_N"),
+    SEND_RT("SEND_RT"),
 
     CTRL_CONNECT("CTRL_CONNECT"),
     CTRL_DISCONNECT("CTRL_DISCONNECT"),
-    CTRL_ADD("CTRL_ADD"),
-    CTRL_RM("CTRL_RM"),
+    CTRL_LIST("CTRL_LIST"),
     CTRL_SEND("CTRL_SEND");
 
     private String command;
@@ -193,21 +194,6 @@ public enum ProtocolCommand {
 
 		msg = msg.concat(" " + args);
 
-
-		// format: DIR CTRL_ADD tid name {SUCCESS | ERROR code}
-	    case CTRL_ADD:
-
-		payloadExists = true;
-		msg = msg.concat(" " + args);
-
-		break;
-
-		// format: DIR CTRL_RM tid name {SUCCESS | ERROR code}
-	    case CTRL_RM:
-
-		if (direction == 0){
-		    msg = msg.concat(" " + name);
-		}
 
 		// format: DIR CTRL_SEND tid client_names {yes|no}
 		// message {SUCCESS | ERROR code}
