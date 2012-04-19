@@ -4,8 +4,8 @@ import java.util.LinkedList;
 /**
  * @class RoutingTable
  *
- * @desc Acts as a forwarding table for this node. Lookups
- *       determine how to get to 
+ * @desc Acts as a routing table for the server. Lookups
+ *       determine how to get to other servers.
  */
 public class RoutingTable
 {
@@ -13,7 +13,7 @@ public class RoutingTable
     LinkedList<Record> records;
     TreeMap<String,RoutingEntry> entries;
 
-    public RoutingTable {
+    public RoutingTable() {
 
 	neighbors = new LinkedList<Record>();
 	entries = new TreeMap<String,RoutingEntry>();
@@ -181,4 +181,4 @@ public class RoutingTable
 
     } // end method findRecords
 
-} // end class ForwardingTable
+} // end class RoutingTable
