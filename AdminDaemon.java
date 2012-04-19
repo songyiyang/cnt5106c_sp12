@@ -21,9 +21,6 @@ public class AdminDaemon extends Thread
     DatagramSocket socket;
     DatagramPacket packet;
 
-    private TreeMap<String,ClientList> clients;
-
-    private LinkedList<Record> links;
     private LinkedList<Transaction> jobQueue;
     private LinkedList<String> processedMsgs;
 
@@ -37,11 +34,8 @@ public class AdminDaemon extends Thread
 	shutdown = false;
 	historyLength = DEFAULT_MAX_HISTORY;
 
-	links = new LinkedList<Record>();
 	jobQueue = new LinkedList<Transaction>();
 	processedMsgs = new LinkedList<String>();
-
-	clients = new TreeMap<String,ClientList>();
 
 	try {
 	    socket = new DatagramSocket();
@@ -113,18 +107,13 @@ public class AdminDaemon extends Thread
 	}
 
 	    // Handle registration requests
-	else if (t.getMessage().matches(".+(UN)?REGISTER.+")){
-	    processRegisterCmd(tranid);	    
-	}
-
-	    // Handle registration requests
 	else if (t.getMessage().matches(".+(UN)?LINK.+")){
 	    processLinkCmd(tranid);
 	}
 
 	    // Handle some CONTROL message
 	else {
-	    // process CONTROL message
+		// process CONTROL message
 	    processControlCmd(tranid);
 		// remember message in case someone sends this to you
 	    addMessageToProcessedList();
@@ -286,54 +275,6 @@ public class AdminDaemon extends Thread
     }
 
 
-    private void processRegisterCmd(String tranid){
-
-	String[] tokens = t.getMessage().split("\\s+");
-	String message = "";
-	String args = "";
-
-	IPAddress rsp = null;
-
-
-	if (t.getMessage().matches(".+REGISTER.+")){
-
-		// First, create the message to the remote servers
-	    args = tranid + " " + tokens[2];
-
-	    message = ProtocolCommand.createPacket(ProtocolCommand.CTRL_ADD,
-		      "", null, args, 0, null);
-
-		// For each link, send message to register user for
-		// this server
-	    for (Record r : links){
-		send(message, r.getIPAddress());
-		rsp = receive();
-		resetPacket();
-	    }
-
-	}
-	else {
-
-		// First, create the message to the remote servers
-	    args = tranid + " " + tokens[2];
-
-	    message = ProtocolCommand.createPacket(ProtocolCommand.CTRL_RM,
-		      "", null, args, 0, null);
-
-		// For each link, send message to register user for
-		// this server
-	    for (Record r : links){
-		send(message, r.getIPAddress());
-		rsp = receive();
-		resetPacket();
-	    }
-
-	}
-
-	addMessageToProcessedList(message);
-
-    } // end processRegisterCmd
-
     private void processLinkCmd(String tranid){
 
 	String[] tokens = t.getMessage().split("\\s+");
@@ -412,113 +353,8 @@ public class AdminDaemon extends Thread
 
 	IPAddress rsp;
 
-	    // CTRL_CONNECT - send clients to user
-	if (tokens[1].matches("CTRL_CONNECT")) {
-
-	    args = tokens[2] + " " + generateClientList();
-
-	    reply = ProtocolCommand.createPacket(ProtocolCommand.CTRL_CONNECT,
-		         "", null, args, 1, null);
-
-	    send(reply, t.getIP());
-
-	    String idParts[] = tokens[2].split("-");
-
-	    links.addLast(new Record(idParts[1], t.getIP(), true));
-
-	    int numNames = Integer.parseInt(tokens[3]);
-
-	    if (numNames > 0){
-		mergeClientList(tokens[4]);
-	    }
-
-	}
-
-	    // CTRL_DISCONNECT - delete clients used by user
-	else if (tokens[1].matches("CTRL_DISCONNECT")) {
-
-	    args = tokens[2];
-
-	    reply = ProtocolCommand.createPacket(
-			    ProtocolCommand.CTRL_DISCONNECT, "", null,
-			    args, 1, null);
-
-	    send(message, t.getIP());
-
-	    String idParts[] = tokens[2].split("-");
-
-	    int index = 0;
-	    String name = "";
-	    if (links.size() > 0){
-		for (Record temp : links){
-		    if (temp.getName().equals(idParts[1])){
-			name = temp.getName();
-			break;
-		    }
-		}
-		links.remove(index);
-	    }
-
-	    clients.remove(name);
-
-	}
-
-	    // CTRL_ADD - add a registered name to list
-	else if (tokens[1].matches("CTRL_ADD")) {
-
-	    String[] idParts = tokens[2].split("-");
-
-	    args = tokens[2] + " " + tokens[3];
-
-	    reply = ProtocolCommand.createPacket(ProtocolCommand.CTRL_ADD,
-			  "", null, args, 1, null);
-
-	    send(message, t.getIP());
-
-	    if (!clients.containsKey(idParts[1])){
-		clients.put(tokens[1],new ClientList());
-	    }
-
-
-	    clients.get(idParts[1]).add(tokens[3]);
-
-
-	    for (Record temp : links){
-		if (!temp.getName().equals(idParts[1])){
-		    send(message, temp.getIPAddress());
-		    rsp = receive();
-		    resetPacket();
-		} // end if
-	    } // end foreach
-
-	}
-
-	    // CTRL_RM - remove a registered name from the list
-	else if (tokens[1].matches("CTRL_RM")) {
-
-	    String[] idParts = tokens[2].split("-");
-
-	    args = tokens[2] + " " + tokens[3];
-
-	    reply = ProtocolCommand.createPacket(ProtocolCommand.CTRL_RM,
-			  "", null, args, 1, null);
-
-	    send(message, t.getIP());
-
-	    if (clients.containsKey(idParts[1])){
-		clients.get(idParts[1]).remove(tokens[3]);
-	    }
-
-	    for (Record temp : links){
-		send(message, temp.getIPAddress());
-		rsp = receive();
-		resetPacket();
-	    }
-
-	}
-
 	    // CTRL_SEND - remove a registered name from the list
-	else if (tokens[1].matches("CTRL_SEND")) {
+	if (tokens[1].matches("CTRL_SEND")) {
 
 	    int msgPos = message.indexOf("! ");
 	    String toSend = message.substring(msgPos+2);
@@ -543,8 +379,6 @@ public class AdminDaemon extends Thread
 	    } // end if tokens
 
 	}
-
-	    // CTRL_UPDATE
 
 	resetPacket();
 
