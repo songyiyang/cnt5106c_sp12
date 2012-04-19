@@ -288,7 +288,7 @@ public class AdminDaemon extends Thread
 
 		// First, send a message to the remote server, listing off
 		// our known contacts.
-	    args = tranid + " " + generateClientList();
+	    args = tranid + " ";
 
 	    message = ProtocolCommand.createPacket(ProtocolCommand.CTRL_CONNECT,
 		      "", null, args, 0, null);
@@ -301,16 +301,7 @@ public class AdminDaemon extends Thread
 
 	    if (rsp != null){
 
-		links.addLast(record);
-
 		message = ClientProtocol.extract(packet);
-	        tokens = message.split("\\s+");
-
-		int numNames = Integer.parseInt(tokens[3]);
-
-		if (numNames > 0){
-		    mergeClientList(tokens[4]);
-		}
 
 	    }
 
@@ -384,87 +375,6 @@ public class AdminDaemon extends Thread
 
     } // end processControlCmd
 
-
-    private String generateClientList(){
-
-	String clientData = "";
-	int numSemicolons = 0;
-	int i = 0;
-	int count = 0;
-
-	synchronized(Server.registrar){
-
-	    numSemicolons = Server.registrar.size() - 1;
-	    i = 0;
-
-	    for (RegisteredName rn : Server.registrar){
-
-		count++;
-
-		clientData += Server.getIPAddress().toString() + "#" +
-			      rn.getName();
-
-		if (i < numSemicolons){
-		    clientData += ";";
-		    i++;
-		}
-
-	    } // end foreach rn
-
-	} // end synchronized
-
-	    // Get all the keys in the mapping
-	Set<String> set = clients.keySet();
-
-	    // For each key, add server names
-	for (String key : set){
-
-	    ClientList list = clients.get((Object)key);
-
-	    numSemicolons = list.size() - 1;
-	    i = 0;
-
-	    for (String name : list.getList()){
-
-		count++;
-
-		clientData += key + "#" + name;
-
-		if (i < numSemicolons){
-		    clientData += ";";
-		    i++;
-		}
-
-	    } // end foreach key
-
-	}
-
-	clientData = "" + count + " " + clientData;
-
-	return clientData;
-
-    } // end generateClientList
-
-    private void mergeClientList(String toParse){
-
-	String[] pairs = toParse.split(";");
-
-	for (int i = 0; i < pairs.length; i++){
-
-	    String[] pair = pairs[i].split("#");
-
-		// Add client if key exists
-	    if (!clients.containsKey(pair[0])){
-		clients.put(pair[0], new ClientList());
-	    }
-
-	    clients.get(pair[0]).add(pair[1]);
-
-//	    System.out.println(pair[0] + " " + pair[1] );
-
-	} // end for int i
-
-    } // end mergeClientList
 
     private void addMessageToProcessedList(){
 
