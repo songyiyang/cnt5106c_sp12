@@ -180,7 +180,7 @@ public enum ProtocolCommand {
 
 		break;
 
-		// format: DIR CTRL_CONNECT tid # {client_list}
+		// format: DIR CTRL_CONNECT tid {[server,next,hopCount]+}
 		//         {SUCCESS | ERROR code}
 	    case CTRL_CONNECT:
 
@@ -189,7 +189,7 @@ public enum ProtocolCommand {
 
 		break;
 
-		// format: DIR CTRL_DISCONNECT tid name {SUCCESS | ERROR code}
+		// format: DIR CTRL_DISCONNECT tid {SUCCESS | ERROR code}
 	    case CTRL_DISCONNECT:
 
 		msg = msg.concat(" " + args);
