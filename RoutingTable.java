@@ -1,4 +1,5 @@
 import java.util.TreeMap;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -88,8 +89,22 @@ public class RoutingTable
 
 	} // end for i
 
+	ArrayList<Record> list = new ArrayList<Record>();
+
 	if (modified){
 
+	    for (Record record : records){
+
+		if (record.getLink()){
+		    list.add(record);
+		}
+
+	     } // end for record
+
+	} // end if modified
+
+	if (list.size() > 0){
+	    links = list.toArray();
 	}
 
 	return links;
