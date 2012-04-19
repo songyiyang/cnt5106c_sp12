@@ -10,12 +10,14 @@ import java.util.LinkedList;
 public class Server
 {
 
-    private static String name;
     private static RecordFile recordFile;
     private static ConfigFile config;
-    private static DatagramSocket socket;
+
+    private static String name;
     private static int port = -1;
     public static IPAddress myIP;
+    public static RoutingTable rtable;
+    private static DatagramSocket socket;
 
 	// Keep track of all the records known to the server
     private static LinkedList<Record> records = new LinkedList<Record>();
@@ -38,6 +40,9 @@ public class Server
 	    // Define a packet with which to receive data
 	DatagramPacket packetIn = null;
 	byte[] dataIn = new byte[Protocol.PACKET_SIZE];
+
+	    // Start up the routing table
+	rtable = new RoutingTable();
 
 	IPAddress client = null;
 
