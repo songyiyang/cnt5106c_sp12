@@ -1,5 +1,6 @@
 import java.util.TreeMap;
 import java.util.LinkedList;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * @class RoutingTable
@@ -13,10 +14,16 @@ public class RoutingTable
     LinkedList<Record> records;
     TreeMap<String,RoutingEntry> entries;
 
+    ReentrantLock tlock;
+    ReentrantLock rlock;
+
     public RoutingTable() {
 
 	neighbors = new LinkedList<Record>();
 	entries = new TreeMap<String,RoutingEntry>();
+
+	tlock = new ReetrantLock();
+	rlock = new ReentrantLock();
 
     }
 
@@ -29,8 +36,9 @@ public class RoutingTable
 
     *****************************************************/
 
+    public void updateEntry(String server, int hopCount){
 
-    public void updateTable(){
+
 
     }
 
