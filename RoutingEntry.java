@@ -7,35 +7,27 @@
 public class RoutingEntry
 {
 
-    private String server;
-    private String neighbor;
+    private String node;
+    private String next;
     private int hopCount;
 
 	// Sentinal value that indicates the node is not reachable
     public static int UNREACHABLE_NODE = -1;
 
-    public RoutingEntry(String _server, String _neighbor) {
+    public RoutingEntry(String _node, String _next) {
 
-	server = _server;
-	neighbor = _neighbor;
+	node = _node;
+	next = _next;
 	hopCount = -1;
 
     }
 
-    public RoutingEntry(String _server, String _neighbor, int _hopCount) {
+    public RoutingEntry(String _node, String _next, int _hopCount) {
 
-	server = _server;
-	neighbor = _neighbor;
+	node = _node;
+	next = _next;
 	hopCount = _hopCount;
 
-    }
-
-    public void setNeighbor(String _neighbor){
-	neighbor = _neighbor;
-    }
-
-    public void setHopCount(int _hopCount){
-	hopCount = _hopCount;
     }
 
     public String getServer(){
@@ -49,5 +41,14 @@ public class RoutingEntry
     public int getHopCount(){
 	return hopCount;
     }
+
+    public void setNext(String _neighbor){
+	neighbor = _neighbor;
+    }
+
+    public void setHopCount(int _hopCount){
+	hopCount = _hopCount;
+    }
+
 
 } // end class RoutingEntry
