@@ -7,8 +7,11 @@
 public class RoutingEntry
 {
 
+	// The node to which this entry directs
     private String node;
+	// The next server in sequence to the node 
     private String next;
+	// The hop count to the server
     private int hopCount;
 
 	// Sentinal value that indicates the node is not reachable
