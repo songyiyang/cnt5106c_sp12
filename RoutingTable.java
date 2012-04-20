@@ -43,54 +43,96 @@ public class RoutingTable
 
     }
 
-    public Record[] updateTable(Record neighbor, String[] vector){
+    public Record[] updateTable(String neighbor, String[] vector){
 
+	    // An array of links to which updates here are sent
 	Record[] links = null;
 
 	RoutingEntry entry = null;
 	boolean modified = false;
 
-	String[] vectorEntries = null;
+	    // Individual entries will be tracked with vectorEntry
+	String[] vectorEntry = null;
 
-	String server = "";
-	String neighbor = "";
+	    // Temporary variables for each vectorEntry
+	String node = "";
+	String next = "";
 	int hopCount = 0;
+	int myHopCount = 0;
 
-
+	    // Loop through received entries and update the table as
+	    // necessary
 	for (int i = 0; i < vector.size; i++){
 
-	    vectorEntries = vector[i].split(",");
+		// Get the three parts to an entry
+	    vectorEntry = vector[i].split(",");
 
-	    server = vectorEntries[0];
-	    neighbor = vectorEntries[1];
-	    hopCount = Integer.parseInt(vectorEntries[2]);
+	    node = vectorEntry[0];
+	    next = vectorEntry[1];
+	    hopCount = Integer.parseInt(vectorEntry[2]);
+	    myHopCount = hopCount + 1;
 
-	    if (entries.containsKey(server)){
+		// If this server already knows about the given node,
+		// then check to see if an update is needed
+	    if (entries.containsKey(node)){
 
-		entry = entries.get(server);
+		entry = entries.get(node);
 
-		if (!entry.getNeighbor().equals(neighbor) ||
-		    !entry.getHopCount() == hopCount){
+		    // If node is unreachable from neighbor, check
+		    // to see if next hop must be updated
+		if (hopCount == RoutingEntry.UNREACHABLE_NODE){
 
-		    entry.setNeighbor(neighbor);
-		    entry.setHopCount(hopCount);
+			// If node was reached through the neighbor,
+			// mark as unreachable
+		    if (entry.getNext().equals(neighbor)){
+			entry.setNext("");
+			entry.setHopCount(RoutingEntry.UNREACHABLE_NODE);
+			modified = true;
+		    }
+
+		}
+
+		    // If the given node is reachable from our neighbor,
+		    // update the entry
+		else if (entry.getHopCount() == RoutingEntry.UNREACHABLE_NODE) {
+
+		    entry.setNext(next);
+		    entry.setHopCount(myHopCount);
+		    modified = true;
+
+		}
+
+		    // If the given node is reachable from our neighbor
+		    // and has a lower weight, update the entry
+		else if (entry.getHopCount() > myHopCount){
+
+		    entry.setNext(next);
+		    entry.setHopCount(myHopCount);
 		    modified = true;
 
 		}
 
 	    } // end if entries.containsKey
 
+		// Else the node hasn't been seen before. Must add entry.
 	    else {
 
-		entry = new RoutingEntry(server, neighbor, hopCount);
-		entries.put(server, hopCount);
+		if (hopCount == RoutingEntry.UNREACHABLE_NODE){
+		    myHopCount = RoutingEntry.UNREACHABLE_NODE;
+		}
+
+		entry = new RoutingEntry(node, next, myHopCount);
+		entries.put(node, entry);
 		modified = true;
 	    }
 
 	} // end for i
 
+	    // Need to build a list of active links to be used
+	    // by the calling thread
 	ArrayList<Record> list = new ArrayList<Record>();
 
+	    // If any modifications took place, get all active links
 	if (modified){
 
 	    for (Record record : records){
@@ -103,6 +145,7 @@ public class RoutingTable
 
 	} // end if modified
 
+	    // Generate an array if active links found!
 	if (list.size() > 0){
 	    links = list.toArray();
 	}
