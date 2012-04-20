@@ -284,6 +284,8 @@ public class AdminDaemon extends Thread
 	Record record = Server.rtable.getRecord(tokens[2]);
 	IPAddress rsp = null;
 
+	Record[] links = null;
+
 	if (t.getMessage().matches(".+LINK.+")){
 
 		// First, send a message to the remote server, listing off
@@ -307,14 +309,28 @@ public class AdminDaemon extends Thread
 		boolean modified = false;
 		String[] vector = tokens[3].split(";");
 
-		    // routing table will perform update
+		    // Routing table will perform update
 		modified = Server.rtable.updateTable(record, vector);
 
+		    // If an update occurred, traverse neighbor
+		    // links and tell them to update
 		if (modified){
-		    
-		}
 
-	    }
+		    links = Server.rtable.getActiveLinks();
+
+		    if (links != null){
+
+			for (int i = 0; i < links.length; i++){
+
+			    // 
+
+			} // end for i
+
+		    } // end if links
+
+		} // end if modified
+
+	    } // end if rsp
 
 	} // end if LINK
 
@@ -335,6 +351,8 @@ public class AdminDaemon extends Thread
 		// Now, delete all the information the other server
 		// passed on.
 	    Server.rtable.removeEntry(record);
+
+	    Record[] links
 
 	}
 
