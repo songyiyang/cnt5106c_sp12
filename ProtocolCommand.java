@@ -17,6 +17,7 @@ public enum ProtocolCommand {
 
     CTRL_CONNECT("CTRL_CONNECT"),
     CTRL_DISCONNECT("CTRL_DISCONNECT"),
+    CTRL_UPDATE("CTRL_UPDATE"),
     CTRL_LIST("CTRL_LIST"),
     CTRL_SEND("CTRL_SEND");
 
@@ -180,7 +181,7 @@ public enum ProtocolCommand {
 
 		break;
 
-		// format: DIR CTRL_CONNECT tid {[server,next,hopCount]+}
+		// format: DIR CTRL_CONNECT 0 name {[server,next,hopCount]+}
 		//         {SUCCESS | ERROR code}
 	    case CTRL_CONNECT:
 
@@ -189,10 +190,22 @@ public enum ProtocolCommand {
 
 		break;
 
-		// format: DIR CTRL_DISCONNECT tid {SUCCESS | ERROR code}
+		// format: DIR CTRL_DISCONNECT 0 name {SUCCESS | ERROR code}
 	    case CTRL_DISCONNECT:
 
+		payloadExists = true;
 		msg = msg.concat(" " + args);
+
+		break;
+
+		// format: DIR CTRL_UPDATE 0 name {[server,next,hopCount]+}
+		//         {SUCCESS | ERROR code}
+	    case CTRL_UPDATE:
+
+		payloadExists = true;
+		msg = msg.concat(" " + args);
+
+		break;
 
 
 		// format: DIR CTRL_SEND tid client_names {yes|no}
