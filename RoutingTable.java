@@ -1,3 +1,4 @@
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -37,16 +38,13 @@ public class RoutingTable
 
     *****************************************************/
 
-    public void updateEntry(String server, int hopCount){
+    public boolean updateEntry(String neighbor, int hopCount){
 
 
 
     }
 
-    public Record[] updateTable(String neighbor, String[] vector){
-
-	    // An array of links to which updates here are sent
-	Record[] links = null;
+    public boolean updateTable(String neighbor, String[] vector){
 
 	RoutingEntry entry = null;
 	boolean modified = false;
@@ -128,20 +126,26 @@ public class RoutingTable
 
 	} // end for i
 
+
+	return modified;
+
+    } // end updateTable
+
+
+    public Record[] getActiveLinks(){
+
+	links = null;
+
 	    // Need to build a list of active links to be used
 	    // by the calling thread
 	ArrayList<Record> list = new ArrayList<Record>();
 
-	    // If any modifications took place, get all active links
-	if (modified){
+	for (Record record : records){
 
-	    for (Record record : records){
-
-		if (record.getLink()){
+	    if (record.getLink()){
 		    list.add(record);
-		}
+	    }
 
-	     } // end for record
 
 	} // end if modified
 
@@ -152,8 +156,35 @@ public class RoutingTable
 
 	return links;
 
-    } // end updateTable
+    }
 
+    public String toString(){
+
+	String table = "";
+
+	int i = 0;
+	int size = entries.size();
+
+	RoutingEntry entry = null;
+	Set<String> keys = entries.keySet();
+
+	    // Iterate through all the keys
+	for (String node : keys){
+
+		// Get the entry and print out
+	    entry = entries.get(node);
+	    table += entry.toString();
+
+		// Print out a ; if more records exist
+	    if (i < size-1){
+		table += ";";
+	    }
+
+	    i++;
+
+	} // end foreach keys
+
+    }
 
     /****************************************************
 
