@@ -142,7 +142,7 @@ public class AdminDaemon extends Thread
 
 
     private void processListCmd(){
-
+/*
 	String[] tokens = t.getMessage().split("\\s+");
 	String names = tokens[2];
 	String servers = tokens[3];
@@ -215,11 +215,11 @@ public class AdminDaemon extends Thread
 			      "", null, args, 1, null);
 
 	send(message, t.getIP());
-
+*/
     }
 
     private void processSendCmd(String tranid){
-
+/*
 	String message = t.getMessage();
 	String[] tokens = t.getMessage().split("\\s+");
 	String names = tokens[2];
@@ -271,7 +271,7 @@ public class AdminDaemon extends Thread
 	} // end foreach keys
 
 	addMessageToProcessedList(message);
-
+*/
     }
 
 
@@ -285,12 +285,13 @@ public class AdminDaemon extends Thread
 	IPAddress rsp = null;
 
 	Record[] links = null;
+	boolean modified = false;
 
 	if (t.getMessage().matches(".+LINK.+")){
 
 		// First, send a message to the remote server, listing off
 		// our routing information
-	    args = tranid + " " + Server.rtable.getRoutingInfo();
+	    args = tranid + " " + Server.rtable;
 
 	    message = ProtocolCommand.createPacket(ProtocolCommand.CTRL_CONNECT,
 		      "", null, args, 0, null);
@@ -306,16 +307,19 @@ public class AdminDaemon extends Thread
 		message = ClientProtocol.extract(packet);
 		tokens = message.split("\\s+");
 
-		boolean modified = false;
 		String[] vector = tokens[3].split(";");
 
+		    // Insert the record
+		modified = Server.rtable.addEntry(record.getName());
 		    // Routing table will perform update
-		modified = Server.rtable.updateTable(record, vector);
+		modified = modified || Server.rtable.updateTable(
+					    record.getName(), vector);
 
 		    // If an update occurred, traverse neighbor
 		    // links and tell them to update
 		if (modified){
 
+			// Get the active links
 		    links = Server.rtable.getActiveLinks();
 
 		    if (links != null){
@@ -323,6 +327,7 @@ public class AdminDaemon extends Thread
 			for (int i = 0; i < links.length; i++){
 
 			    // 
+			    resetPacket();
 
 			} // end for i
 
@@ -348,15 +353,26 @@ public class AdminDaemon extends Thread
 	    rsp = receive();
 	    message = ClientProtocol.extract(packet);
 
-		// Now, delete all the information the other server
-		// passed on.
-	    Server.rtable.removeEntry(record);
+		// Now update router table
+	    modified = Server.rtable.removeEntry(record.getName());
 
-	    Record[] links
+	    links = Server.rtable.getActiveLinks();
 
-	}
+	    if (links != null){
 
-	resetPacket();
+		for (int i = 0; i < links.length; i++){
+
+		    send(message, links[i].getIPAddress());
+		    rsp = receive();
+		    resetPacket();
+
+		} // end for i
+
+	    } // end if links
+
+	} // end if..else
+
+
 
     } // end processLinkCmd
 
@@ -369,7 +385,7 @@ public class AdminDaemon extends Thread
 	String args = "";	
 
 	IPAddress rsp;
-
+/*
 	    // CTRL_SEND - remove a registered name from the list
 	if (tokens[1].matches("CTRL_SEND")) {
 
@@ -398,7 +414,7 @@ public class AdminDaemon extends Thread
 	}
 
 	resetPacket();
-
+*/
     } // end processControlCmd
 
 
