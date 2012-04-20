@@ -21,10 +21,10 @@ public class RoutingTable
 
     public RoutingTable() {
 
-	neighbors = new LinkedList<Record>();
+	records = new LinkedList<Record>();
 	entries = new TreeMap<String,RoutingEntry>();
 
-	tlock = new ReetrantLock();
+	tlock = new ReentrantLock();
 	rlock = new ReentrantLock();
 
     }
@@ -38,9 +38,54 @@ public class RoutingTable
 
     *****************************************************/
 
-    public boolean updateEntry(String neighbor, int hopCount){
+    public boolean addEntry(String neighbor){
+
+	boolean modified = false;
+	RoutingEntry entry = null;
+
+	if (entries.containsKey(neighbor)){
+
+	    entry = entries.get(neighbor);
+
+	    if (entry.getHopCount() != 1){
+		entry.setNext(neighbor);
+		entry.setHopCount(1);
+		modified = true;
+	    }
+
+	}
+	else {
+	    entry = new RoutingEntry(neighbor, neighbor, 1);
+	    entries.put(neighbor, entry);
+	    modified = true;
+	}
 
 
+	return modified;
+
+    }
+
+    public boolean removeEntry(String neighbor){
+
+	boolean modified = false;
+
+	RoutingEntry entry = null;
+	Set<String> keys = entries.keySet();
+
+	    // Iterate through all the keys
+	for (String node : keys){
+
+	    entry = entries.get(node);
+
+	    if (entry.getNext().equals(neighbor)){
+		entry.setNext("-");
+		entry.setHopCount(RoutingEntry.UNREACHABLE_NODE);
+		modified = true;
+	    }
+
+	} // end foreach keys
+
+	return modified;
 
     }
 
@@ -60,7 +105,7 @@ public class RoutingTable
 
 	    // Loop through received entries and update the table as
 	    // necessary
-	for (int i = 0; i < vector.size; i++){
+	for (int i = 0; i < vector.length; i++){
 
 		// Get the three parts to an entry
 	    vectorEntry = vector[i].split(",");
@@ -83,7 +128,7 @@ public class RoutingTable
 			// If node was reached through the neighbor,
 			// mark as unreachable
 		    if (entry.getNext().equals(neighbor)){
-			entry.setNext("");
+			entry.setNext("-");
 			entry.setHopCount(RoutingEntry.UNREACHABLE_NODE);
 			modified = true;
 		    }
@@ -134,7 +179,7 @@ public class RoutingTable
 
     public Record[] getActiveLinks(){
 
-	links = null;
+	Record[] links = null;
 
 	    // Need to build a list of active links to be used
 	    // by the calling thread
@@ -142,7 +187,7 @@ public class RoutingTable
 
 	for (Record record : records){
 
-	    if (record.getLink()){
+	    if (record.getLinked()){
 		    list.add(record);
 	    }
 
@@ -151,7 +196,7 @@ public class RoutingTable
 
 	    // Generate an array if active links found!
 	if (list.size() > 0){
-	    links = list.toArray();
+	    links = (Record[]) list.toArray();
 	}
 
 	return links;
@@ -183,6 +228,8 @@ public class RoutingTable
 	    i++;
 
 	} // end foreach keys
+
+	return table;
 
     }
 
