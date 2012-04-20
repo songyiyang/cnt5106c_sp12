@@ -33,20 +33,20 @@ public class RoutingEntry
 
     }
 
-    public String getServer(){
-	return server;
+    public String getNode(){
+	return node;
     }
 
-    public String getNeighbor(){
-	return neighbor;
+    public String getNext(){
+	return next;
     }
 
     public int getHopCount(){
 	return hopCount;
     }
 
-    public void setNext(String _neighbor){
-	neighbor = _neighbor;
+    public void setNext(String _next){
+	next = _next;
     }
 
     public void setHopCount(int _hopCount){
