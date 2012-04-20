@@ -53,5 +53,8 @@ public class RoutingEntry
 	hopCount = _hopCount;
     }
 
+    public String toString(){
+	return node + "," + next + "," + hopCount;
+    }
 
 } // end class RoutingEntry
