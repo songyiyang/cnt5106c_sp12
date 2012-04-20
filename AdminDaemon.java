@@ -51,8 +51,10 @@ public class AdminDaemon extends Thread
 
     public void run(){
 
+	    // While the thread is alive, keep looping
 	while (!shutdown){
 
+		// If no jobs exist, await work
 	    if (!doJobsExist()){
 		try {
 		    sleep(SLEEP_TIMER);
@@ -60,11 +62,23 @@ public class AdminDaemon extends Thread
 		catch (InterruptedException e){ }
 	    }
 
+		// Take a job from the queue and process it.
+		// Nothing is done if there is no work.
 	    processJob();
 
 	} // end while !shutdown
 
     } // end method run
+
+
+    /****************************************************
+
+
+	methods to process jobs
+
+
+    *****************************************************/
+
 
     public void addJobToQueue(Transaction transaction){
 
@@ -73,6 +87,38 @@ public class AdminDaemon extends Thread
 	}
 
     }
+
+    private void addMessageToProcessedList(){
+
+	if (processedMsgs.size() == historyLength){
+
+	    int numToRemove = historyLength / 2;
+
+	    for (int i = 0; i < numToRemove; i++){
+		processedMsgs.removeFirst();
+	    }
+	}
+
+        processedMsgs.addLast(t.getMessage());
+
+    } // end addMessageToProcessedList
+
+
+    private void addMessageToProcessedList(String message){
+
+	if (processedMsgs.size() == historyLength){
+
+	    int numToRemove = historyLength / 2;
+
+	    for (int i = 0; i < numToRemove; i++){
+		processedMsgs.removeFirst();
+	    }
+	}
+
+        processedMsgs.addLast(message);
+
+    } // end addMessageToProcessedList
+
 
     private boolean doJobsExist(){
 
@@ -86,6 +132,23 @@ public class AdminDaemon extends Thread
 
     }
 
+    private void getUnprocessedJob(){
+
+	Transaction temp;
+
+	while (t == null && doJobsExist()){
+
+	    temp = jobQueue.removeFirst();
+
+	    if (!processedMsgs.contains(temp.getMessage())){
+		t = temp;
+	    }
+
+	} // end while message
+
+    } // end getUnprocessedJob
+
+
     private void processJob(){
 
 	getUnprocessedJob();
@@ -94,7 +157,7 @@ public class AdminDaemon extends Thread
 	    return;
 	}
 
-	String tranid = id + "-" + Server.getIPAddress().toString();
+	String tranid = id + "-" + Server.name;
 
 	    // Handle a LIST request
 	if (t.getMessage().matches(".+LIST.+")){
@@ -124,21 +187,15 @@ public class AdminDaemon extends Thread
 
     } // end processJob
 
-    private void getUnprocessedJob(){
 
-	Transaction temp;
+    /****************************************************
 
-	while (t == null && doJobsExist()){
 
-	    temp = jobQueue.removeFirst();
+	methods to perform certain jobs
 
-	    if (!processedMsgs.contains(temp.getMessage())){
-		t = temp;
-	    }
 
-	} // end while message
+    *****************************************************/
 
-    } // end getUnprocessedJob
 
 
     private void processListCmd(){
@@ -291,7 +348,7 @@ public class AdminDaemon extends Thread
 
 		// First, send a message to the remote server, listing off
 		// our routing information
-	    args = tranid + " " + Server.rtable;
+	    args = " 0 " + Server.name + " " + Server.rtable;
 
 	    message = ProtocolCommand.createPacket(ProtocolCommand.CTRL_CONNECT,
 		      "", null, args, 0, null);
@@ -307,10 +364,11 @@ public class AdminDaemon extends Thread
 		message = ClientProtocol.extract(packet);
 		tokens = message.split("\\s+");
 
-		String[] vector = tokens[3].split(";");
+		String[] vector = tokens[4].split(";");
 
 		    // Insert the record
 		modified = Server.rtable.addEntry(record.getName());
+
 		    // Routing table will perform update
 		modified = modified || Server.rtable.updateTable(
 					    record.getName(), vector);
@@ -319,6 +377,12 @@ public class AdminDaemon extends Thread
 		    // links and tell them to update
 		if (modified){
 
+		    args = " 0 " + Server.name + " " + Server.rtable;
+
+		    message = ProtocolCommand.createPacket(
+				    ProtocolCommand.CTRL_UPDATE, "", null,
+				    args, 0, null);
+
 			// Get the active links
 		    links = Server.rtable.getActiveLinks();
 
@@ -326,7 +390,8 @@ public class AdminDaemon extends Thread
 
 			for (int i = 0; i < links.length; i++){
 
-			    // 
+			    send(message, links[i].getIPAddress());
+			    rsp = receive();
 			    resetPacket();
 
 			} // end for i
@@ -342,7 +407,7 @@ public class AdminDaemon extends Thread
 	    // Else it's an UNLINK command, remove data
 	else {
 
-	    args = tranid;
+	    args = " 0 " + Server.name;
 
 		// First, disconnect from the remote server.
 	    message = ProtocolCommand.createPacket(
@@ -351,28 +416,15 @@ public class AdminDaemon extends Thread
 
 	    send(message, record.getIPAddress());
 	    rsp = receive();
-	    message = ClientProtocol.extract(packet);
 
 		// Now update router table
 	    modified = Server.rtable.removeEntry(record.getName());
 
-	    links = Server.rtable.getActiveLinks();
-
-	    if (links != null){
-
-		for (int i = 0; i < links.length; i++){
-
-		    send(message, links[i].getIPAddress());
-		    rsp = receive();
-		    resetPacket();
-
-		} // end for i
-
-	    } // end if links
+	    if (modified){
+		updateNeighbors();
+	    }
 
 	} // end if..else
-
-
 
     } // end processLinkCmd
 
@@ -385,6 +437,43 @@ public class AdminDaemon extends Thread
 	String args = "";	
 
 	IPAddress rsp;
+
+	if (tokens[1].matches("CTRL_CONNECT")) {
+
+	    String[] vector = tokens[4].split(";");
+
+		// Add new router entry
+	    boolean modified = Server.rtable.addEntry(tokens[3]);
+
+		// Update table
+	    modified = modified || Server.rtable.updateTable(
+					  tokens[3], vector);
+
+	    if (modified){
+		updateNeighbors();
+	    }
+
+	}
+
+	else if (tokens[1].matches("CTRL_DISCONNECT")) {
+
+		// Remove entry
+	    boolean modified = Server.rtable.removeEntry(tokens[3]);
+
+		// Update neighbors if necessary
+	    if (modified){
+		updateNeighbors();
+	    }
+
+	}
+
+	else if (tokens[1].matches("CTRL_UPDATE")) {
+
+	    // Update table
+
+	    // Update neighbors as necessary
+
+	}
 /*
 	    // CTRL_SEND - remove a registered name from the list
 	if (tokens[1].matches("CTRL_SEND")) {
@@ -418,37 +507,38 @@ public class AdminDaemon extends Thread
     } // end processControlCmd
 
 
-    private void addMessageToProcessedList(){
+    private void updateNeighbors(){
 
-	if (processedMsgs.size() == historyLength){
+	Record[] links = Server.rtable.getActiveLinks();
 
-	    int numToRemove = historyLength / 2;
+	String args = " 0 " + Server.name + " " + Server.rtable;
+	String message = ProtocolCommand.createPacket(
+			      ProtocolCommand.CTRL_UPDATE, "", null, args,
+			      0, null);
 
-	    for (int i = 0; i < numToRemove; i++){
-		processedMsgs.removeFirst();
-	    }
-	}
+	IPAddress rsp = null;
 
-        processedMsgs.addLast(t.getMessage());
+	if (links != null){
 
-    } // end addMessageToProcessedList
+	    for (int i = 0; i < links.length; i++){
+
+		send(message, links[i].getIPAddress());
+		rsp = receive();
+		resetPacket();
+
+	    } // end for i
+
+	} // end if links
+
+    }
+
+    /****************************************************
 
 
-    private void addMessageToProcessedList(String message){
+	helper methods
 
-	if (processedMsgs.size() == historyLength){
 
-	    int numToRemove = historyLength / 2;
-
-	    for (int i = 0; i < numToRemove; i++){
-		processedMsgs.removeFirst();
-	    }
-	}
-
-        processedMsgs.addLast(message);
-
-    } // end addMessageToProcessedList
-
+    *****************************************************/
 
     private IPAddress receive(){
 
