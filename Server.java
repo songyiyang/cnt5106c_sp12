@@ -13,7 +13,7 @@ public class Server
     private static RecordFile recordFile;
     private static ConfigFile config;
 
-    private static String name;
+    public static String name;
     private static int port = -1;
     public static IPAddress myIP;
     public static RoutingTable rtable;
