@@ -358,6 +358,31 @@ public class ServerProtocol extends Protocol
 
 	}
 
+
+	    // Remove link to the given server
+	else if (tokens[1].equals("CTRL_SEND_N")){
+
+	    Server.admin.addJobToQueue(new Transaction(message,
+			client.getIPNetAddress(), client.getPort()));
+	    Server.admin.interrupt();
+
+	    system_msg = "send_n";
+
+	}
+
+
+	    // Remove link to the given server
+	else if (tokens[1].equals("CTRL_SEND_F")){
+
+	    Server.admin.addJobToQueue(new Transaction(message,
+			client.getIPNetAddress(), client.getPort()));
+	    Server.admin.interrupt();
+
+	    system_msg = "send_f";
+
+	}
+
+
 	    // If the server needs to respond, send response
 	    // to the client
 	if (cmd != null){
