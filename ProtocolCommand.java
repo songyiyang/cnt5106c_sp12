@@ -13,7 +13,7 @@ public enum ProtocolCommand {
     LIST("LIST"),
     SEND("SEND"),
     SEND_N("SEND_N"),
-    SEND_RT("SEND_RT"),
+    SEND_F("SEND_F"),
 
     CTRL_CONNECT("CTRL_CONNECT"),
     CTRL_DISCONNECT("CTRL_DISCONNECT"),
@@ -165,7 +165,7 @@ public enum ProtocolCommand {
 
 		break;
 
-		// format: DIR SEND clients servers message
+		// format: DIR SEND client server message
 		// {SUCCESS | ERROR code}
 	    case SEND:
 
@@ -182,6 +182,28 @@ public enum ProtocolCommand {
 		msg = msg.concat(" " + args);
 
 		break;
+
+
+		// format: DIR SEND_N servers {SUCCESS | ERROR code}
+	    case SEND_N:
+
+		payloadExists = true;
+
+		if (direction == 0){
+		    msg = msg.concat(" " + args);
+		}
+
+		break;
+
+		// format: DIR SEND_F servers {SUCCESS | ERROR code}
+	    case SEND_F:
+
+		if (direction == 0){
+		    msg = msg.concat(" " + args);
+		}
+
+		break;
+
 
 		// format: DIR CTRL_CONNECT 0 name ip:port 
 		//         {[server,next,hopCount]+} {SUCCESS | ERROR code}
@@ -210,24 +232,18 @@ public enum ProtocolCommand {
 		break;
 
 
-		// format: DIR CTRL_LIST tid servers clients
-	    case CTRL_SEND:
-
-		msg = msg.concat(" " + args);
-
-
 		// format: DIR CTRL_SEND tid client server message
 	    case CTRL_SEND:
 
 		msg = msg.concat(" " + args);
 
-		// format: DIR CTRL_SEND_N tid client servers 
+		// format: DIR CTRL_SEND_N tid client server
 	    case CTRL_SEND_N:
 
 		msg = msg.concat(" " + args);
 
 
-		// format: DIR CTRL_SEND tid client servers
+		// format: DIR CTRL_SEND_F tid client server
 	    case CTRL_SEND_F:
 
 		msg = msg.concat(" " + args);
