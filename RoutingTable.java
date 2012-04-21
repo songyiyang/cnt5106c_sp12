@@ -51,7 +51,6 @@ public class RoutingTable
 		entry.setNext(neighbor);
 		entry.setHopCount(1);
 		modified = true;
-System.out.println("updated entry");
 	    }
 
 	}
@@ -59,8 +58,6 @@ System.out.println("updated entry");
 	    entry = new RoutingEntry(neighbor, neighbor, 1);
 	    entries.put(neighbor, entry);
 	    modified = true;
-System.out.println("added entry");
-
 	}
 
 
@@ -89,6 +86,20 @@ System.out.println("added entry");
 	} // end foreach keys
 
 	return modified;
+
+    }
+
+    public Record getNextLink(String destination){
+
+	Record link = null;
+	RoutingEntry entry = null;
+
+	if (entries.containsKey(destination)){
+	    entry = entries.get(destination);
+	    link = getRecord(entry.getNext());
+	}
+
+	return link;
 
     }
 
