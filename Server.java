@@ -187,13 +187,17 @@ public class Server
 	    
 	port = selectedPort;
 
+	name = "";
 
+	    // Select the name from the arguments first
 	if (args.length == 2){
 	    name = args[1];
 	}
-	else if (!config.getName().equals("")){
+	    // If it isn't alphanumeric, read from config file
+	if (!name.matches("[A-Za-z0-9]+")){
 	    name = config.getName();
 	}
+	    // Else name it "default"
 	else {
 	    name = "default";
 	}
@@ -204,7 +208,7 @@ public class Server
 	try {
 	    host = InetAddress.getLocalHost();
 	    System.out.println("IP is " + host.getHostAddress() +
-			       ", port is " + port);
+			       ", port is " + port + ", name is " + name);
 	    myIP = new IPAddress(host, port);
 	}
 	catch (UnknownHostException e){ }
