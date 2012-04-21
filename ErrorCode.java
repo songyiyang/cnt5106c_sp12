@@ -10,6 +10,7 @@ public enum ErrorCode
     FAIL_WHALE(72, "fail whale is failing, unknown error occurred"),
     NAME_PREVIOUSLY_REGISTERED(101, "someone else using name or ip"),
     NAME_NOT_FOUND (102, "name wasn't found, maybe"),
+    MUST_HAVE_NAME (103, "must have name registered on server!"),
     PACKET_EXPLODED(777, "packet inexplicably blew up"),
     TIMEOUT(1973, "server's response timed out - it is wasting the "+
                   "hours in an offhand way"),
@@ -49,6 +50,12 @@ public enum ErrorCode
 	    case 102:
 
 		ec = ErrorCode.NAME_NOT_FOUND;
+		break;
+
+		// Must have a registered name
+	    case 103:
+
+		ec = ErrorCode.MUST_HAVE_NAME;
 		break;
 
 		// Record could not be found
