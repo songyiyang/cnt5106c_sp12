@@ -332,40 +332,49 @@ public class ClientProtocol extends Protocol
 		// send mail to users
 	    else if (command.matches("^send")){
 
-		String nameList;
-		String serverList;
-		String message;
+		String server = "";
+		String message = "";
 
 		    // Get the regex for the name
-		nameList = parseParameter("Please enter the client names, " +
-			 "separated with spaces, or '*':", 
-			 "(\\*|[A-Za-z0-9]{1,80}{1}(\\s+[A-Za-z0-9]{1,80})*)",
-			 tokens, 2, in, false);
+		name = parseParameter("Please enter the client name: ", 
+			 "([A-Za-z0-9]{1,80}{1}", tokens, 2, in, false);
 
 		    // Get the regex for the name
-		serverList = parseParameter("Please enter the " +
-			 "servers names, separated with spaces, or '*':", 
-			 "(\\*|[A-Za-z0-9]{1,80}{1}(\\s+[A-Za-z0-9]{1,80})*)",
-			 tokens, 3, in, false);
+		server = parseParameter("Please enter the server name: ", 
+			 "([A-Za-z0-9]{1,80}{1})", tokens, 3, in, false);
 
 		    // Get the regex for the name
 		message = parseParameter("Please enter the "+
 			 "message to send:", ".+", tokens, 4, in, false);
 
-		nameList = nameList.trim();
-		nameList = nameList.replace("\\s+", ",");
-
-		serverList = serverList.trim();
-		serverList = serverList.replace("\\s+", ",");
-
-		args = nameList + " " + serverList + " !";
+		args = name + " " + server + " ! ";
 
 		message = message.trim();
 		message = message.concat("\n.\n");
 
-		args = args.concat(" " + message);
+		args = args.concat(message);
 
 		cmd = ProtocolCommand.SEND;
+
+	    }
+
+		// get neighbor list of listed servers
+	    else if (command.matches("^neighbors")){
+
+		String servers = "";
+
+		    // Get the regex for the server list
+		servers = parseParameter("Please enter the server names: ", 
+			 "([A-Za-z0-9]{1,80}{1}(\\s[A-Za-z0-9]{1,80})*)",
+			 tokens, 1, in, true);
+
+
+		servers = servers.trim();
+		servers = servers.replace("\\s+", ",");
+
+		args = servers;
+
+		cmd = ProtocolCommand.SEND_N;
 
 	    }
 
