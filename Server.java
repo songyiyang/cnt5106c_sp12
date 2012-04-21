@@ -194,11 +194,11 @@ public class Server
 	    name = args[1];
 	}
 	    // If it isn't alphanumeric, read from config file
-	if (!name.matches("[A-Za-z0-9]+")){
+	if (!name.matches("[A-Za-z0-9!@#%&]+")){
 	    name = config.getName();
 	}
 	    // Else name it "default"
-	else {
+	if (!name.matches("[A-Za-z0-9!@#%&]+")) {
 	    name = "default";
 	}
 
