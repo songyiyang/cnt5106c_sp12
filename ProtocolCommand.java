@@ -19,7 +19,9 @@ public enum ProtocolCommand {
     CTRL_DISCONNECT("CTRL_DISCONNECT"),
     CTRL_UPDATE("CTRL_UPDATE"),
     CTRL_LIST("CTRL_LIST"),
-    CTRL_SEND("CTRL_SEND");
+    CTRL_SEND("CTRL_SEND"),
+    CTRL_SEND_N("CTRL_SEND_N"),
+    CTRL_SEND_F("CTRL_SEND_F");
 
     private String command;
 
@@ -208,11 +210,28 @@ public enum ProtocolCommand {
 		break;
 
 
-		// format: DIR CTRL_SEND tid client_names {yes|no}
-		// message {SUCCESS | ERROR code}
+		// format: DIR CTRL_LIST tid servers clients
 	    case CTRL_SEND:
 
 		msg = msg.concat(" " + args);
+
+
+		// format: DIR CTRL_SEND tid client server message
+	    case CTRL_SEND:
+
+		msg = msg.concat(" " + args);
+
+		// format: DIR CTRL_SEND_N tid client servers 
+	    case CTRL_SEND_N:
+
+		msg = msg.concat(" " + args);
+
+
+		// format: DIR CTRL_SEND tid client servers
+	    case CTRL_SEND_F:
+
+		msg = msg.concat(" " + args);
+
 
 	} // end switch cmd
 
