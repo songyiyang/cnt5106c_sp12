@@ -181,8 +181,8 @@ public enum ProtocolCommand {
 
 		break;
 
-		// format: DIR CTRL_CONNECT 0 name {[server,next,hopCount]+}
-		//         {SUCCESS | ERROR code}
+		// format: DIR CTRL_CONNECT 0 name ip:port 
+		//         {[server,next,hopCount]+} {SUCCESS | ERROR code}
 	    case CTRL_CONNECT:
 
 		payloadExists = true;
