@@ -104,7 +104,7 @@ public class ServerProtocol extends Protocol
 	    String address = tokens[3];
 
 		// Attempt to find records
-	    matchedRecords = Server.findRecords(name, address);
+	    matchedRecords = Server.rtable.findRecords(name, address);
 
 		// If no records have been found, set error code
 		// to RECORD_NOT_FOUND
@@ -278,6 +278,27 @@ public class ServerProtocol extends Protocol
 	    Server.admin.addJobToQueue(new Transaction(message,
 			    client.getIPNetAddress(), client.getPort()));
 	    Server.admin.interrupt();
+
+	    cmd = ProtocolCommand.SEND;
+	    system_msg = "send";
+
+	}
+
+	    // Send mail to clients in the network
+	else if (tokens[1].equals("SEND_N")){
+
+	    RegisteredName rname = Server.findRegisteredNameIP(client);
+
+	    if (rname == null){
+		error = ErrorCode.NAME_NOT_FOUND;
+	    }
+	    else {
+
+		Server.admin.addJobToQueue(new Transaction(message,
+				client.getIPNetAddress(), client.getPort()));
+		Server.admin.interrupt();
+
+	    }
 
 	    cmd = ProtocolCommand.SEND;
 	    system_msg = "send";
