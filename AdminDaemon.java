@@ -159,8 +159,16 @@ public class AdminDaemon extends Thread
 
 	String tranid = id + "-" + Server.name;
 
+	    // Handle some CONTROL message
+	if (t.getMessage().matches(".+CTRL.+")) {
+		// process CONTROL message
+	    processControlCmd(tranid);
+		// remember message in case someone sends this to you
+	    addMessageToProcessedList();
+	}
+
 	    // Handle a LIST request
-	if (t.getMessage().matches(".+LIST.+")){
+	else if (t.getMessage().matches(".+LIST.+")){
 	    processListCmd(tranid);
 	}
 
@@ -174,13 +182,6 @@ public class AdminDaemon extends Thread
 	    processLinkCmd(tranid);
 	}
 
-	    // Handle some CONTROL message
-	else {
-		// process CONTROL message
-	    processControlCmd(tranid);
-		// remember message in case someone sends this to you
-	    addMessageToProcessedList();
-	}
 
 	id++;
 	t = null;
@@ -279,6 +280,7 @@ System.out.println("reached the end");
 	String[] tokens = t.getMessage().split("\\s+");
 	String args = "";
 
+
 	if (tokens[1].equals("SEND")){
 	    //int msgPos = message.indexOf("! ");
 	    //String toSend = message.substring(msgPos+2);
@@ -287,6 +289,7 @@ System.out.println("reached the end");
 	else if (tokens[1].equals("SEND_N")){
 
 	    RegisteredName name = Server.findRegisteredNameIP(t.getIP());
+	    IPAddress receiver = name.getMailAddress();
 
 	    if (tokens[2].equals("-")){
 
@@ -300,8 +303,8 @@ System.out.println("reached the end");
 		    message += "\n";
 		}
 
-		Server.sendMail(name.getMailAddress(), message);
-System.out.println("mail sent on this server");
+		Server.sendMail(receiver, message);
+
 	    }
 
 	    else {
@@ -310,20 +313,29 @@ System.out.println("mail sent on this server");
 		String[] serverList = tokens[2].split(",");
 
 		args = tranid + " " + name.getMailAddress() + " ";
+		String myArgs = "";
 
 		for (int i = 0; i < serverList.length; i++){
 
 		    link = Server.rtable.getNextLink(serverList[i]);
-		    args += serverList[i];
-		    message = ProtocolCommand.createPacket(cmd, "", null,
-			     args, 0, null);
-System.out.println("sending out a packet");
-		    send(message,link.getIPAddress());
-		    receive();
-		    resetPacket();
-System.out.println("packet sent");
-		} // end for i
 
+		    if (link == null){
+			message = Server.name + ": unable to forward mail " +
+				  "to " + serverList[i];
+			Server.sendMail(receiver, message);
+		    }
+		    else {
+			myArgs = args + serverList[i];
+			message = ProtocolCommand.createPacket(cmd, "", null,
+				     myArgs, 0, null);
+
+System.out.println(myArgs);
+			send(message,link.getIPAddress());
+			receive();
+			resetPacket();
+		    } // end else
+
+		} // end for i
 	    } // end else
 
 	}
@@ -525,6 +537,7 @@ System.out.println("got response for UNLINK");
 
 	}
 
+	    // Send the list of neighbors
 	else if (tokens[1].equals("CTRL_SEND_N")){
 
 	    cmd = ProtocolCommand.CTRL_SEND_N;
@@ -548,8 +561,9 @@ System.out.println("got response for UNLINK");
 
 		String[] ipParts = tokens[3].split(":");
 		int port = Integer.parseInt(ipParts[1]);
+		IPAddress receiver = new IPAddress(ipParts[0],port);
 
-		Server.sendMail(new IPAddress(ipParts[0],port), message);
+		Server.sendMail(receiver, message);
 
 	    }
 
@@ -564,13 +578,14 @@ System.out.println("got response for UNLINK");
 		message = ProtocolCommand.createPacket(cmd, "", null,
 			      args, 1, null);
 
+
 		send(message, record.getIPAddress());
 		receive();
-
 	    }
 
 	}
 
+	    // Send the forwarding table
 	else if (tokens[1].equals("CTRL_SEND_F")){
 
 	}
