@@ -244,22 +244,23 @@ public enum ProtocolCommand {
 		// format: DIR CTRL_SEND tid name server message
 	    case CTRL_SEND:
 
-		payloadExists = true;
 		msg = msg.concat(" " + args);
+
+		break;
 
 		// format: DIR CTRL_SEND_N tid client server message
 	    case CTRL_SEND_N:
 
-		payloadExists = true;
 		msg = msg.concat(" " + args);
 
+		break;
 
 		// format: DIR CTRL_SEND_F tid client server
 	    case CTRL_SEND_F:
 
-		payloadExists = true;
 		msg = msg.concat(" " + args);
 
+		break;
 
 	} // end switch cmd
 
