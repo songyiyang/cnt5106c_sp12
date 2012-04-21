@@ -184,7 +184,7 @@ public class AdminDaemon extends Thread
 
 	id++;
 	t = null;
-
+System.out.println("reached the end");
     } // end processJob
 
 
@@ -348,10 +348,12 @@ public class AdminDaemon extends Thread
 
 		// First, send a message to the remote server, listing off
 		// our routing information
-	    args = " 0 " + Server.name + " " + Server.rtable;
+	    args = " 0 " + Server.name + " " + Server.myIP  + " "
+		   + Server.rtable;
 
-	    message = ProtocolCommand.createPacket(ProtocolCommand.CTRL_CONNECT,
-		      "", null, args, 0, null);
+	    message = ProtocolCommand.createPacket(
+			     ProtocolCommand.CTRL_CONNECT, "", null, args,
+			     0, null);
 
 	    send(message, record.getIPAddress());
 
@@ -364,42 +366,27 @@ public class AdminDaemon extends Thread
 		message = ClientProtocol.extract(packet);
 		tokens = message.split("\\s+");
 
-		String[] vector = tokens[4].split(";");
-
 		    // Insert the record
 		modified = Server.rtable.addEntry(record.getName());
 
-		    // Routing table will perform update
-		modified = modified || Server.rtable.updateTable(
-					    record.getName(), vector);
+
+		if (!tokens[4].equals("-")) {
+
+		    String[] vector = tokens[4].split(";");
+
+			// Routing table will perform update
+		    modified = modified || Server.rtable.updateTable(
+						record.getName(), vector);
+
+		}
 
 		    // If an update occurred, traverse neighbor
 		    // links and tell them to update
 		if (modified){
 
-		    args = " 0 " + Server.name + " " + Server.rtable;
-
-		    message = ProtocolCommand.createPacket(
-				    ProtocolCommand.CTRL_UPDATE, "", null,
-				    args, 0, null);
-
-			// Get the active links
-		    links = Server.rtable.getActiveLinks();
-
-		    if (links != null){
-
-			for (int i = 0; i < links.length; i++){
-
-			    send(message, links[i].getIPAddress());
-			    rsp = receive();
-			    resetPacket();
-
-			} // end for i
-
-		    } // end if links
-
+		    updateNeighbors();
 		} // end if modified
-
+System.out.println(Server.rtable);
 	    } // end if rsp
 
 	} // end if LINK
@@ -416,7 +403,7 @@ public class AdminDaemon extends Thread
 
 	    send(message, record.getIPAddress());
 	    rsp = receive();
-
+System.out.println("got response for UNLINK");
 		// Now update router table
 	    modified = Server.rtable.removeEntry(record.getName());
 
@@ -431,6 +418,8 @@ public class AdminDaemon extends Thread
 
     private void processControlCmd(String tranid){
 
+	Record record = null;
+
 	String reply = "";
 	String message = t.getMessage();
 	String[] tokens = message.split("\\s+");
@@ -440,14 +429,33 @@ public class AdminDaemon extends Thread
 
 	if (tokens[1].matches("CTRL_CONNECT")) {
 
-	    String[] vector = tokens[4].split(";");
+	    args = " 0 " + Server.name + " " + Server.myIP + " "
+		   + Server.rtable;
+
+	    message = ProtocolCommand.createPacket(
+			     ProtocolCommand.CTRL_CONNECT, "", null, args,
+			     0, null);
+
+	    String[] ipParts = tokens[4].split(":");
+	    int port = Integer.parseInt(ipParts[1]);
+	    IPAddress server = new IPAddress(ipParts[0], port);
+
+	    send(message, t.getIP());
+
+	    Server.rtable.addRecord(new Record(tokens[3], server, true));
+
+	    boolean modified = false;
 
 		// Add new router entry
-	    boolean modified = Server.rtable.addEntry(tokens[3]);
+	    modified = Server.rtable.addEntry(tokens[3]);
 
-		// Update table
-	    modified = modified || Server.rtable.updateTable(
-					  tokens[3], vector);
+	    if (!tokens[5].equals("-")){
+		String[] vector = tokens[4].split(";");
+
+		    // Update table
+		modified = modified || Server.rtable.updateTable(
+					      tokens[3], vector);
+	    }
 
 	    if (modified){
 		updateNeighbors();
@@ -456,6 +464,14 @@ public class AdminDaemon extends Thread
 	}
 
 	else if (tokens[1].matches("CTRL_DISCONNECT")) {
+
+	    args = " 0 " + Server.name;
+
+	    message = ProtocolCommand.createPacket(
+			     ProtocolCommand.CTRL_DISCONNECT, "", null, args,
+			     0, null);
+
+	    send(message, t.getIP());
 
 		// Remove entry
 	    boolean modified = Server.rtable.removeEntry(tokens[3]);
@@ -469,9 +485,29 @@ public class AdminDaemon extends Thread
 
 	else if (tokens[1].matches("CTRL_UPDATE")) {
 
-	    // Update table
+	    record = Server.rtable.getRecord(tokens[3]);
 
-	    // Update neighbors as necessary
+	    args = " 0 " + Server.name + " " + Server.rtable;
+
+	    message = ProtocolCommand.createPacket(
+			     ProtocolCommand.CTRL_UPDATE, "", null, args,
+			     1, null);
+
+	    send(message, t.getIP());
+System.out.println("confirmed update");
+	    boolean modified = false;
+
+	    if (!tokens[4].equals("-")){
+		String[] vector = tokens[4].split(";");
+
+		    // Update table
+		modified = modified || Server.rtable.updateTable(
+					      tokens[3], vector);
+	    }
+System.out.println(Server.rtable);
+	    if (modified){
+		updateNeighbors();
+	    }
 
 	}
 /*
@@ -521,11 +557,8 @@ public class AdminDaemon extends Thread
 	if (links != null){
 
 	    for (int i = 0; i < links.length; i++){
-
 		send(message, links[i].getIPAddress());
-		rsp = receive();
 		resetPacket();
-
 	    } // end for i
 
 	} // end if links
