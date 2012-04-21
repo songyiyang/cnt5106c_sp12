@@ -14,6 +14,8 @@ public enum ProtocolCommand {
     SEND("SEND"),
     SEND_N("SEND_N"),
     SEND_F("SEND_F"),
+    GET_NAME("GET_NAME"),
+
 
     CTRL_CONNECT("CTRL_CONNECT"),
     CTRL_DISCONNECT("CTRL_DISCONNECT"),
@@ -135,7 +137,19 @@ public enum ProtocolCommand {
 	    case LINK:
 
 		if (direction == 0){
-		    msg = msg.concat(" " + name);
+
+		    String addressString = "";
+
+		    if (name == null){
+			name = "null";
+			addressString = address.toString();
+		    }
+		    else if (address == null){
+			addressString = "null";
+		    }
+
+		    msg = msg.concat(" " + name + " " + addressString);
+
 		}
 
 		break;
@@ -144,7 +158,19 @@ public enum ProtocolCommand {
 	    case UNLINK:
 
 		if (direction == 0){
-		    msg = msg.concat(" " + name);
+
+		    String addressString = "";
+
+		    if (name == null){
+			name = "null";
+			addressString = address.toString();
+		    }
+		    else if (address == null){
+			addressString = "null";
+		    }
+
+		    msg = msg.concat(" " + name + " " + addressString);
+
 		}
 
 		break;
@@ -261,6 +287,17 @@ public enum ProtocolCommand {
 		msg = msg.concat(" " + args);
 
 		break;
+
+	    case GET_NAME:
+
+		payloadExists = true;
+
+		if (direction == 1){
+		    msg = msg.concat(" " + name);
+		}
+
+		break;
+
 
 	} // end switch cmd
 
