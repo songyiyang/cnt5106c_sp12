@@ -317,7 +317,7 @@ public class ClientProtocol extends Protocol
 			 tokens, 3, in, false);
 
 		nameList = nameList.trim();
-		nameList = nameList.replace("\\s+", ",");
+		nameList = nameList.replaceAll("\\s+", ",");
 
 		serverList = serverList.trim();
 		serverList = serverList.replaceAll("\\s+", ",");
@@ -337,15 +337,19 @@ public class ClientProtocol extends Protocol
 
 		    // Get the regex for the name
 		name = parseParameter("Please enter the client name: ", 
-			 "([A-Za-z0-9]{1,80}{1}", tokens, 2, in, false);
+			 "([A-Za-z0-9]{1,80}{1})", tokens, 2, in, false);
 
 		    // Get the regex for the name
 		server = parseParameter("Please enter the server name: ", 
-			 "([A-Za-z0-9]{1,80}{1})", tokens, 3, in, false);
+			 "([A-Za-z0-9]{1,80}{1})", tokens, 3, in, true);
 
 		    // Get the regex for the name
 		message = parseParameter("Please enter the "+
 			 "message to send:", ".+", tokens, 4, in, false);
+
+		if (server.equals("!")){
+		    server = "-";
+		}
 
 		args = name + " " + server + " ! ";
 
@@ -381,6 +385,30 @@ public class ClientProtocol extends Protocol
 		cmd = ProtocolCommand.SEND_N;
 
 	    }
+
+		// get forwarding table of listed servers
+	    else if (command.matches("^forwarding")){
+
+		String servers = "";
+
+		    // Get the regex for the server list
+		servers = parseParameter("Please enter the server names: ", 
+			 "([A-Za-z0-9]{1,80}{1}(\\s[A-Za-z0-9]{1,80})*)",
+			 tokens, 1, in, true);
+
+		servers = servers.trim();
+		servers = servers.replaceAll("\\s+", ",");
+
+		if (servers.equals("!")){
+		    servers = "-";
+		}
+
+		args = servers;
+
+		cmd = ProtocolCommand.SEND_F;
+
+	    }
+
 
 		// Force the client to exit
 	    else if (command.equals("quit")){
@@ -515,22 +543,7 @@ System.out.println(system_msg);
 	else if (tokens[1].equals("LIST")){
 
 	    if (error == null){
-
-		System.out.println("names from server:");
-
-		if (tokens[4].equals("-")){
-		    System.out.println("no registered names found");
-		}
-		else {
-
-		    String[] names = tokens[4].split(";");
-
-		    for (int i = 0; i < names.length; i++){
-			System.out.println(names[i]);
-		    }
-
-		}
-
+		System.out.println("message sent to server");
 	    }
 
 	    system_msg = "list";
