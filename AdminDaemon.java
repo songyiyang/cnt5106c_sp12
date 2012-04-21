@@ -186,7 +186,7 @@ public class AdminDaemon extends Thread
 	id++;
 	t = null;
 	resetPacket();
-System.out.println("reached the end");
+
     } // end processJob
 
 
@@ -312,10 +312,10 @@ System.out.println("reached the end");
 
 		args = tranid + " " + tokens[2] + " " + tokens[3] + " ! "
 		       + toSend;
-System.out.println("args = " + args);
+
 		message = ProtocolCommand.createPacket(cmd, "", null,
 			     args, 0, null);
-System.out.println("message = " + message);
+
 	        link = Server.rtable.getNextLink(tokens[3]);
 
 		if (link != null){
@@ -811,7 +811,7 @@ System.out.println("message = " + message);
 
 	    // CTRL_SEND - remove a registered name from the list
 	else if (tokens[1].equals("CTRL_SEND")) {
-System.out.println(message);
+
 	    int msgPos = message.indexOf("! ");
 	    String toSend = message.substring(msgPos+2);
 
