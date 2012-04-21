@@ -51,6 +51,7 @@ public class RoutingTable
 		entry.setNext(neighbor);
 		entry.setHopCount(1);
 		modified = true;
+System.out.println("updated entry");
 	    }
 
 	}
@@ -58,6 +59,8 @@ public class RoutingTable
 	    entry = new RoutingEntry(neighbor, neighbor, 1);
 	    entries.put(neighbor, entry);
 	    modified = true;
+System.out.println("added entry");
+
 	}
 
 
@@ -115,9 +118,15 @@ public class RoutingTable
 	    hopCount = Integer.parseInt(vectorEntry[2]);
 	    myHopCount = hopCount + 1;
 
+		// Ignore the other server's entry for the current
+		// server
+	    if (node.equals(Server.name)){
+		continue;
+	    }
+
 		// If this server already knows about the given node,
 		// then check to see if an update is needed
-	    if (entries.containsKey(node)){
+	    else if (entries.containsKey(node)){
 
 		entry = entries.get(node);
 
@@ -139,7 +148,7 @@ public class RoutingTable
 		    // update the entry
 		else if (entry.getHopCount() == RoutingEntry.UNREACHABLE_NODE) {
 
-		    entry.setNext(next);
+		    entry.setNext(neighbor);
 		    entry.setHopCount(myHopCount);
 		    modified = true;
 
@@ -149,7 +158,7 @@ public class RoutingTable
 		    // and has a lower weight, update the entry
 		else if (entry.getHopCount() > myHopCount){
 
-		    entry.setNext(next);
+		    entry.setNext(neighbor);
 		    entry.setHopCount(myHopCount);
 		    modified = true;
 
@@ -164,7 +173,7 @@ public class RoutingTable
 		    myHopCount = RoutingEntry.UNREACHABLE_NODE;
 		}
 
-		entry = new RoutingEntry(node, next, myHopCount);
+		entry = new RoutingEntry(node, neighbor, myHopCount);
 		entries.put(node, entry);
 		modified = true;
 	    }
@@ -194,9 +203,13 @@ public class RoutingTable
 
 	} // end if modified
 
+	links = new Record[list.size()];
+	int i = 0;
+
 	    // Generate an array if active links found!
-	if (list.size() > 0){
-	    links = (Record[]) list.toArray();
+	for (Record temp : list){
+	    links[i] = temp;
+	    i++;
 	}
 
 	return links;
@@ -228,6 +241,10 @@ public class RoutingTable
 	    i++;
 
 	} // end foreach keys
+
+	if (i == 0){
+	    table = "-";
+	}
 
 	return table;
 
