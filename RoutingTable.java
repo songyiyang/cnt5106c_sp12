@@ -85,6 +85,9 @@ public class RoutingTable
 
 	} // end foreach keys
 
+	getRecord(neighbor).setLinked(false);
+	
+
 	return modified;
 
     }
@@ -370,6 +373,22 @@ public class RoutingTable
 	return record;
 
     }
+
+    public Record getRecord(IPAddress address){
+
+	Record record = null;
+
+	for (Record temp : records){
+	    if (temp.getIPAddress().toString().equals(address.toString())){
+		record = temp;
+		break;
+	    }
+	}
+
+	return record;
+
+    }
+
 
     /**
      * Find records that match the given regular expressions.
