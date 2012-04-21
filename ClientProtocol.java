@@ -71,29 +71,17 @@ public class ClientProtocol extends Protocol
 	    tokens = command.split("\\s+");
 
 		// Insert a new record
-	    if (command.matches("^insert(\\s[A-Za-z0-9\\.]){0,3}.*")){
-
-		while (name.equals("SELF") || name.equals("")){
-			// The name to insert at remote site
-		    name = parseParameter("Please enter the alphanumeric"+
-			 "name (max 80 chars): ","[A-Za-z0-9]{1,80}",
-			 tokens, 1, in, false);
-
-		    if (name.equals("SELF")){
-			tokens[1] = "";
-		    }
-
-		}
+	    if (command.matches("^insert(\\s[A-Za-z0-9\\.]){0,2}.*")){
 
 		    // The IP address of the remote site
 		addr = parseParameter("Please enter the IP address:",
-			 IPAddress.ipRegex, tokens, 2, in, false);
+			 IPAddress.ipRegex, tokens, 1, in, false);
 
 		    // The port number of the remote socket
 		    // Note the port can be anything that isn't 0
 		while (port < 1024 || port > 65535){
 		    portStr = parseParameter("Please enter the port number:",
-			 "^[1-9][0-9]{3,4}$", tokens, 3, in, false);
+			 "^[1-9][0-9]{3,4}$", tokens, 2, in, false);
 		    port = Integer.parseInt(portStr);
 		}
 
@@ -106,27 +94,10 @@ public class ClientProtocol extends Protocol
 		// Delete a record from the server
 	    else if (command.matches("^delete(\\s[A-Za-z0-9\\.]){0,2}.*")){
 
-		while (name.equals("SELF") || name.equals("")){
-			// The name to insert at remote site
-		    name = parseParameter("Please enter the alphanumeric"+
-			 "name (max 80 chars): ","[A-Za-z0-9]{1,80}",
-			 tokens, 1, in, false);
-
-		    if (name.equals("SELF")){
-			tokens[1] = "";
-		    }
-
-		}
-
 		    // Get the IP address to delete
 		    // This field is optional
 		addr = parseParameter("Please enter the IP address:",
-			 IPAddress.ipRegex, tokens, 2, in, true);
-
-		    // If ignore sentinel was passed, null out variable
-		if (addr.equals("!")){
-		    addr = null;
-		}
+			 IPAddress.ipRegex, tokens, 2, in, false);
 
 		    // Get the port of the record to delete
 		    // This field is optional
@@ -200,18 +171,38 @@ public class ClientProtocol extends Protocol
 	    }
 
 		// link current server to another server
-	    else if (command.matches("^link(\\s[A-Za-z0-9])?.*")){
+	    else if (command.matches("^link(\\s[A-Za-z0-9\\s])}{0,3}.*")){
 
+		String option = "";
 
-		while (name.equals("SELF") || name.equals("")){
+		option = parseParameter("Please enter 'n' for name or 'ip' for "+
+		     "IP ","(n|ip)", tokens, 1, in, false);
+
+		if (option.equals("n")){
+
+		    address = null;
 
 		    name = parseParameter("Please enter the alphanumeric"+
 			 "name (max 80 chars): ","[A-Za-z0-9]{1,80}",
-			 tokens, 1, in, false);
+			 tokens, 2, in, false);
+		}
+		else {
 
-		    if (name.equals("SELF")){
-			tokens[1] = "";
+		    name = null;
+
+			// Get the regex for the IP address
+		    addr = parseParameter("Please enter the IP address:",
+			     IPAddress.ipRegex, tokens, 2, in, false);
+
+			// The port number of the remote socket
+			// Note the port can be anything that isn't 0
+		    while (port < 1024 || port > 65535){
+			portStr = parseParameter("Please enter the port number:",
+			     "^[1-9][0-9]{3,4}$", tokens, 3, in, false);
+			port = Integer.parseInt(portStr);
 		    }
+
+		    address = new IPAddress(addr, port);
 
 		}
 
@@ -220,17 +211,38 @@ public class ClientProtocol extends Protocol
 	    }
 
 		// unlink current server from another server
-	    else if (command.matches("^unlink(\\s[A-Za-z0-9])?.*")){
+	    else if (command.matches("^unlink(\\s[A-Za-z0-9\\.]){0,3}.*")){
 
-		while (name.equals("SELF") || name.equals("")){
+		String option = "";
+
+		option = parseParameter("Please enter 'n' for name or 'ip' for "+
+		     "IP ","(n|ip)", tokens, 1, in, false);
+
+		if (option.equals("n")){
+
+		    address = null;
 
 		    name = parseParameter("Please enter the alphanumeric"+
 			 "name (max 80 chars): ","[A-Za-z0-9]{1,80}",
-			 tokens, 1, in, false);
+			 tokens, 2, in, false);
+		}
+		else {
 
-		    if (name.equals("SELF")){
-			name = "";
+		    name = null;
+
+			// Get the regex for the IP address
+		    addr = parseParameter("Please enter the IP address:",
+			     IPAddress.ipRegex, tokens, 2, in, false);
+
+			// The port number of the remote socket
+			// Note the port can be anything that isn't 0
+		    while (port < 1024 || port > 65535){
+			portStr = parseParameter("Please enter the port number:",
+			     "^[1-9][0-9]{3,4}$", tokens, 3, in, false);
+			port = Integer.parseInt(portStr);
 		    }
+
+		    address = new IPAddress(addr, port);
 
 		}
 
