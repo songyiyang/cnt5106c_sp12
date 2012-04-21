@@ -449,7 +449,7 @@ public class ClientProtocol extends Protocol
 	    }
 
 	} // end if input.matches
-System.out.println(system_msg);
+
 	return system_msg;
 
     } // end method parseCommand
@@ -555,7 +555,7 @@ System.out.println(system_msg);
 	else if (tokens[1].equals("LIST")){
 
 	    if (error == null){
-		System.out.println("message sent to server");
+		System.out.println("request sent to servers");
 	    }
 
 	    system_msg = "list";
@@ -565,7 +565,7 @@ System.out.println(system_msg);
 	else if (tokens[1].equals("SEND")){
 
 	    if (error == null){
-		System.out.println("message sent to recipients.");
+		System.out.println("message sent to recipient.");
 	    }
 
 	    system_msg = "send";
@@ -576,7 +576,19 @@ System.out.println(system_msg);
 	else if (tokens[1].equals("SEND_N")){
 
 	    if (error == null){
-		System.out.println("message sent to recipients.");
+		System.out.println("request sent to servers.");
+	    }
+
+	    system_msg = "send_n";
+
+	}
+
+
+
+	else if (tokens[1].equals("SEND_F")){
+
+	    if (error == null){
+		System.out.println("request sent to servers.");
 	    }
 
 	    system_msg = "send_n";
