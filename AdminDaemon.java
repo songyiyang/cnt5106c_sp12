@@ -160,7 +160,7 @@ public class AdminDaemon extends Thread
 	String tranid = id + "-" + Server.name;
 
 	    // Handle some CONTROL message
-	if (t.getMessage().matches(".+CTRL.+")) {
+	if (t.getMessage().indexOf("CTRL") > 0) {
 		// process CONTROL message
 	    processControlCmd(tranid);
 		// remember message in case someone sends this to you
@@ -185,6 +185,7 @@ public class AdminDaemon extends Thread
 
 	id++;
 	t = null;
+	resetPacket();
 System.out.println("reached the end");
     } // end processJob
 
@@ -212,10 +213,18 @@ System.out.println("reached the end");
 
 	ProtocolCommand cmd = ProtocolCommand.CTRL_LIST;
 
+	RegisteredName name = Server.findRegisteredNameIP(t.getIP());
+	IPAddress receiver = name.getMailAddress();
+
 	    // If current server is selected, list of the clients
 	    // on this server
 	if (servers.equals("*") || servers.matches(Server.name)){
-	    // Get all clients on current server
+
+	    String list = Server.getNameList(names);
+	    message = Server.name + " Name List:\n\n" + list;
+
+	    send(message, name.getMailAddress());
+
 	}
 
 	args = tranid + " ";
@@ -224,7 +233,7 @@ System.out.println("reached the end");
 	    // send out
 	if (servers.equals("*")){
 
-	    args += servers + " " + names;
+	    args += name.getMailAddress() + " " + servers + " " + names;
 	    message = ProtocolCommand.createPacket(cmd, "", null,
 			     args, 0, null);
 
@@ -232,7 +241,8 @@ System.out.println("reached the end");
 	    Record[] links = Server.rtable.getActiveLinks();
 
 	    for (int i = 0; i < links.length; i++){
-		send(message, link.getIPAddress());
+System.out.println(message);
+		send(message, links[i].getIPAddress());
 		rsp = receive();
 		resetPacket();		
 	    }
@@ -257,10 +267,11 @@ System.out.println("reached the end");
 
 		    // If the link was found, send message over link
 		if (link != null){
-		    args += serverList[i] + " " + names;
+		    args += name.getMailAddress() + " " + serverList[i]
+			    + " " + names;
 		    message = ProtocolCommand.createPacket(cmd, "", null,
 			     args, 0, null);
-
+System.out.println(message);
 		    send(message, link.getIPAddress());
 		    rsp = receive();
 		    resetPacket();
@@ -282,8 +293,41 @@ System.out.println("reached the end");
 
 
 	if (tokens[1].equals("SEND")){
-	    //int msgPos = message.indexOf("! ");
-	    //String toSend = message.substring(msgPos+2);
+
+	    int msgPos = message.indexOf("! ");
+	    String toSend = message.substring(msgPos+2);
+
+	    send(message, t.getIP());
+
+	    if (tokens[3].equals("-")){
+
+		RegisteredName rname = Server.findRegisteredName(tokens[2]);
+
+		if (rname != null){
+		    Server.sendMail(rname.getMailAddress(), toSend);
+		}
+
+	    }
+	    else {
+
+		ProtocolCommand cmd = ProtocolCommand.CTRL_SEND;
+
+		args = tranid + " " + tokens[2] + " " + tokens[3] + " ! "
+		       + toSend;
+
+		message = ProtocolCommand.createPacket(cmd, "", null,
+			     args, 0, null);
+
+	        link = Server.rtable.getNextLink(tokens[3]);
+
+		if (link != null){
+		    send(message, link.getIPAddress());
+		    receive();
+		    resetPacket();
+		}
+
+	    }
+
 	}
 
 	else if (tokens[1].equals("SEND_N")){
@@ -329,7 +373,6 @@ System.out.println("reached the end");
 			message = ProtocolCommand.createPacket(cmd, "", null,
 				     myArgs, 0, null);
 
-System.out.println(myArgs);
 			send(message,link.getIPAddress());
 			receive();
 			resetPacket();
@@ -341,6 +384,59 @@ System.out.println(myArgs);
 	}
 
 	else if (tokens[1].equals("SEND_F")){
+
+	    RegisteredName name = Server.findRegisteredNameIP(t.getIP());
+	    IPAddress receiver = name.getMailAddress();
+
+	    if (tokens[2].equals("-")){
+
+		message = "Forwarding table for " + Server.name;
+		message += " (format is \"server,next hop,hop count\"):\n\n";
+
+		String[] entries = Server.rtable.toString().split(";");
+
+		if (entries.length == 1 && entries[0].equals("-")){
+		    message += "No entries in forwarding table";
+		}
+		else {
+		    for (int i = 0; i < entries.length; i++){
+			message += entries[i] + "\n";
+		    }
+		}
+
+		Server.sendMail(receiver, message);
+
+	    }
+
+	    else {
+
+		ProtocolCommand cmd = ProtocolCommand.CTRL_SEND_F;
+		String[] serverList = tokens[2].split(",");
+
+		args = tranid + " " + name.getMailAddress() + " ";
+		String myArgs = "";
+
+		for (int i = 0; i < serverList.length; i++){
+
+		    link = Server.rtable.getNextLink(serverList[i]);
+
+		    if (link == null){
+			message = Server.name + ": unable to forward mail " +
+				  "to " + serverList[i];
+			Server.sendMail(receiver, message);
+		    }
+		    else {
+			myArgs = args + serverList[i];
+			message = ProtocolCommand.createPacket(cmd, "", null,
+				     myArgs, 0, null);
+
+			send(message,link.getIPAddress());
+			receive();
+			resetPacket();
+		    } // end else
+
+		} // end for i
+	    } // end else
 
 	}
 
@@ -359,7 +455,7 @@ System.out.println(myArgs);
 	Record[] links = null;
 	boolean modified = false;
 
-	if (t.getMessage().matches(".+LINK.+")){
+	if (tokens[1].equals("LINK")){
 
 		// First, send a message to the remote server, listing off
 		// our routing information
@@ -528,11 +624,83 @@ System.out.println("got response for UNLINK");
 	}
 
 	else if (tokens[1].matches("CTRL_LIST")){
+System.out.println(message);
+	    String[] ipParts = tokens[3].split(":");
+	    int port = Integer.parseInt(ipParts[1]);
+	    IPAddress receiver = new IPAddress(ipParts[0], port);
+
 
 	    cmd = ProtocolCommand.CTRL_LIST;
-	    args = tokens[2] + " " + tokens[3] + " " + tokens[4];
+	    args = tokens[2] + " " + tokens[3] + " " + tokens[4] +
+		   " " + tokens[5];
 	    message = ProtocolCommand.createPacket(cmd, "", null,
-			     args, 0, null);
+			     args, 1, null);
+
+	    send(message, t.getIP());
+
+		// If current server is selected, list of the clients
+		// on this server
+	    if (tokens[4].equals("*") || tokens[4].matches(Server.name)){
+
+		String list = Server.getNameList(tokens[5]);
+		message = Server.name + " Name List:\n\n" + list;
+System.out.println(message);
+		send(message, receiver);
+
+	    }
+
+	    args = tokens[2] + " ";
+
+		// If all servers will be hit, get active links and
+		// send out
+	    if (tokens[4].equals("*")){
+
+		args += tokens[3] + " " + tokens[4] + " " + tokens[5];
+		message = ProtocolCommand.createPacket(cmd, "", null,
+				 args, 0, null);
+
+
+		Record[] links = Server.rtable.getActiveLinks();
+
+		for (int i = 0; i < links.length; i++){
+		    send(message, links[i].getIPAddress());
+		    rsp = receive();
+		    resetPacket();		
+		}
+
+	    } // end if servers.equals
+
+		// If only certain servers are selected, then
+		// forward request to those servers
+	    else {
+
+		String[] serverList = tokens[4].split(",");
+
+		for (int i = 0; i < serverList.length; i++){
+
+			// Ignore this server if it is in the list
+		    if (serverList[i].equals(Server.name)){
+			continue;
+		    }
+
+			// Get the next link
+		    record = Server.rtable.getNextLink(serverList[i]);
+
+			// If the link was found, send message over link
+		    if (record != null){
+			args += tokens[3] + " " + serverList[i] + " "
+				 + tokens[5];
+			message = ProtocolCommand.createPacket(cmd, "", null,
+				 args, 0, null);
+
+			send(message, record.getIPAddress());
+			rsp = receive();
+			resetPacket();
+		    }
+
+		} // end for i
+
+	    } // end else
 
 
 	}
@@ -547,6 +715,11 @@ System.out.println("got response for UNLINK");
 
 	    send(message, t.getIP());
 
+	    String[] ipParts = tokens[3].split(":");
+	    int port = Integer.parseInt(ipParts[1]);
+	    IPAddress receiver = new IPAddress(ipParts[0],port);
+
+
 	    if (tokens[4].equals(Server.name)){
 
 		Record[] links = Server.rtable.getActiveLinks();
@@ -558,10 +731,6 @@ System.out.println("got response for UNLINK");
 				    + links[i].getIPAddress();
 		    message += "\n";
 		}
-
-		String[] ipParts = tokens[3].split(":");
-		int port = Integer.parseInt(ipParts[1]);
-		IPAddress receiver = new IPAddress(ipParts[0],port);
 
 		Server.sendMail(receiver, message);
 
@@ -575,25 +744,76 @@ System.out.println("got response for UNLINK");
 			     args, 1, null);
 
 	        record = Server.rtable.getNextLink(tokens[4]);
-		message = ProtocolCommand.createPacket(cmd, "", null,
-			      args, 1, null);
 
+		if (record == null){
+		    message = Server.name + ": unable to forward mail " +
+				  "to " + tokens[4];
+		    Server.sendMail(receiver, message);
+		}
+		else {
+		    send(message, record.getIPAddress());
+		    receive();
+		}
 
-		send(message, record.getIPAddress());
-		receive();
-	    }
+	    } // end else
 
 	}
 
 	    // Send the forwarding table
 	else if (tokens[1].equals("CTRL_SEND_F")){
 
+	    cmd = ProtocolCommand.CTRL_SEND_F;
+	    args = tokens[2] + " " + tokens[3] + " " + tokens[4];
+	    message = ProtocolCommand.createPacket(cmd, "", null,
+			     args, 1, null);
+
+	    send(message, t.getIP());
+
+	    String[] ipParts = tokens[3].split(":");
+	    int port = Integer.parseInt(ipParts[1]);
+	    IPAddress receiver = new IPAddress(ipParts[0],port);
+
+	    if (tokens[4].equals(Server.name)){
+
+		message = "Forwarding table for " + Server.name;
+		message += " (format is \"server,next hop,hop count\"):\n\n";
+
+		String[] entries = Server.rtable.toString().split(";");
+
+		for (int i = 0; i < entries.length; i++){
+		    message += entries[i] + "\n";
+		}
+
+		Server.sendMail(receiver, message);
+
+	    }
+
+	    else {
+
+		cmd = ProtocolCommand.CTRL_SEND_F;
+		args = tokens[2] + " " + tokens[3] + " " + tokens[4];
+		message = ProtocolCommand.createPacket(cmd, "", null,
+			     args, 1, null);
+
+	        record = Server.rtable.getNextLink(tokens[4]);
+
+		if (record == null){
+		    message = Server.name + ": unable to forward mail " +
+				  "to " + tokens[4];
+		    Server.sendMail(receiver, message);
+		}
+		else {
+		    send(message, record.getIPAddress());
+		    receive();
+		}
+
+	    }
+
 	}
 
-/*
 	    // CTRL_SEND - remove a registered name from the list
-	if (tokens[1].matches("CTRL_SEND")) {
-
+	else if (tokens[1].equals("CTRL_SEND")) {
+System.out.println(message);
 	    int msgPos = message.indexOf("! ");
 	    String toSend = message.substring(msgPos+2);
 
@@ -604,22 +824,37 @@ System.out.println("got response for UNLINK");
 
 	    send(message, t.getIP());
 
-		// Send mail to users here
-	    Server.sendMailToClients(tokens[3].split(","),toSend);
+	    if (tokens[4].equals(Server.name)){
 
-		// Send mail to others, if required
-	    if (tokens[5].equals("yes")){
-		for (Record temp : links){
-		    send(message, temp.getIPAddress());
-		    rsp = receive();
-		    resetPacket();
-		} // end foreach
-	    } // end if tokens
+		RegisteredName rname = Server.findRegisteredName(tokens[3]);
+
+		if (rname != null){
+		    Server.sendMail(rname.getMailAddress(), toSend);
+		}
+
+	    }
+	    else {
+
+		cmd = ProtocolCommand.CTRL_SEND;
+		args = tokens[2] + " " + tokens[3] + " " + tokens[4]
+		       + " ! " + toSend;
+
+		message = ProtocolCommand.createPacket(cmd, "", null,
+			     args, 1, null);
+
+	        record = Server.rtable.getNextLink(tokens[4]);
+
+		if (record != null){
+		    send(message, record.getIPAddress());
+		    receive();
+		}
+
+	    }
 
 	}
 
 	resetPacket();
-*/
+
     } // end processControlCmd
 
 
