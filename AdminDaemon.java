@@ -161,7 +161,7 @@ public class AdminDaemon extends Thread
 
 	    // Handle a LIST request
 	if (t.getMessage().matches(".+LIST.+")){
-	    processListCmd();
+	    processListCmd(tranid);
 	}
 
 	    // Handle a SEND request
@@ -198,82 +198,79 @@ System.out.println("reached the end");
 
 
 
-    private void processListCmd(){
-/*
+    private void processListCmd(String tranid){
+
 	String[] tokens = t.getMessage().split("\\s+");
 	String names = tokens[2];
 	String servers = tokens[3];
+	Record link = null;
 
-	String data = "";
 	String args = "";
+	String message = "";
+	IPAddress rsp = null;
 
-	String nameRegexp = "";
-	String serverRegexp = "";
+	ProtocolCommand cmd = ProtocolCommand.CTRL_LIST;
 
-	if (!names.equals("*")){
-	    nameRegexp = "(" + names.replaceAll(",", "|") + ")";
+	    // If current server is selected, list of the clients
+	    // on this server
+	if (servers.equals("*") || servers.matches(Server.name)){
+	    // Get all clients on current server
 	}
 
-	if (!servers.equals("*")){
-	    serverRegexp = servers.replaceAll("SELF","");
-	    serverRegexp = servers.replaceAll(",,", ",");
-	    serverRegexp = "(" + servers.replaceAll(",", "|") + ")";
-	}
+	args = tranid + " ";
+
+	    // If all servers will be hit, get active links and
+	    // send out
+	if (servers.equals("*")){
+
+	    args += servers + " " + names;
+	    message = ProtocolCommand.createPacket(cmd, "", null,
+			     args, 0, null);
 
 
-	if (servers.indexOf("SELF") >= 0 || servers.equals("*")){
+	    Record[] links = Server.rtable.getActiveLinks();
 
-	    for (RegisteredName rn : Server.registrar){
-
-		if (!names.equals("*") && !rn.getName().matches(nameRegexp)){
-		    continue;
-		}
-
-		data += "SELF:" + rn.getName() + ";";
+	    for (int i = 0; i < links.length; i++){
+		send(message, link.getIPAddress());
+		rsp = receive();
+		resetPacket();		
 	    }
 
-	}
+	} // end if servers.equals
 
+	    // If only certain servers are selected, then
+	    // forward request to those servers
+	else {
 
-	    // For each link, send out the message
+	    String[] serverList = tokens[3].split(",");
 
-	if (clients.size() > 0){
+	    for (int i = 0; i < serverList.length; i++){
 
-	    Set<String> keys = clients.keySet();
-	    LinkedList<String> nameList = null;
-
-	    for (String key : keys){
-
-		if (!servers.equals("*") && !key.matches(serverRegexp)){
+		    // Ignore this server if it is in the list
+		if (serverList[i].equals(Server.name)){
 		    continue;
 		}
 
-		nameList = clients.get(key).getList();
+		    // Get the next link
+		link = Server.rtable.getNextLink(serverList[i]);
 
-		for (String entry : nameList){
+		    // If the link was found, send message over link
+		if (link != null){
+		    args += serverList[i] + " " + names;
+		    message = ProtocolCommand.createPacket(cmd, "", null,
+			     args, 0, null);
 
-		    if (!names.equals("*") && !entry.matches(nameRegexp)){
-			continue;
-		    }
-
-		    data += key + ":" + entry + ";";
+		    send(message, link.getIPAddress());
+		    rsp = receive();
+		    resetPacket();
 		}
 
-	    } // end foreach keys
-	}
+	    } // end for i
 
-	if (data.equals("")){
-	    data = "-";
-	}
+	} // end else
 
-	args = tokens[2] + " " + tokens[3] + " " + data;
 
-	String message = ProtocolCommand.createPacket(ProtocolCommand.LIST,
-			      "", null, args, 1, null);
-
-	send(message, t.getIP());
-*/
-    }
+    } // end processListCmd
 
     private void processSendCmd(String tranid){
 /*
@@ -383,10 +380,9 @@ System.out.println("reached the end");
 		    // If an update occurred, traverse neighbor
 		    // links and tell them to update
 		if (modified){
-
 		    updateNeighbors();
 		} // end if modified
-System.out.println(Server.rtable);
+
 	    } // end if rsp
 
 	} // end if LINK
@@ -508,6 +504,16 @@ System.out.println(Server.rtable);
 	    if (modified){
 		updateNeighbors();
 	    }
+
+	}
+
+	else if (tokens[1].matches("CTRL_LIST")){
+
+	    ProtocolCommand cmd = ProtocolCommand.CTRL_LIST;
+	    args = tokens[2] + " " tokens[3] + " " + tokens[4];
+	    String message = ProtocolCommand.createPacket(cmd, "", null,
+			     args, 0, null);
+
 
 	}
 /*
