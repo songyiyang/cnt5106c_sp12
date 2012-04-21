@@ -35,9 +35,10 @@
   vii.  UNREGISTER
    ix.	LIST
     x.	SEND
-  xii.	SEND_N
- xiii.  SEND_F
-   xi.  GAMEOVER
+   xi.	SEND_N
+  xii.  SEND_F
+ xiii.	GET_NAME
+  xiv.  GAMEOVER
 
   c. Error Codes
 
@@ -470,7 +471,7 @@ viii.UNREGISTER
 xii. SEND_F
 
      SND SEND_F {-|server-list}
-     RCV SEND_F client server {SUCCESS | ERROR code}
+     RCV SEND_F {-|server-list} {SUCCESS | ERROR code}
 
      DIR CTRL_SEND_F tid client server {SUCCESS | ERROR code}
 
@@ -486,7 +487,17 @@ xii. SEND_F
     it to the indicated server.
 
 
- xi.  GAMEOVER
+xiii. GET_NAME
+
+     SND GET_NAME
+     RCV GET_NAME name {SUCCESS | ERROR code}
+
+    GET_NAME is used by the INSERT command to get the name of a
+    given server. This is done to ensure that all records have a
+    name that can be used by client if he/she so desires.
+
+
+xiv.  GAMEOVER
 
     SND GAMEOVER
     RCV GAMEOVER {MSG} {SUCCESS | ERROR code}
