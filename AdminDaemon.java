@@ -241,7 +241,7 @@ System.out.println("reached the end");
 	    Record[] links = Server.rtable.getActiveLinks();
 
 	    for (int i = 0; i < links.length; i++){
-System.out.println(message);
+
 		send(message, links[i].getIPAddress());
 		rsp = receive();
 		resetPacket();		
@@ -271,7 +271,7 @@ System.out.println(message);
 			    + " " + names;
 		    message = ProtocolCommand.createPacket(cmd, "", null,
 			     args, 0, null);
-System.out.println(message);
+
 		    send(message, link.getIPAddress());
 		    rsp = receive();
 		    resetPacket();
@@ -297,8 +297,6 @@ System.out.println(message);
 	    int msgPos = message.indexOf("! ");
 	    String toSend = message.substring(msgPos+2);
 
-	    send(message, t.getIP());
-
 	    if (tokens[3].equals("-")){
 
 		RegisteredName rname = Server.findRegisteredName(tokens[2]);
@@ -314,10 +312,10 @@ System.out.println(message);
 
 		args = tranid + " " + tokens[2] + " " + tokens[3] + " ! "
 		       + toSend;
-
+System.out.println("args = " + args);
 		message = ProtocolCommand.createPacket(cmd, "", null,
 			     args, 0, null);
-
+System.out.println("message = " + message);
 	        link = Server.rtable.getNextLink(tokens[3]);
 
 		if (link != null){
@@ -513,7 +511,7 @@ System.out.println(message);
 
 	    send(message, record.getIPAddress());
 	    rsp = receive();
-System.out.println("got response for UNLINK");
+
 		// Now update router table
 	    modified = Server.rtable.removeEntry(record.getName());
 
@@ -624,7 +622,7 @@ System.out.println("got response for UNLINK");
 	}
 
 	else if (tokens[1].matches("CTRL_LIST")){
-System.out.println(message);
+
 	    String[] ipParts = tokens[3].split(":");
 	    int port = Integer.parseInt(ipParts[1]);
 	    IPAddress receiver = new IPAddress(ipParts[0], port);
@@ -644,7 +642,7 @@ System.out.println(message);
 
 		String list = Server.getNameList(tokens[5]);
 		message = Server.name + " Name List:\n\n" + list;
-System.out.println(message);
+
 		send(message, receiver);
 
 	    }
