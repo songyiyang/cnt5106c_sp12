@@ -248,6 +248,47 @@ public class Server
 
     } // end findRegisteredName
 
+    /**
+     * Finds and returns the registered name, if it exists. 
+     *
+     * @param name
+     *    The name on which to search.
+     *
+     * @return
+     *    The RegisteredName object if found, or null if not found.
+     */
+    public static String getNameList(String names){
+
+	String list = "";
+
+	int i = 0;
+	boolean match = false;
+	int size = registrar.size();
+
+	for (RegisteredName temp : registrar){
+
+	    if (names.indexOf(temp.getName()) > -1){
+		list += temp.getName();
+		match = true;
+	    }
+
+	    if (i < size-1 && match){
+		list += ",";
+	    }
+
+	    i++;
+	    match = false;
+
+	} // end for RegisteredName
+
+	if (list.equals("")){
+	    list = "no registered names on server";
+	}
+
+	return list;
+
+    } // end findRegisteredName
+
 
     /**
      * Finds and returns the registered name given an IP, if it exists. 
