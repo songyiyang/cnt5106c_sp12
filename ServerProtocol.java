@@ -308,7 +308,7 @@ public class ServerProtocol extends Protocol
 	    RegisteredName rname = Server.findRegisteredNameIP(client);
 
 	    if (rname == null){
-		error = ErrorCode.NAME_NOT_FOUND;
+		error = ErrorCode.MUST_HAVE_NAME;
 	    }
 	    else {
 
