@@ -30,8 +30,7 @@ public class ServerProtocol extends Protocol
 	    // Insert a record
 	if (tokens[1].equals("INSERT")){
 
-	    name = tokens[2];
-	    String[] address = tokens[3].split(":");
+	    String[] address = tokens[2].split(":");
 
 		// Build the IPAddress based on passed parameter
 		// values
@@ -43,12 +42,31 @@ public class ServerProtocol extends Protocol
 		ipAddress = new IPAddress(address[0]);
 	    }
 
-		// Create the record and add it to the list
-	    Record record = new Record(name, ipAddress);
-	    boolean added = Server.rtable.addRecord(record);
+	    String msg = ProtocolCommand.createPacket(ProtocolCommand.GET_NAME,
+					 "", null, "", 0, null);
+	    int packetSize = Protocol.PACKET_SIZE_LARGE;
+	    DatagramPacket in = new DatagramPacket(new byte[packetSize],
+						   packetSize);
+	    IPAddress server = null;
 
-	    if (!added){
-		error = ErrorCode.FAIL_WHALE;
+	    ClientProtocol.setTimeout(true);
+	    ClientProtocol.send(msg, ipAddress);
+	    server = ClientProtocol.receive(in);
+	    ClientProtocol.setTimeout(false);
+
+	    if (server == null){
+		error = ErrorCode.TIMEOUT;
+	    }
+	    else {
+		String data = ClientProtocol.extract(in);
+		String dataTokens[] = data.split("\\s+");
+		    // Create the record and add it to the list
+		Record record = new Record(dataTokens[2], ipAddress);
+		boolean added = Server.rtable.addRecord(record);
+
+		if (!added){
+		    error = ErrorCode.FAIL_WHALE;
+		}
 	    }
 
 	    cmd = ProtocolCommand.INSERT;
@@ -133,9 +151,20 @@ public class ServerProtocol extends Protocol
 	else if (tokens[1].equals("LINK")){
 
 	    name = tokens[2];
+	    String[] address = tokens[3].split(":");
+	    String ip = null;
+	    port = 0;
 
-		// Attempt to find record
-	    Record link = Server.rtable.getRecord(name);
+	    Record link = null;
+
+	    if (name.equals("null")){
+		port = Integer.parseInt(address[1]);
+		IPAddress temp = new IPAddress(address[0],port);
+		link = Server.rtable.getRecord(temp);
+	    }
+	    else {
+		link = Server.rtable.getRecord(name);
+	    }
 
 		// If the server to which to link is not known,
 		// send client a SERVER_NOT_KNOWN message
@@ -187,9 +216,20 @@ public class ServerProtocol extends Protocol
 	else if (tokens[1].equals("UNLINK")){
 
 	    name = tokens[2];
+	    String[] address = tokens[3].split(":");
+	    String ip = null;
+	    port = 0;
 
-		// Attempt to find record
-	    Record link = Server.rtable.getRecord(name);
+	    Record link = null;
+
+	    if (name.equals("null")){
+		port = Integer.parseInt(address[1]);
+		IPAddress temp = new IPAddress(address[0],port);
+		link = Server.rtable.getRecord(temp);
+	    }
+	    else {
+		link = Server.rtable.getRecord(name);
+	    }
 
 		// If the server to which to link is not known,
 		// send client a SERVER_NOT_FOUND message
@@ -335,6 +375,13 @@ public class ServerProtocol extends Protocol
 	    cmd = ProtocolCommand.SEND_F;
 	    system_msg = "send";
 
+	}
+
+	    // Client sent test message
+	else if (tokens[1].equals("GET_NAME")){
+	    name = Server.name;
+	    cmd = ProtocolCommand.GET_NAME;
+	    system_msg = "get_name";
 	}
 
 	    // Process a shutdown request
