@@ -31,7 +31,9 @@
 
   c. Error Codes
 
-6. Test Cases
+6. Routing Algorithm
+
+7. Test Cases
 
 ============================================
  1. Compilation
@@ -448,9 +450,24 @@ ErrorCode class:
       stop because it is busy processing something.
 
 
+============================================
+ 6. Routing Algorithm
+============================================
+
+The program uses something similar to a distance-vector algorithm to maintain
+the routing information. As a node connects/disconnects, a node's routing
+table is referenced to see if there are any changes to be made. If ANY
+change is made to the table, the node informs its neighbors of the changes.
+The changes propagate until the nodes do not have any changes to be made.
+
+In addition, the algorithm implements a simple poisoned reverse. When
+unlinking from a neighbor, a node advertises that it cannot reach that
+neighbor anymore by setting its hop count to -1 and setting the next node
+field to '-'. This in turn ensures that nodes do not attempt to go through
+the broken link.
 
 ============================================
- 6. Test Cases
+ 7. Test Cases
 ============================================
 
 The following are test cases that can be used to test the system
