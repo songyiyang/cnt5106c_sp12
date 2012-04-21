@@ -320,7 +320,7 @@ public class ClientProtocol extends Protocol
 		nameList = nameList.replace("\\s+", ",");
 
 		serverList = serverList.trim();
-		serverList = serverList.replace("\\s+", ",");
+		serverList = serverList.replaceAll("\\s+", ",");
 
 		args = nameList + " " + serverList;
 
@@ -370,7 +370,11 @@ public class ClientProtocol extends Protocol
 
 
 		servers = servers.trim();
-		servers = servers.replace("\\s+", ",");
+		servers = servers.replaceAll("\\s+", ",");
+
+		if (servers.equals("!")){
+		    servers = "-";
+		}
 
 		args = servers;
 
@@ -405,7 +409,7 @@ public class ClientProtocol extends Protocol
 	    }
 
 	} // end if input.matches
-
+System.out.println(system_msg);
 	return system_msg;
 
     } // end method parseCommand
@@ -540,6 +544,17 @@ public class ClientProtocol extends Protocol
 	    }
 
 	    system_msg = "send";
+
+	}
+
+
+	else if (tokens[1].equals("SEND_N")){
+
+	    if (error == null){
+		System.out.println("message sent to recipients.");
+	    }
+
+	    system_msg = "send_n";
 
 	}
 
