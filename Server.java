@@ -277,7 +277,7 @@ public class Server
 	    }
 
 	    if (i < size-1 && match){
-		list += ",";
+		list += "\n";
 	    }
 
 	    i++;
