@@ -264,9 +264,20 @@ public class ServerProtocol extends Protocol
 	    // Get a list of all the clients in the network
 	else if (tokens[1].equals("LIST")){
 
-	    Server.admin.addJobToQueue(new Transaction(message,
-			    client.getIPNetAddress(), client.getPort()));
-	    Server.admin.interrupt();
+
+	    RegisteredName rname = Server.findRegisteredNameIP(client);
+
+	    if (rname == null){
+		error = ErrorCode.NAME_NOT_FOUND;
+	    }
+	    else {
+
+		Server.admin.addJobToQueue(new Transaction(message,
+				client.getIPNetAddress(), client.getPort()));
+		Server.admin.interrupt();
+
+	    }
+
 	    cmd = ProtocolCommand.LIST;
 	    system_msg = "list";
 
@@ -300,7 +311,28 @@ public class ServerProtocol extends Protocol
 
 	    }
 
-	    cmd = ProtocolCommand.SEND;
+	    cmd = ProtocolCommand.SEND_N;
+	    system_msg = "send";
+
+	}
+
+	    // Send mail to clients in the network
+	else if (tokens[1].equals("SEND_F")){
+
+	    RegisteredName rname = Server.findRegisteredNameIP(client);
+
+	    if (rname == null){
+		error = ErrorCode.NAME_NOT_FOUND;
+	    }
+	    else {
+
+		Server.admin.addJobToQueue(new Transaction(message,
+				client.getIPNetAddress(), client.getPort()));
+		Server.admin.interrupt();
+
+	    }
+
+	    cmd = ProtocolCommand.SEND_F;
 	    system_msg = "send";
 
 	}
@@ -358,6 +390,27 @@ public class ServerProtocol extends Protocol
 
 	}
 
+	    // Remove link to the given server
+	else if (tokens[1].equals("CTRL_LIST")){
+
+	    Server.admin.addJobToQueue(new Transaction(message,
+			client.getIPNetAddress(), client.getPort()));
+	    Server.admin.interrupt();
+
+	    system_msg = "list";
+
+	}
+
+	    // Remove link to the given server
+	else if (tokens[1].equals("CTRL_SEND")){
+
+	    Server.admin.addJobToQueue(new Transaction(message,
+			client.getIPNetAddress(), client.getPort()));
+	    Server.admin.interrupt();
+
+	    system_msg = "send";
+
+	}
 
 	    // Remove link to the given server
 	else if (tokens[1].equals("CTRL_SEND_N")){
