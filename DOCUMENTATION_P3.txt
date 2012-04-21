@@ -111,8 +111,8 @@ port from the config file. If for some reason the config file is unable to
 return a valid port number, the port is simply specified as 8080.
 
 In addition, the user may specify a name for the server or may let the
-configuration file define the server name. If there is no name, the
-application exits.
+configuration file define the server name. If either is an unsuitable
+name, the server defaults to 'default' as the server name.
 
 Once started, the server is self-running. It will continue operating until
 a client issues a GAMEOVER packet. (See Section 3: Client Commands for more.)
