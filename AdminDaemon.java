@@ -273,59 +273,65 @@ System.out.println("reached the end");
     } // end processListCmd
 
     private void processSendCmd(String tranid){
-/*
+
+	Record link = null;
 	String message = t.getMessage();
 	String[] tokens = t.getMessage().split("\\s+");
-	String names = tokens[2];
-	String servers = tokens[3];
 	String args = "";
 
-	int msgPos = message.indexOf("! ");
-	String toSend = message.substring(msgPos+2);
-	IPAddress rsp;
-
-	if (servers.indexOf("SELF") >= 0 || servers.equals("*")){
-	    Server.sendMailToClients(names.split(","), toSend);
-	    servers = servers.replaceAll("SELF","");
-	    servers = servers.replaceAll(",,", ",");
+	if (tokens[1].equals("SEND")){
+	    //int msgPos = message.indexOf("! ");
+	    //String toSend = message.substring(msgPos+2);
 	}
 
-	if (!names.equals("*")){
-	    names = "(" + names.replaceAll(",", "|") + ")";
-	}
+	else if (tokens[1].equals("SEND_N")){
 
-	if (!servers.equals("*")){
-	    servers = "(" + servers.replaceAll(",", "|") + ")";
-	}
+	    RegisteredName name = Server.findRegisteredNameIP(t.getIP());
 
-	args = tranid + " " + tokens[2];
+	    if (tokens[2].equals("-")){
 
-	if (servers.equals("*")){
-	    args += " yes";
-	}
-	else {
-	    args += " no";
-	}
+		Record[] links = Server.rtable.getActiveLinks();
 
-	    // For each link, send out the message
-	for (Record r : links){
+		message = "Neighbors for " + Server.name + ":\n\n";
 
-	    if (!r.getName().matches(servers) && !servers.equals("*")){
-		continue;
+		for (int i = 0; i < links.length; i++){
+		    message += links[i].getName() + " "
+				    + links[i].getIPAddress();
+		    message += "\n";
+		}
+
+		Server.sendMail(name.getMailAddress(), message);
+System.out.println("mail sent on this server");
 	    }
 
-		// Send message with information
+	    else {
 
-	    message = ProtocolCommand.createPacket(ProtocolCommand.CTRL_SEND,
-		      "", null, args, 0, null);
+		ProtocolCommand cmd = ProtocolCommand.CTRL_SEND_N;
+		String[] serverList = tokens[2].split(",");
 
-	    send(message, r.getIPAddress());
-	    rsp = receive();
+		args = tranid + " " + name.getMailAddress() + " ";
 
-	} // end foreach keys
+		for (int i = 0; i < serverList.length; i++){
 
-	addMessageToProcessedList(message);
-*/
+		    link = Server.rtable.getNextLink(serverList[i]);
+		    args += serverList[i];
+		    message = ProtocolCommand.createPacket(cmd, "", null,
+			     args, 0, null);
+System.out.println("sending out a packet");
+		    send(message,link.getIPAddress());
+		    receive();
+		    resetPacket();
+System.out.println("packet sent");
+		} // end for i
+
+	    } // end else
+
+	}
+
+	else if (tokens[1].equals("SEND_F")){
+
+	}
+
     }
 
 
@@ -423,6 +429,8 @@ System.out.println("got response for UNLINK");
 
 	IPAddress rsp;
 
+	ProtocolCommand cmd = null;
+
 	if (tokens[1].matches("CTRL_CONNECT")) {
 
 	    args = " 0 " + Server.name + " " + Server.myIP + " "
@@ -490,7 +498,7 @@ System.out.println("got response for UNLINK");
 			     1, null);
 
 	    send(message, t.getIP());
-System.out.println("confirmed update");
+
 	    boolean modified = false;
 
 	    if (!tokens[4].equals("-")){
@@ -500,7 +508,7 @@ System.out.println("confirmed update");
 		modified = modified || Server.rtable.updateTable(
 					      tokens[3], vector);
 	    }
-System.out.println(Server.rtable);
+
 	    if (modified){
 		updateNeighbors();
 	    }
@@ -509,13 +517,64 @@ System.out.println(Server.rtable);
 
 	else if (tokens[1].matches("CTRL_LIST")){
 
-	    ProtocolCommand cmd = ProtocolCommand.CTRL_LIST;
-	    args = tokens[2] + " " tokens[3] + " " + tokens[4];
-	    String message = ProtocolCommand.createPacket(cmd, "", null,
+	    cmd = ProtocolCommand.CTRL_LIST;
+	    args = tokens[2] + " " + tokens[3] + " " + tokens[4];
+	    message = ProtocolCommand.createPacket(cmd, "", null,
 			     args, 0, null);
 
 
 	}
+
+	else if (tokens[1].equals("CTRL_SEND_N")){
+
+	    cmd = ProtocolCommand.CTRL_SEND_N;
+	    args = tokens[2] + " " + tokens[3] + " " + tokens[4];
+	    message = ProtocolCommand.createPacket(cmd, "", null,
+			     args, 1, null);
+
+	    send(message, t.getIP());
+
+	    if (tokens[4].equals(Server.name)){
+
+		Record[] links = Server.rtable.getActiveLinks();
+
+		message = "Neighbors for " + Server.name + ":\n\n";
+
+		for (int i = 0; i < links.length; i++){
+		    message += links[i].getName() + " "
+				    + links[i].getIPAddress();
+		    message += "\n";
+		}
+
+		String[] ipParts = tokens[3].split(":");
+		int port = Integer.parseInt(ipParts[1]);
+
+		Server.sendMail(new IPAddress(ipParts[0],port), message);
+
+	    }
+
+	    else {
+
+		cmd = ProtocolCommand.CTRL_SEND_N;
+		args = tokens[2] + " " + tokens[3] + " " + tokens[4];
+		message = ProtocolCommand.createPacket(cmd, "", null,
+			     args, 1, null);
+
+	        record = Server.rtable.getNextLink(tokens[4]);
+		message = ProtocolCommand.createPacket(cmd, "", null,
+			      args, 1, null);
+
+		send(message, record.getIPAddress());
+		receive();
+
+	    }
+
+	}
+
+	else if (tokens[1].equals("CTRL_SEND_F")){
+
+	}
+
 /*
 	    // CTRL_SEND - remove a registered name from the list
 	if (tokens[1].matches("CTRL_SEND")) {
