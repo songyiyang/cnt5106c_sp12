@@ -26,6 +26,7 @@ public class AdminDaemon extends Thread
 
     private static final int DEFAULT_MAX_HISTORY = 20;
     private static final long SLEEP_TIMER = 1000 * 30;
+    private static final int AWAIT_RESPONSE_TIMER = 1000 * 30;
 
     public AdminDaemon(){
 
@@ -39,6 +40,7 @@ public class AdminDaemon extends Thread
 
 	try {
 	    socket = new DatagramSocket();
+	    socket.setSoTimeout(AWAIT_RESPONSE_TIMER);
 	    daemonIP = Server.myIP;
 	}
 	catch (SocketException e){
@@ -46,6 +48,8 @@ public class AdminDaemon extends Thread
 	}
 
 	resetPacket();
+
+	setDaemon(true);
 
     } // end constructor
 
@@ -333,16 +337,21 @@ public class AdminDaemon extends Thread
 	    RegisteredName name = Server.findRegisteredNameIP(t.getIP());
 	    IPAddress receiver = name.getMailAddress();
 
-	    if (tokens[2].equals("-")){
+	    if (tokens[2].equals("-") || tokens[2].indexOf(Server.name) >= 0){
 
 		Record[] links = Server.rtable.getActiveLinks();
 
 		message = "Neighbors for " + Server.name + ":\n\n";
 
-		for (int i = 0; i < links.length; i++){
-		    message += links[i].getName() + " "
-				    + links[i].getIPAddress();
-		    message += "\n";
+		if (links == null){
+		    message += "No neighbors found";
+		}
+		else {
+		    for (int i = 0; i < links.length; i++){
+			message += links[i].getName() + " "
+					+ links[i].getIPAddress();
+			message += "\n";
+		    }
 		}
 
 		Server.sendMail(receiver, message);
@@ -358,6 +367,10 @@ public class AdminDaemon extends Thread
 		String myArgs = "";
 
 		for (int i = 0; i < serverList.length; i++){
+
+		    if (serverList[i].equals(Server.name)){
+			continue;
+		    }
 
 		    link = Server.rtable.getNextLink(serverList[i]);
 
@@ -724,10 +737,15 @@ public class AdminDaemon extends Thread
 
 		message = "Neighbors for " + Server.name + ":\n\n";
 
-		for (int i = 0; i < links.length; i++){
-		    message += links[i].getName() + " "
-				    + links[i].getIPAddress();
-		    message += "\n";
+		if (links == null){
+		    message += "No neighbors found";
+		}
+		else {
+		    for (int i = 0; i < links.length; i++){
+			message += links[i].getName() + " "
+					+ links[i].getIPAddress();
+			message += "\n";
+		    }
 		}
 
 		Server.sendMail(receiver, message);
