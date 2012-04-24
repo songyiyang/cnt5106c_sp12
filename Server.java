@@ -28,6 +28,8 @@ public class Server
 
 	// Daemon thread that process network information
     public static AdminDaemon admin;
+	// Daemon thread that checks link status
+    public static LinkCheckDaemon linkChecker;
 
     public static void main(String[] args){
 
@@ -87,10 +89,15 @@ public class Server
 
 	} // end while true
 
-	    // Start server daemon thread
+	    // Start server admin daemon thread
 	admin = new AdminDaemon();
 	admin.setDaemon(true);
 	admin.start();
+
+	    // Start server link checker daemon thread
+	linkChecker = new LinkCheckDaemon();
+	linkChecker.setDaemon(true);
+	linkChecker.start();
 
 
 	String system_msg = null;
@@ -241,12 +248,14 @@ public class Server
 
 	RegisteredName rname = null;
 
-	for (RegisteredName temp : registrar){
-	    if (temp.getName().equals(name)){
-		rname = temp;
-		break;
-	    } // end if name.matches()
-	} // end for RegisteredName
+	synchronized(registrar){
+	    for (RegisteredName temp : registrar){
+		if (temp.getName().equals(name)){
+		    rname = temp;
+		    break;
+		} // end if name.matches()
+	    } // end for RegisteredName
+	} // end synchronized
 
 	return rname;
 
@@ -269,21 +278,23 @@ public class Server
 	boolean match = false;
 	int size = registrar.size();
 
-	for (RegisteredName temp : registrar){
+	synchronized(registrar){
+	    for (RegisteredName temp : registrar){
 
-	    if (names.indexOf(temp.getName()) > -1){
-		list += temp.getName();
-		match = true;
-	    }
+		if (names.indexOf(temp.getName()) > -1){
+		    list += temp.getName();
+		    match = true;
+		}
 
-	    if (i < size-1 && match){
-		list += "\n";
-	    }
+		if (i < size-1 && match){
+		    list += "\n";
+		}
 
-	    i++;
-	    match = false;
+		i++;
+		match = false;
 
-	} // end for RegisteredName
+	    } // end for RegisteredName
+	} // end synchronized
 
 	if (list.equals("")){
 	    list = "no registered names on server";
@@ -308,16 +319,18 @@ public class Server
 	RegisteredName rname = null;
 	IPAddress ip = null;
 
-	for (RegisteredName temp : registrar){
+	synchronized(registrar){
+	    for (RegisteredName temp : registrar){
 
-	    ip = temp.getIP(); 
+		ip = temp.getIP(); 
 
-	    if (ip.getIPAddress().equals(addr.getIPAddress())){
-		rname = temp;
-		break;
-	    } // end if temp.getIPAddress
+		if (ip.getIPAddress().equals(addr.getIPAddress())){
+		    rname = temp;
+		    break;
+		} // end if temp.getIPAddress
 
-	} // end for RegisteredName
+	    } // end for RegisteredName
+	} // end synchronized
 
 	return rname;
 
@@ -340,7 +353,9 @@ public class Server
      *    The RegisteredName to remove.
      */
     public static void removeClient(RegisteredName rname){
-	registrar.remove(rname);
+	synchronized(registrar){
+	    registrar.remove(rname);
+	} // end registrar
     }
 
     /**
@@ -360,8 +375,10 @@ public class Server
 	    // '*' character, send to all registered clients on the
 	    // server
 	if (names.length == 1 && names[0].equals("*")){
-	    for (RegisteredName name : registrar){
-		ClientProtocol.send(message, name.getMailAddress());
+	    synchronized(registrar){
+		for (RegisteredName name : registrar){
+		    ClientProtocol.send(message, name.getMailAddress());
+		}
 	    }
 	} // end if names.length
 
