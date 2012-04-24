@@ -2,7 +2,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * @class RoutingTable
@@ -16,16 +15,10 @@ public class RoutingTable
     LinkedList<Record> records;
     TreeMap<String,RoutingEntry> entries;
 
-    ReentrantLock tlock;
-    ReentrantLock rlock;
-
     public RoutingTable() {
 
 	records = new LinkedList<Record>();
 	entries = new TreeMap<String,RoutingEntry>();
-
-	tlock = new ReentrantLock();
-	rlock = new ReentrantLock();
 
     }
 
@@ -43,23 +36,26 @@ public class RoutingTable
 	boolean modified = false;
 	RoutingEntry entry = null;
 
-	if (entries.containsKey(neighbor)){
+	synchronized(entries){
 
-	    entry = entries.get(neighbor);
+	    if (entries.containsKey(neighbor)){
 
-	    if (entry.getHopCount() != 1){
-		entry.setNext(neighbor);
-		entry.setHopCount(1);
+		entry = entries.get(neighbor);
+
+		if (entry.getHopCount() != 1){
+		    entry.setNext(neighbor);
+		    entry.setHopCount(1);
+		    modified = true;
+		}
+
+	    }
+	    else {
+		entry = new RoutingEntry(neighbor, neighbor, 1);
+		entries.put(neighbor, entry);
 		modified = true;
 	    }
 
-	}
-	else {
-	    entry = new RoutingEntry(neighbor, neighbor, 1);
-	    entries.put(neighbor, entry);
-	    modified = true;
-	}
-
+	} // end synchronized
 
 	return modified;
 
@@ -70,23 +66,28 @@ public class RoutingTable
 	boolean modified = false;
 
 	RoutingEntry entry = null;
-	Set<String> keys = entries.keySet();
 
-	    // Iterate through all the keys
-	for (String node : keys){
+	synchronized(entries){
+	    Set<String> keys = entries.keySet();
 
-	    entry = entries.get(node);
+		// Iterate through all the keys
+	    for (String node : keys){
 
-	    if (entry.getNext().equals(neighbor)){
-		entry.setNext("-");
-		entry.setHopCount(RoutingEntry.UNREACHABLE_NODE);
-		modified = true;
-	    }
+		entry = entries.get(node);
 
-	} // end foreach keys
+		if (entry.getNext().equals(neighbor)){
+		    entry.setNext("-");
+		    entry.setHopCount(RoutingEntry.UNREACHABLE_NODE);
+		    modified = true;
+		}
 
-	getRecord(neighbor).setLinked(false);
-	
+	    } // end foreach keys
+
+	}
+
+	synchronized(records){
+	    getRecord(neighbor).setLinked(false);
+	}
 
 	return modified;
 
@@ -97,8 +98,13 @@ public class RoutingTable
 	Record link = null;
 	RoutingEntry entry = null;
 
-	if (entries.containsKey(destination)){
-	    entry = entries.get(destination);
+	synchronized(entries){
+	    if (entries.containsKey(destination)){
+		entry = entries.get(destination);
+	    }
+	} // end synchronized
+
+	if (entry != null){
 	    link = getRecord(entry.getNext());
 	}
 
@@ -120,80 +126,82 @@ public class RoutingTable
 	int hopCount = 0;
 	int myHopCount = 0;
 
-	    // Loop through received entries and update the table as
-	    // necessary
-	for (int i = 0; i < vector.length; i++){
+	synchronized(entries){
+		// Loop through received entries and update the table as
+		// necessary
+	    for (int i = 0; i < vector.length; i++){
 
-		// Get the three parts to an entry
-	    vectorEntry = vector[i].split(",");
+		    // Get the three parts to an entry
+		vectorEntry = vector[i].split(",");
 
-	    node = vectorEntry[0];
-	    next = vectorEntry[1];
-	    hopCount = Integer.parseInt(vectorEntry[2]);
-	    myHopCount = hopCount + 1;
+		node = vectorEntry[0];
+		next = vectorEntry[1];
+		hopCount = Integer.parseInt(vectorEntry[2]);
+		myHopCount = hopCount + 1;
 
-		// Ignore the other server's entry for the current
-		// server
-	    if (node.equals(Server.name)){
-		continue;
-	    }
+		    // Ignore the other server's entry for the current
+		    // server
+		if (node.equals(Server.name)){
+		    continue;
+		}
 
-		// If this server already knows about the given node,
-		// then check to see if an update is needed
-	    else if (entries.containsKey(node)){
+		    // If this server already knows about the given node,
+		    // then check to see if an update is needed
+		else if (entries.containsKey(node)){
 
-		entry = entries.get(node);
+		    entry = entries.get(node);
 
-		    // If node is unreachable from neighbor, check
-		    // to see if next hop must be updated
-		if (hopCount == RoutingEntry.UNREACHABLE_NODE){
+			// If node is unreachable from neighbor, check
+			// to see if next hop must be updated
+		    if (hopCount == RoutingEntry.UNREACHABLE_NODE){
 
-			// If node was reached through the neighbor,
-			// mark as unreachable
-		    if (entry.getNext().equals(neighbor)){
-			entry.setNext("-");
-			entry.setHopCount(RoutingEntry.UNREACHABLE_NODE);
-			modified = true;
+			    // If node was reached through the neighbor,
+			    // mark as unreachable
+			if (entry.getNext().equals(neighbor)){
+			    entry.setNext("-");
+			    entry.setHopCount(RoutingEntry.UNREACHABLE_NODE);
+			    modified = true;
+			}
+
 		    }
 
-		}
+			// If the given node is reachable from our neighbor,
+			// update the entry
+		    else if (entry.getHopCount() == RoutingEntry.UNREACHABLE_NODE) {
 
-		    // If the given node is reachable from our neighbor,
-		    // update the entry
-		else if (entry.getHopCount() == RoutingEntry.UNREACHABLE_NODE) {
+			entry.setNext(neighbor);
+			entry.setHopCount(myHopCount);
+			modified = true;
 
-		    entry.setNext(neighbor);
-		    entry.setHopCount(myHopCount);
+		    }
+
+			// If the given node is reachable from our neighbor
+			// and has a lower weight, update the entry
+		    else if (entry.getHopCount() > myHopCount){
+
+			entry.setNext(neighbor);
+			entry.setHopCount(myHopCount);
+			modified = true;
+
+		    }
+
+		} // end if entries.containsKey
+
+		    // Else the node hasn't been seen before. Must add entry.
+		else {
+
+		    if (hopCount == RoutingEntry.UNREACHABLE_NODE){
+			myHopCount = RoutingEntry.UNREACHABLE_NODE;
+		    }
+
+		    entry = new RoutingEntry(node, neighbor, myHopCount);
+		    entries.put(node, entry);
 		    modified = true;
-
 		}
 
-		    // If the given node is reachable from our neighbor
-		    // and has a lower weight, update the entry
-		else if (entry.getHopCount() > myHopCount){
+	    } // end for i
 
-		    entry.setNext(neighbor);
-		    entry.setHopCount(myHopCount);
-		    modified = true;
-
-		}
-
-	    } // end if entries.containsKey
-
-		// Else the node hasn't been seen before. Must add entry.
-	    else {
-
-		if (hopCount == RoutingEntry.UNREACHABLE_NODE){
-		    myHopCount = RoutingEntry.UNREACHABLE_NODE;
-		}
-
-		entry = new RoutingEntry(node, neighbor, myHopCount);
-		entries.put(node, entry);
-		modified = true;
-	    }
-
-	} // end for i
-
+	} // end synchronized
 
 	return modified;
 
@@ -208,14 +216,15 @@ public class RoutingTable
 	    // by the calling thread
 	ArrayList<Record> list = new ArrayList<Record>();
 
-	for (Record record : records){
+	synchronized(records){
+	    for (Record record : records){
 
-	    if (record.getLinked()){
+		if (record.getLinked()){
 		    list.add(record);
-	    }
+		}
 
-
-	} // end if modified
+	    } // end if modified
+	} // end synchronized
 
 	links = new Record[list.size()];
 	int i = 0;
@@ -228,7 +237,7 @@ public class RoutingTable
 
 	return links;
 
-    }
+    } 
 
     public String toString(){
 
@@ -238,23 +247,28 @@ public class RoutingTable
 	int size = entries.size();
 
 	RoutingEntry entry = null;
-	Set<String> keys = entries.keySet();
 
-	    // Iterate through all the keys
-	for (String node : keys){
+	synchronized(entries){
 
-		// Get the entry and print out
-	    entry = entries.get(node);
-	    table += entry.toString();
+	    Set<String> keys = entries.keySet();
 
-		// Print out a ; if more records exist
-	    if (i < size-1){
-		table += ";";
-	    }
+		// Iterate through all the keys
+	    for (String node : keys){
 
-	    i++;
+		    // Get the entry and print out
+		entry = entries.get(node);
+		table += entry.toString();
 
-	} // end foreach keys
+		    // Print out a ; if more records exist
+		if (i < size-1){
+		    table += ";";
+		}
+
+		i++;
+
+	    } // end foreach keys
+
+	} // end synchronized
 
 	if (i == 0){
 	    table = "-";
@@ -280,12 +294,14 @@ public class RoutingTable
 	boolean added = false;
 	boolean duplicateExists = false;
 
-	for (Record temp : records){
-	    if (temp.getName().equals(record.getName())){
-		duplicateExists = true;
-		break;
+	synchronized(records){
+	    for (Record temp : records){
+		if (temp.getName().equals(record.getName())){
+		    duplicateExists = true;
+		    break;
+		}
 	    }
-	}
+	} // end synchronized
 
 	if (!duplicateExists){
 	    records.addLast(record);
@@ -318,41 +334,44 @@ public class RoutingTable
 
 	String addressTemp = null;
 
-	    // Go through all the records
-	for (Record temp : records){
+	synchronized(records){
+		// Go through all the records
+	    for (Record temp : records){
 
-	    match = false;
+		match = false;
 
-		// Try to match against the supplied name
-	    match = temp.getName().equals(name);
+		    // Try to match against the supplied name
+		match = temp.getName().equals(name);
 
-		// If the supplied IP address isn't null, check
-		// against it as well
-	    if (ipAddress.getIPAddress() != null){
-		address = ipAddress.getIPAddress();
-		addressTemp = temp.getIPAddress().getIPAddress();
-		match = match && addressTemp.matches(address);
+		    // If the supplied IP address isn't null, check
+		    // against it as well
+		if (ipAddress.getIPAddress() != null){
+		    address = ipAddress.getIPAddress();
+		    addressTemp = temp.getIPAddress().getIPAddress();
+		    match = match && addressTemp.matches(address);
+		}
+
+		    // Also check against supplied port number, if it
+		    // isn't == 0
+		if (ipAddress.getPort() > 0){
+		    match = match && (temp.getIPAddress().getPort()
+					     == ipAddress.getPort());
+		}
+
+		    // If found, break from loop
+		if (match){
+		    deleteMe = temp;
+		    break;
+		}
+
+	    } // end foreach
+
+		// If a record was found, attempt to delete it
+	    if (deleteMe != null){
+		deleted = records.remove(deleteMe);
 	    }
 
-		// Also check against supplied port number, if it
-		// isn't == 0
-	    if (ipAddress.getPort() > 0){
-		match = match && (temp.getIPAddress().getPort()
-					 == ipAddress.getPort());
-	    }
-
-		// If found, break from loop
-	    if (match){
-		deleteMe = temp;
-		break;
-	    }
-
-	} // end foreach
-
-	    // If a record was found, attempt to delete it
-	if (deleteMe != null){
-	    deleted = records.remove(deleteMe);
-	}
+	} // end synchronized
 
 	return deleted;
 
@@ -363,10 +382,12 @@ public class RoutingTable
 
 	Record record = null;
 
-	for (Record temp : records){
-	    if (temp.getName().equals(name)){
-		record = temp;
-		break;
+	synchronized(records){
+	    for (Record temp : records){
+		if (temp.getName().equals(name)){
+		    record = temp;
+		    break;
+		}
 	    }
 	}
 
@@ -378,12 +399,14 @@ public class RoutingTable
 
 	Record record = null;
 
-	for (Record temp : records){
-	    if (temp.getIPAddress().toString().equals(address.toString())){
-		record = temp;
-		break;
+	synchronized(records){
+	    for (Record temp : records){
+		if (temp.getIPAddress().toString().equals(address.toString())){
+		    record = temp;
+		    break;
+		}
 	    }
-	}
+	} // end synchronized
 
 	return record;
 
@@ -413,14 +436,16 @@ public class RoutingTable
 	    // Create empty list in which to put matched records
 	LinkedList<Record> matchedRecords = new LinkedList<Record>();
 
-	    // Run checks against all records in the list
-	for (Record temp : records){
+	synchronized(records){
+		// Run checks against all records in the list
+	    for (Record temp : records){
 
-	    if (temp.matches(name, ipRegex)){
-		matchedRecords.addLast(temp);
-	    } // end if temp.matches
+		if (temp.matches(name, ipRegex)){
+		    matchedRecords.addLast(temp);
+		} // end if temp.matches
 
-	} // end foreach
+	    } // end foreach
+	} // end synchronized
 
 	return matchedRecords;
 
