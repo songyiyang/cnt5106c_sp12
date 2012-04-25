@@ -460,11 +460,20 @@ public class AdminDaemon extends Thread
 	String message = "";
 	String args = "";
 
-	Record record = Server.rtable.getRecord(tokens[2]);
+	Record record = null;
 	IPAddress rsp = null;
 
 	Record[] links = null;
 	boolean modified = false;
+
+	if (tokens[2].equals("null")){
+	    String[] ipParts = tokens[3].split(":");
+	    int port = Integer.parseInt(ipParts[1]);
+	    record = Server.rtable.getRecord(new IPAddress(ipParts[0], port));
+	}
+	else {
+	    record = Server.rtable.getRecord(tokens[2]);
+	}
 
 	if (tokens[1].equals("LINK")){
 
